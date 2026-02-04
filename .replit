@@ -1,9 +1,9 @@
 entrypoint = "index.html"
-modules = ["web"]
+modules = ["nodejs-20", "python-3.11", "web"]
 
 [nix]
 channel = "stable-24_11"
-packages = ["static-web-server"]
+packages = ["static-web-server", "tesseract4"]
 
 [deployment]
 publicDir = "/"
@@ -28,3 +28,7 @@ waitForPort = 80
 [[ports]]
 localPort = 80
 externalPort = 80
+
+[agent]
+expertMode = true
+

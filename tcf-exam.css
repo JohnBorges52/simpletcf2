@@ -1,0 +1,522 @@
+/* tcf-exam.css */
+
+.tcf-page {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.tcf-hero {
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--card, #fff);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.tcf-hero h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.tcf-subtitle {
+  margin: 0;
+  color: var(--muted, #334155);
+  line-height: 1.65;
+}
+
+.tcf-toc {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tcf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text, #0b0f17);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tcf-chip:hover {
+  background: rgba(59, 130, 246, 0.18);
+
+}
+
+.tcf-section {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  /* border: 1px solid var(--border, #e5e7eb); */
+  background: var(--card, #fff);
+}
+
+.tcf-section h2 {
+  margin-top: 0px;
+
+}
+
+.tcf-section__title h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.tcf-section__title p {
+  margin: 0;
+  color: var(--muted, #334155);
+  line-height: 1.5;
+}
+
+.tcf-meta {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--muted, #334155);
+  font-size: 14px;
+}
+
+.tcf-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.tcf-callout {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--muted, #334155);
+  line-height: 1.55;
+}
+
+.tcf-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.tcf-card {
+  grid-column: span 12;
+  border-radius: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--surface, #fff);
+  padding: 14px;
+}
+
+.tcf-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.tcf-card p {
+  margin: 0 0 10px;
+  color: var(--muted, #334155);
+  line-height: 1.5;
+}
+
+.tcf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(59, 130, 246, 0.10);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+@media (min-width: 900px) {
+  .tcf-card {
+    grid-column: span 4;
+  }
+}
+
+.tcf-cta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tcf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  text-decoration: none;
+  font-weight: 800;
+  color: var(--text, #0b0f17);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.tcf-btn--secondary {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.regular-list-item {
+  margin-left: 20px;
+  list-style-type: none
+}
+
+.tcf-weight-table {
+
+  width: 100%;
+  max-width: 550px;
+
+
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 14px;
+  background: var(--card, #fff);
+}
+
+.tcf-weight-table th,
+.tcf-weight-table td {
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  text-align: center;
+}
+
+.tcf-weight-table th {
+  background: rgba(59, 130, 246, 0.08);
+  font-weight: 700;
+}
+
+.tcf-weight-table tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.tcf-weight-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.tcf-weight-table tbody tr:nth-child(4) {
+  background-color: rgb(25, 84, 179, 0.40);
+  font-weight: 500;
+}
+
+/* Writing evaluation block */
+.tcf-eval {
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(0, 0, 0, 0.02);
+  padding: 14px;
+}
+
+.tcf-eval__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.tcf-eval__intro {
+  margin: 0 0 12px;
+  color: var(--muted, #334155);
+  line-height: 1.65;
+}
+
+.tcf-eval__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.tcf-eval__item {
+  border-radius: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--surface, #fff);
+  padding: 12px 12px 10px;
+}
+
+.tcf-eval__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+
+}
+
+.tcf-eval__head>strong {
+  font-weight: 500;
+}
+
+.tcf-eval__num {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border: 1px solid var(--border, #e5e7eb);
+  background: rgba(59, 130, 246, 0.10);
+}
+
+.tcf-eval__item p {
+  margin: 0;
+  color: var(--muted, #334155);
+  line-height: 1.55;
+}
+
+.tcf-hero-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted, #334155);
+  line-height: 1.55;
+}
+
+.tcf-hero-list li {
+  margin: 4px 0;
+}
+
+#nclc-table {
+  margin-top: 0px;
+}
+
+.main-title {
+  color: #376a9a;
+
+  text-decoration: underline;
+}
+
+.main-title:hover {
+  color: #539ee4;
+
+}
+
+.h3-style {
+  font-weight: 500;
+}
+
+.tcf-section>h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* -------------------------------------------
+   Practice dropdown (desktop hover + mobile click)
+-------------------------------------------- */
+
+.quiz--nav__dropdown {
+  position: relative;
+}
+
+.quiz--nav__dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz--nav__caret {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -2px;
+  opacity: 0.8;
+}
+
+/* dropdown panel */
+.quiz--nav__dropdown-menu {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 280px;
+  justify-content: center;
+
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+
+  z-index: 9999;
+}
+
+/* items inside dropdown */
+.quiz--nav__dropdown-menu>li>a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.quiz--nav__dropdown-menu>li>a:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* show on hover/focus (desktop) */
+.quiz--nav__dropdown:hover .quiz--nav__dropdown-menu,
+.quiz--nav__dropdown:focus-within .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* -------------------------------------------
+   Mobile behavior: when header has open-nav,
+   dropdown becomes "inline" and opens via class.
+-------------------------------------------- */
+
+/* If your mobile menu is vertical when .open-nav is on header */
+.quiz--main_h.open-nav .quiz--nav__dropdown-menu {
+  position: static;
+  min-width: auto;
+  box-shadow: none;
+  border-radius: 12px;
+  margin-top: 8px;
+
+  /* keep hidden by default on mobile */
+  opacity: 0;
+  visibility: hidden;
+  transform: none;
+  height: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  border: 0;
+}
+
+/* opened state (JS will toggle this class on the li) */
+.quiz--main_h.open-nav .quiz--nav__dropdown.is-open .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  padding: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+/* rotate caret when open */
+.quiz--nav__dropdown.is-open .quiz--nav__caret {
+  transform: rotate(225deg);
+}
+
+/* ============================================
+   Scroll reveal animations (IntersectionObserver)
+   ============================================ */
+
+/* Initial state (hidden) */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(2px);
+  transition:
+    opacity 700ms ease,
+    transform 700ms cubic-bezier(.2, .8, .2, 1),
+    filter 700ms ease;
+  will-change: opacity, transform, filter;
+}
+
+/* Visible state */
+.reveal.is-inview {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* Slight emphasis for large blocks */
+.reveal.reveal--pop {
+  transform: translateY(22px) scale(0.99);
+}
+
+.reveal.reveal--pop.is-inview {
+  transform: translateY(0) scale(1);
+}
+
+/* Stagger children (set via --d inline style from JS) */
+.reveal-stagger>* {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 650ms ease,
+    transform 650ms cubic-bezier(.2, .8, .2, 1);
+  transition-delay: var(--d, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-stagger.is-inview>* {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: subtle "lift" once visible */
+.tcf-section.is-inview {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 700ms ease;
+}
+
+/* Respect demonstrate accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+  .reveal,
+  .reveal-stagger>* {
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   Page load fade-in
+   ============================================ */
+
+/* Initial hidden state */
+.page-fade {
+  opacity: 0;
+  transition: opacity 960ms ease;
+}
+
+/* Visible after load */
+.page-fade.is-loaded {
+  opacity: 1;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .page-fade {
+    transition: none !important;
+    opacity: 1 !important;
+  }
+}

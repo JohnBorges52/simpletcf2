@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TCF Reading Practice</title>
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="listening.css" />
+    <link rel="stylesheet" href="reading.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <meta
+      name="description"
+      content="Practice TCF reading questions with weights, progress tracking, and real tests."
+    />
+
+    <!-- PDF.js -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"
+      defer
+    ></script>
+
+    <!-- ✅ lock/fade style (menu stays but cannot click) -->
+    <style>
+      .quiz--ui-locked {
+        opacity: 0.45;
+        filter: saturate(0.7);
+        pointer-events: none;
+        user-select: none;
+      }
+      .quiz--ui-locked .quiz--btn,
+      .quiz--ui-locked .quiz--pill,
+      .quiz--ui-locked input,
+      .quiz--ui-locked label {
+        cursor: not-allowed !important;
+      }
+      .quiz--btn-locked {
+        opacity: 0.45;
+        filter: saturate(0.7);
+        pointer-events: none;
+        user-select: none;
+      }
+      .quiz--controls-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+
+  <body class="quiz--light">
+    <!-- Header -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
+            <li>
+              <a href="/index.html#contact-section" class="quiz--nav__link"
+                >Contact</a
+              >
+            </li>
+
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="quiz--wrap">
+      <!-- Practice controls -->
+      <section
+        id="practiceControls"
+        aria-labelledby="filters-title"
+        class="quiz--controls"
+      >
+        <h2 id="filters-title" class="quiz--hidden">Filters</h2>
+
+        <div class="quiz--controls-top">
+          <label class="quiz--toggle" for="onlyUnansweredChk">
+            <input type="checkbox" id="onlyUnansweredChk" />
+            <span>Never responded questions only</span>
+          </label>
+        </div>
+
+        <div
+          id="filtersToolbar"
+          class="quiz--toolbar"
+          role="toolbar"
+          aria-label="Question weight filters"
+        >
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-all="1"
+            id="allBtn"
+            onclick="filterQuestions('all')"
+          >
+            All Weights
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="33"
+            onclick="filterQuestions(33)"
+          >
+            Weight-33
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="26"
+            onclick="filterQuestions(26)"
+          >
+            Weight-26
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="21"
+            onclick="filterQuestions(21)"
+          >
+            Weight-21
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="15"
+            onclick="filterQuestions(15)"
+          >
+            Weight-15
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="9"
+            onclick="filterQuestions(9)"
+          >
+            Weight-09
+          </button>
+
+          <button
+            type="button"
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-weight="3"
+            onclick="filterQuestions(3)"
+          >
+            Weight-03
+          </button>
+
+          <button
+            type="button"
+            id="deservesBtn"
+            class="quiz--btn quiz--pill"
+            aria-pressed="false"
+          >
+            📚 Deserves Attention (0)
+          </button>
+
+          <button type="button" id="realTestBtn" class="quiz--btn quiz--pill">
+            🧪 Real Test
+          </button>
+        </div>
+      </section>
+
+      <div
+        id="emptyState"
+        class="quiz--empty-state quiz--hidden"
+        aria-live="polite"
+      >
+        📭 Select a weight to start.
+      </div>
+
+      <!-- Real Test Loading Overlay -->
+      <div
+        id="realTestLoading"
+        class="quiz--hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Loading real test"
+      >
+        <div class="quiz--loading-backdrop" id="rtBackdrop"></div>
+
+        <div class="quiz--loading-card" role="document">
+          <button class="quiz--close-x" id="rtClose" aria-label="Close">
+            ✕
+          </button>
+
+          <div class="spinner-box" aria-hidden="true">
+            <div class="circle-border">
+              <div class="circle-core"></div>
+            </div>
+          </div>
+
+          <p id="rtLoadingText" class="quiz--loading-text quiz--loading-flash">
+            Preparing Test...
+          </p>
+
+          <button
+            id="startRealTestBtn"
+            type="button"
+            class="quiz--btn quiz--pill quiz--start-btn"
+            disabled
+          >
+            Start the test
+          </button>
+        </div>
+      </div>
+
+      <!-- Real Test Container -->
+      <section
+        id="realTestContainer"
+        class="quiz--hidden"
+        aria-labelledby="realtest-title"
+      >
+        <h2 id="realtest-title" class="quiz--hidden">Real Test</h2>
+
+        <div
+          id="questionNav"
+          class="quiz--question-nav"
+          aria-label="Question navigation dots"
+        ></div>
+
+        <div class="quiz--test-controls" role="group" aria-label="Finish test">
+          <button
+            id="finishRealTestBtn"
+            type="button"
+            class="quiz--btn quiz--pill padding-space"
+          >
+            Finish Test
+          </button>
+        </div>
+      </section>
+
+      <!-- Main Quiz Card -->
+      <main
+        id="quiz"
+        class="quiz--card"
+        role="main"
+        aria-labelledby="questionNumber"
+      >
+        <div class="quiz--meta">
+          <div class="quiz--kpi" id="kpiBox">
+            <span id="questionNumber" role="heading" aria-level="2"></span>
+            <div id="questionStats"></div>
+          </div>
+        </div>
+
+        <!-- ✅ PDF container (with overlay copy button) -->
+        <div
+          id="pictureContainer"
+          class="quiz--media quiz--image quiz--pdf-wrap"
+          aria-hidden="true"
+          style="margin-top: 12px"
+        >
+          <button
+            type="button"
+            id="copyReadingBtn"
+            class="quiz--btn quiz--pill quiz--copybtn quiz--copybtn-overlay"
+            aria-label="Copy reading text"
+          >
+            📋 Copy text
+          </button>
+
+          <div id="pdfInner" class="quiz--pdf-inner"></div>
+        </div>
+
+        <!-- Alternatives -->
+        <div
+          id="alternatives"
+          class="quiz--choices"
+          role="group"
+          aria-label="Answer choices"
+          style="margin-top: 12px"
+        ></div>
+
+        <button type="button" id="confirmBtn" class="quiz--btn quiz--pill">
+          ✅ Confirm
+        </button>
+
+        <div
+          class="quiz--nav quiz--nav-bottom"
+          role="group"
+          aria-label="Question navigation"
+        >
+          <button type="button" class="quiz--btn" onclick="prevQuestion()">
+            ← Previous
+          </button>
+          <button type="button" class="quiz--btn" onclick="nextQuestion()">
+            Next →
+          </button>
+        </div>
+
+        <div class="quiz--meta">
+          <div class="quiz--kpi">
+            <span id="score" class="quiz--score" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div id="notice" style="margin-top: 10px"></div>
+        <!-- Passage / Question text (from JSON) -->
+        <div class="quiz--question-wrap" style="margin-top: 8px">
+          <div
+            id="questionText"
+            class="quiz--question quiz--collapsed"
+            aria-expanded="false"
+          ></div>
+
+          <button
+            type="button"
+            class="quiz--expand-btn"
+            id="toggleReadingBtn"
+            aria-controls="questionText"
+          >
+            ⬇️ Copiable text (click to expand)
+          </button>
+        </div>
+      </main>
+
+      <!-- Results -->
+      <section
+        id="realTestResults"
+        class="quiz--hidden"
+        aria-labelledby="results-title"
+      >
+        <h2 id="results-title" class="quiz--hidden">Results</h2>
+
+        <div id="resultsHeader"></div>
+        <div id="clbTable" class="quiz--clb-table"></div>
+        <div id="resultsDots" class="quiz--results-dots"></div>
+
+        <div class="quiz--again-wrap">
+          <button
+            id="againBtn"
+            type="button"
+            class="quiz--btn quiz--pill padding-space"
+          >
+            🔁 Do another Real Test
+          </button>
+        </div>
+
+        <div id="allQuestionsReview"></div>
+      </section>
+
+      <noscript>
+        <p><strong>JavaScript is required</strong> to run this practice app.</p>
+      </noscript>
+
+      <script src="reading.js" defer></script>
+    </div>
+
+    <script>
+      (function () {
+        const header = document.getElementById("mainHeader");
+        const toggle = document.getElementById("navToggle");
+        if (!header || !toggle) return;
+        toggle.addEventListener("click", () => {
+          const open = header.classList.toggle("quiz--open-nav");
+          toggle.setAttribute("aria-expanded", String(open));
+        });
+      })();
+    </script>
+  </body>
+</html>

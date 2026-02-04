@@ -1,0 +1,1125 @@
+/* plans.css */
+:root {
+  --bg: #0b0f19;
+  --card: #10182a;
+  --card2: #0e1626;
+  --text: #e9eefc;
+  --muted: rgba(233, 238, 252, 0.7);
+  --muted2: rgba(233, 238, 252, 0.55);
+  --border: rgba(233, 238, 252, 0.12);
+
+  --accent: #7c5cff;
+  --accent2: #22c55e;
+
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  --radius: 18px;
+  --max: 1120px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.plans {
+  margin: 0;
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    sans-serif;
+  /* color: var(--text); */
+  /* background: radial-gradient(1200px 800px at 10% 0%,
+      rgba(124, 92, 255, 0.22),
+      transparent 55%),
+    radial-gradient(900px 650px at 90% 10%,
+      rgba(34, 197, 94, 0.12),
+      transparent 55%),
+    var(--bg); */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.92em;
+}
+
+.tiny {
+  font-size: 0.92rem;
+  color: var(--muted2);
+  line-height: 1.4;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+/* Header */
+.plans-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background: rgba(11, 15, 25, 0.6);
+  border-bottom: 1px solid var(--border);
+}
+
+.plans-header__inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand__mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.9), rgba(34, 197, 94, 0.65));
+  box-shadow: 0 10px 30px rgba(124, 92, 255, 0.25);
+}
+
+.brand__text {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.plans-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.plans-nav__link {
+  padding: 8px 10px;
+  border-radius: 12px;
+  color: var(--muted);
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.plans-nav__link:hover {
+  transform: translateY(-1px);
+  background: rgba(233, 238, 252, 0.06);
+  color: var(--text);
+}
+
+.plans-nav__link.is-active {
+  color: var(--text);
+  background: rgba(124, 92, 255, 0.18);
+  border: 1px solid rgba(124, 92, 255, 0.25);
+}
+
+.plans-nav__cta {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  background: rgba(233, 238, 252, 0.07);
+  border: 1px solid var(--border);
+  transition: transform 120ms ease, background 120ms ease, border 120ms ease;
+}
+
+.plans-nav__cta:hover {
+  transform: translateY(-1px);
+  background: rgba(233, 238, 252, 0.1);
+  border: 1px solid rgba(233, 238, 252, 0.18);
+}
+
+/* Layout */
+.plans-main {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 28px 18px 60px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition: transform 120ms ease, background 120ms ease, border 120ms ease;
+  user-select: none;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn--primary {
+  background: linear-gradient(177deg, rgb(37 37 37 / 66%), #8a3affd1);
+  box-shadow: 0 16px 50px rgba(124, 92, 255, 0.5);
+}
+
+.btn--primary:hover {
+  transform: translateY(-1px);
+  linear-gradient(177deg, rgb(37 37 37 / 76%), #8a3aff);
+}
+
+.btn--ghost {
+  background: rgba(233, 238, 252, 0.06);
+  border: 1px solid var(--border);
+  /* color: var(--text); */
+  color: #7577bf;
+  font-family: "Montserrat";
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn--ghost:hover {
+  transform: translateY(-1px);
+  background: rgba(233, 238, 252, 0.09);
+  border: 1px solid #7b7ed5;
+  color: #4044c5;
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 20px;
+  padding: 26px 0 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(233, 238, 252, 0.06);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  width: fit-content;
+}
+
+.hero__title {
+  margin: 14px 0 10px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+}
+
+.hero__subtitle {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.stat {
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.stat__num {
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.stat__label {
+  margin-top: 6px;
+  color: var(--muted2);
+  font-size: 0.95rem;
+}
+
+/* Hero side card */
+.hero-card {
+  background: linear-gradient(180deg, rgba(233, 238, 252, 0.06), rgba(233, 238, 252, 0.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  height: 100%;
+}
+
+.hero-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.hero-card__note {
+  margin: 6px 0 0;
+  color: var(--muted2);
+}
+
+.checklist {
+  margin: 14px 0 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.checklist li {
+  padding-left: 28px;
+  position: relative;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: rgba(233, 238, 252, 0.95);
+  font-weight: 800;
+}
+
+.hero-card__footer {
+  display: grid;
+  gap: 10px;
+}
+
+/* Sections */
+.section {
+  padding: 34px 0 10px;
+}
+
+.section__header {
+  margin-bottom: 16px;
+}
+
+.section__header--row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.section__title {
+  margin: 0;
+  font-size: 1.55rem;
+  letter-spacing: -0.2px;
+}
+
+.section__subtitle {
+  margin: 8px 0 0;
+  color: rgb(31, 69, 104);
+  line-height: 1.6;
+  max-width: 76ch;
+}
+
+/* Features */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.feature {
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.feature__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.feature__text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Steps */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.step__num {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  background: rgba(124, 92, 255, 0.18);
+  border: 1px solid rgba(124, 92, 255, 0.25);
+}
+
+.step__title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.step__text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Toggle */
+.toggle {
+  display: inline-flex;
+  background: rgba(233, 238, 252, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggle__btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.toggle__btn.is-active {
+  background: rgba(124, 92, 255, 0.22);
+  color: var(--text);
+  border: 1px solid rgba(124, 92, 255, 0.25);
+}
+
+/* Plans */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.plan {
+  position: relative;
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.plan__name {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.plan__desc {
+  margin: 6px 0 0;
+  color: rgb(31, 69, 104);
+  line-height: 1.5;
+}
+
+.plan__price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 0 6px;
+}
+
+.price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-weight: 900;
+}
+
+.price__currency {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.price__amount {
+  font-size: 2.4rem;
+  letter-spacing: -0.6px;
+}
+
+.price__unit {
+  color: var(--muted2);
+  font-weight: 700;
+}
+
+.plan__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.plan__list li {
+  padding-left: 22px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.plan__list li::before {
+  content: "•";
+  position: absolute;
+  left: 6px;
+  top: 0;
+  color: rgba(210, 200, 255, 0.8);
+}
+
+/* Featured plan */
+.plan--featured {
+  background: linear-gradient(180deg,
+      rgba(186, 169, 255, 0.8),
+      rgba(233, 238, 252, 0.05));
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  box-shadow: 0 20px 70px rgba(203, 191, 255, 0.8);
+  transform: translateY(-4px);
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+
+/* SVG overlay */
+.plan--featured .plan-border {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* The animated stroke */
+.plan--featured .plan-border__rect {
+  fill: none;
+  stroke: rgba(124, 92, 255, 0.95);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+
+  /* draw animation setup */
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+/* On hover: draw the border in 2 seconds */
+.plan--featured:hover .plan-border__rect {
+  opacity: 1;
+  animation: planBorderDraw 2s linear forwards;
+}
+
+/* start at top-left */
+@keyframes planBorderDraw {
+  from {
+    stroke-dashoffset: 400;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+
+.plan__ribbon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: rgba(34, 197, 94, 0.16);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+
+/* FAQ */
+.faq {
+  display: grid;
+  gap: 12px;
+}
+
+.faq__item {
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.faq__q {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--text);
+  list-style: none;
+}
+
+.faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.faq__a {
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* CTA */
+.cta {
+  margin-top: 28px;
+  padding: 22px 0 0;
+}
+
+.cta__inner {
+  background: linear-gradient(135deg,
+      rgba(124, 92, 255, 0.16),
+      rgba(34, 197, 94, 0.08));
+  border: 1px solid rgba(233, 238, 252, 0.14);
+  border-radius: calc(var(--radius) + 6px);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.cta__title {
+  margin: 0 0 8px;
+  font-size: 1.45rem;
+}
+
+.cta__text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.cta__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+/* Footer */
+.plans-footer {
+  border-top: 1px solid var(--border);
+  background: rgba(11, 15, 25, 0.55);
+}
+
+.plans-footer__inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.plans-footer__links {
+  display: flex;
+  gap: 14px;
+}
+
+.fineprint {
+  margin-top: 12px;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan--featured {
+    transform: none;
+  }
+
+  .hero__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .btn,
+  .plans-nav__link,
+  .plans-nav__cta {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   HERO FIX (paste at END of plans.css)
+   Makes hero a proper section with overlay + glass card,
+   and overrides global centering from styles.css
+========================================================= */
+
+body.plans .hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+
+  /* Make it feel like a hero section */
+  min-height: 560px;
+  padding: clamp(26px, 4vw, 56px);
+
+  /* Force layout even if global CSS messes with it */
+  display: grid !important;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 22px;
+  align-items: center;
+
+  /* If your body has a background image, this prevents “double busy” */
+  background: rgba(11, 15, 25, 0.25);
+  border: 1px solid rgba(233, 238, 252, 0.12);
+}
+
+/* Photo layer */
+body.plans .hero.hero--photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hero-bg) center / cover no-repeat;
+  transform: scale(1.03);
+  filter: saturate(1.05) contrast(1.05);
+  z-index: 0;
+}
+
+/* Dark overlay so text is readable */
+body.plans .hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+      rgba(11, 15, 25, 0.88) 0%,
+      rgba(11, 15, 25, 0.66) 45%,
+      rgba(11, 15, 25, 0.42) 100%);
+  z-index: 0;
+}
+
+/* Keep content above overlay */
+body.plans .hero__content,
+body.plans .hero__card {
+  position: relative;
+  z-index: 1;
+}
+
+/* Force left alignment (global CSS often centers headings) */
+body.plans .hero__content {
+  text-align: left !important;
+  max-width: 70ch;
+}
+
+body.plans .hero__title {
+  text-align: left !important;
+  margin-top: 14px;
+}
+
+body.plans .hero__subtitle {
+  text-align: left !important;
+}
+
+/* Stats should not stack in a weird vertical pile */
+body.plans .hero__stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px;
+  justify-items: start;
+  margin-top: 16px;
+}
+
+/* Make the right card actually look like a card */
+body.plans .hero-card {
+  background: rgba(16, 24, 42, 0.72) !important;
+  border: 1px solid rgba(233, 238, 252, 0.14) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+}
+
+/* Make checklist readable on photo */
+body.plans .checklist li {
+  color: rgba(233, 238, 252, 0.82) !important;
+}
+
+/* Buttons: ensure they stand out on photo */
+body.plans .btn--ghost {
+  background: rgba(233, 238, 252, 0.10) !important;
+}
+
+/* Responsive: stack nicely */
+@media (max-width: 980px) {
+  body.plans .hero {
+    grid-template-columns: 1fr !important;
+    min-height: auto;
+  }
+
+  body.plans .hero__stats {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+body.plans .hero-wrap {
+  max-width: none;
+  margin: 0 -18px;
+  /* cancels main padding */
+}
+
+body.plans .hero-wrap .hero {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+/* ================= HERO (PHOTO ONLY) ================= */
+
+body.plans .hero {
+  position: relative;
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+body.plans .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hero-bg) center / cover no-repeat;
+  z-index: 0;
+}
+
+body.plans .hero__overlay {
+  position: absolute;
+  inset: 0;
+  /* background: rgba(8, 12, 24, 0.01); */
+  z-index: 1;
+}
+
+body.plans .hero__center {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  padding: 24px;
+}
+
+body.plans .hero__title {
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  margin: 16px 0 22px;
+}
+
+.btn--lg {
+  padding: 16px 26px;
+  font-size: 1.05rem;
+}
+
+/* ================= SECTIONS ================= */
+
+.section {
+  padding: 64px 0;
+}
+
+.section--narrow {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.section__text {
+  color: black;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+
+/* ================= FEATURES ================= */
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.feature-card {
+  background: rgba(233, 238, 252, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.feature-card h3 {
+  margin: 0 0 8px;
+}
+
+/* ================= PLANS ================= */
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 32px;
+}
+
+.plan {
+  background: rgb(212 224 255 / 50%);
+  border: 1px solid;
+  border-color: rgba(124, 92, 255, 0.45);
+  border-radius: var(--radius);
+  padding: 26px;
+}
+
+.plan__price {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 14px 0;
+}
+
+.plan__price span {
+  font-size: 1rem;
+  color: rgb(31, 69, 104);
+}
+
+.plan ul {
+  padding-left: 18px;
+  margin: 16px 0 22px;
+  color: rgb(31, 69, 104)
+}
+
+/* .plan ul il {
+  list-style: none;
+} */
+
+.plan--featured {
+  border-color: rgba(124, 92, 255, 0.45);
+  background: linear-gradient(180deg,
+      rgba(216, 206, 255, 0.8),
+      rgba(233, 238, 252, 0.46));
+
+}
+
+
+
+.plan__badge {
+  display: inline-block;
+  background: #8a3aff;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border-bottom-right-radius: 20px;
+  border-top-left-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1px;
+  color: white;
+  position: fixed;
+  top: 0;
+  right: 0;
+  margin: 0;
+  z-index: 9;
+
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 900px) {
+
+  .features-grid,
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.plans .hero {
+    min-height: 60vh;
+  }
+}
+
+/* =========================================================
+   PLANS CAROUSEL OVERRIDES (PASTE AT END)
+   - Keeps cards same size as the old 3-column grid
+   - Arrows do NOT shrink the cards (overlay buttons)
+========================================================= */
+
+#plans .plan-carousel {
+  position: relative;
+  margin-top: 32px;
+}
+
+/* Full width viewport (cards keep original size) */
+#plans .plan-carousel__viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Track: horizontal row */
+#plans .plan-grid--carousel {
+  --gap: 22px;
+  display: flex !important;
+  gap: var(--gap) !important;
+  margin-top: 0 !important;
+
+  /* movement */
+  transition: transform 320ms ease;
+  will-change: transform;
+}
+
+/* Cards: exactly 3 visible (same as your previous grid) */
+#plans .plan-grid--carousel>.plan {
+  flex: 0 0 calc((100% - (var(--gap) * 2)) / 3);
+}
+
+/* Overlay arrows (do not take layout space) */
+#plans .plan-carousel__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  background: rgba(233, 238, 252, 0.60);
+  color: rgba(20, 25, 50, 0.9);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+  user-select: none;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+#plans .plan-carousel__btn:hover {
+  transform: translateY(-50%) translateY(-1px);
+  background: rgba(233, 238, 252, 0.8);
+}
+
+#plans .plan-carousel__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Left/right placement */
+#plans .plan-carousel__btn--prev {
+  left: -56px;
+  /* pulls outside so it doesn’t cover card content */
+}
+
+#plans .plan-carousel__btn--next {
+  right: -56px;
+}
+
+/* If you don't have space outside container, use these instead:
+#plans .plan-carousel__btn--prev { left: 10px; }
+#plans .plan-carousel__btn--next { right: 10px; }
+*/
+
+/* Mobile: 1 card visible */
+@media (max-width: 900px) {
+  #plans .plan-grid--carousel>.plan {
+    flex-basis: 100%;
+  }
+
+  #plans .plan-carousel__btn--prev {
+    left: 10px;
+  }
+
+  #plans .plan-carousel__btn--next {
+    right: 10px;
+  }
+}
+
+#plans .plan-grid--carousel>.plan--featured {
+  transform: none !important;
+}
+
+/* ==========================================
+   Plans page: make Practice dropdown NOT dark
+========================================== */
+
+/* The dropdown panel */
+body.plans .quiz--nav__dropdown-menu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.10) !important;
+}
+
+/* Dropdown links */
+body.plans .quiz--nav__dropdown-menu .quiz--nav__link,
+body.plans .quiz--nav__dropdown-menu .quiz--nav__link:visited {
+  color: rgba(15, 23, 42, 0.92) !important;
+}
+
+/* Hover state inside dropdown */
+body.plans .quiz--nav__dropdown-menu .quiz--nav__link:hover {
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: rgba(15, 23, 42, 1) !important;
+}
+
+/* If your dark background is on the dropdown container itself */
+body.plans .quiz--nav__dropdown {
+  background: transparent !important;
+}

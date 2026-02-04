@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Mobile-friendly viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TCF Writing Practice</title>
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="listening.css" />
+    <link rel="stylesheet" href="writing.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <meta
+      name="description"
+      content="Practice TCF writing tasks with section selection, random topics, and special character helper."
+    />
+  </head>
+
+  <body class="quiz--light">
+    <!-- Header (structured like your listening header) -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <a href="/plan.html" class="quiz--nav__link">Plans</a>
+            </li>
+            <li>
+              <a href="/index.html#contact-section" class="quiz--nav__link"
+                >Contact</a
+              >
+            </li>
+
+            <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="quiz--container quiz--page">
+      <section class="quiz--hero">
+        <div>
+          <h1 class="quiz--title">Expression Écrite</h1>
+          <p class="quiz--subtitle">
+            Pick a section, generate a topic, and write your response. Use the
+            special characters panel to insert accents.
+          </p>
+        </div>
+
+        <div class="quiz--heroActions">
+          <div
+            class="quiz--segmented"
+            role="tablist"
+            aria-label="Writing sections"
+          >
+            <button
+              class="quiz--segBtn is-active"
+              data-section="1"
+              role="tab"
+              aria-selected="true"
+            >
+              Section 1
+            </button>
+            <button
+              class="quiz--segBtn"
+              data-section="2"
+              role="tab"
+              aria-selected="false"
+            >
+              Section 2
+            </button>
+            <button
+              class="quiz--segBtn"
+              data-section="3"
+              role="tab"
+              aria-selected="false"
+            >
+              Section 3
+            </button>
+          </div>
+
+          <button
+            id="btnGenerateTopic"
+            class="quiz--btn quiz--btnPrimary"
+            type="button"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            Generate Topic
+          </button>
+        </div>
+      </section>
+
+      <section class="quiz--grid">
+        <!-- Left: Topic + editor -->
+        <div class="quiz--card">
+          <div class="quiz--cardHeader">
+            <div class="quiz--cardTitle">
+              <i class="fa-regular fa-pen-to-square"></i>
+              Topic
+            </div>
+
+            <div class="quiz--rightMeta">
+              <div class="quiz--badge" id="badgeSection">Section 1</div>
+              <div
+                class="quiz--lenPill"
+                id="lenPill"
+                title="Word limits for this section"
+              >
+                0 / 120
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3 documents (hidden unless Section 3 is active) -->
+          <div class="quiz--docs" id="docsWrap" hidden>
+            <div class="quiz--docsHeader">
+              <div class="quiz--docsMeta">
+                À partir de ces deux documents, comparez les points de vue et
+                donnez votre opinion. Utilisez des connecteurs et des exemples.
+              </div>
+            </div>
+
+            <div class="quiz--docsGrid">
+              <article class="quiz--docCard">
+                <div class="quiz--docHead">
+                  <span class="quiz--docBadge">Document A</span>
+                </div>
+                <div class="quiz--docBody" id="docA"></div>
+              </article>
+
+              <article class="quiz--docCard">
+                <div class="quiz--docHead">
+                  <span class="quiz--docBadge">Document B</span>
+                </div>
+                <div class="quiz--docBody" id="docB"></div>
+              </article>
+            </div>
+
+            <div class="quiz--divider"></div>
+          </div>
+
+          <!-- Topic (Sections 1–2 use this normally; Section 3 uses it as prompt if needed) -->
+          <div class="quiz--topicBox" id="topicBox">
+            Click <span class="gerate-span">Generate Topic</span> to start.
+          </div>
+
+          <div class="quiz--divider"></div>
+
+          <div class="quiz--editorHeader">
+            <div class="quiz--editorTitle">Your text</div>
+            <div class="quiz--editorMeta">
+              <span id="wordCount">0 words</span>
+              <span class="quiz--dot">•</span>
+              <span id="charCount">0 chars</span>
+              <span class="quiz--dot">•</span>
+              <span id="rangeHint" class="quiz--rangeHint"
+                >Target: 60–120 words</span
+              >
+            </div>
+          </div>
+
+          <textarea
+            id="writingBox"
+            class="quiz--textarea"
+            placeholder="Write your answer here..."
+            spellcheck="true"
+          ></textarea>
+
+          <div class="quiz--hint">
+            Accented characters can’t be typed or pasted directly. Use the panel
+            on the right to insert accents.
+          </div>
+
+          <div class="quiz--toast" id="toast" aria-live="polite"></div>
+        </div>
+
+        <!-- Right: Special characters -->
+        <aside class="quiz--card quiz--side">
+          <div class="quiz--cardHeader">
+            <div class="quiz--cardTitle">
+              <!-- <i class="fa-solid fa-language"></i> -->
+              Special Characters
+            </div>
+
+            <div
+              class="quiz--capsToggle"
+              role="group"
+              aria-label="Character case"
+            >
+              <button
+                id="capsOff"
+                class="quiz--capsBtn is-active"
+                type="button"
+                aria-pressed="true"
+              >
+                abc
+              </button>
+              <button
+                id="capsOn"
+                class="quiz--capsBtn"
+                type="button"
+                aria-pressed="false"
+              >
+                ABC
+              </button>
+            </div>
+          </div>
+
+          <div class="quiz--charsWrap" id="charPanel">
+            <!-- buttons injected by JS -->
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="writing.js"></script>
+  </body>
+</html>

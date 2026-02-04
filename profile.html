@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Profile • Simple.TCF</title>
+
+    <!-- Global styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Profile-only styles -->
+    <link rel="stylesheet" href="profile.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class="quiz--light">
+    <!-- Header -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <a href="/plan.html" class="quiz--nav__link">Plans</a>
+            </li>
+            <li>
+              <a href="/index.html#contact-section" class="quiz--nav__link"
+                >Contact</a
+              >
+            </li>
+
+            <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="profile-wrap">
+      <div class="profile-grid">
+        <!-- Sidebar -->
+        <aside class="profile-card">
+          <div class="profile-user">
+            <div class="profile-avatar" id="avatarInitial">U</div>
+            <div>
+              <div class="profile-name" id="profileName">User</div>
+              <div class="profile-email" id="profileEmail">—</div>
+              <span class="pill" id="memberPill">SimpleTCF Member</span>
+            </div>
+          </div>
+
+          <hr class="profile-divider" />
+
+          <nav class="profile-nav">
+            <button
+              class="profile-sidebtn"
+              data-tab="overview"
+              aria-current="true"
+            >
+              📌 Overview
+            </button>
+            <button class="profile-sidebtn" data-tab="progress">
+              📈 My Progress
+            </button>
+            <button class="profile-sidebtn" data-tab="realtests">
+              🧪 Real Tests
+            </button>
+            <button class="profile-sidebtn" data-tab="orders">
+              🧾 My Orders
+            </button>
+            <button class="profile-sidebtn" data-tab="account">
+              ⚙️ Account
+            </button>
+          </nav>
+
+          <hr class="profile-divider" />
+
+          <div class="profile-actions">
+            <button class="profile-btn" id="logoutBtn">Logout</button>
+          </div>
+        </aside>
+
+        <!-- Content -->
+        <section class="profile-card">
+          <!-- OVERVIEW -->
+          <div id="tab-overview">
+            <h1>Your Dashboard</h1>
+            <p class="muted">Quick snapshot of your progress.</p>
+
+            <div class="profile-kpis">
+              <div class="profile-kpi">
+                <div class="big" id="kpiAnswered">—</div>
+                <div class="lbl">Questions answered</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="kpiAccuracy">—</div>
+                <div class="lbl">Accuracy</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="kpiRealTests">—</div>
+                <div class="lbl">Real Tests Done</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="kpiStreak">—</div>
+                <div class="lbl">Study streak</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROGRESS -->
+          <div id="tab-progress" class="profile-hidden">
+            <div class="progress-head">
+              <div>
+                <h1>My Progress</h1>
+                <p class="muted">
+                  Track your performance and keep improving (placeholders for
+                  now).
+                </p>
+              </div>
+
+              <div
+                class="progress-toggle"
+                role="tablist"
+                aria-label="Progress mode"
+              >
+                <button
+                  class="progress-toggle-btn"
+                  id="btnModeListening"
+                  data-mode="listening"
+                  aria-pressed="true"
+                  type="button"
+                >
+                  🎧 Listening
+                </button>
+                <button
+                  class="progress-toggle-btn"
+                  id="btnModeReading"
+                  data-mode="reading"
+                  aria-pressed="false"
+                  type="button"
+                >
+                  📖 Reading
+                </button>
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="profile-kpis" style="margin-top: 12px">
+              <div class="profile-kpi">
+                <div class="big" id="pAccuracy">—</div>
+                <div class="lbl">Average accuracy</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="pAnswered">—</div>
+                <div class="lbl">Questions answered</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="pCorrect">—</div>
+                <div class="lbl">Correct answers</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="pStreak">—</div>
+                <div class="lbl">Study streak</div>
+              </div>
+            </div>
+
+            <div class="progress-grid">
+              <!-- Chart -->
+              <div class="section-card">
+                <div class="section-head">
+                  <h2>Accuracy over time</h2>
+                  <span class="pill" id="pRangePill"
+                    >Weekly (Last 12 weeks)</span
+                  >
+                </div>
+
+                <!-- Optional Daily/Weekly buttons -->
+                <div
+                  class="profile-actions"
+                  style="justify-content: flex-end; margin-bottom: 10px"
+                >
+                  <button
+                    class="profile-btn"
+                    id="btnDaily"
+                    type="button"
+                    aria-current="true"
+                  >
+                    Daily
+                  </button>
+                  <button
+                    class="profile-btn"
+                    id="btnWeekly"
+                    type="button"
+                    aria-current="true"
+                  >
+                    Weekly
+                  </button>
+                </div>
+
+                <!-- Chart wrap + tooltip -->
+                <div class="chart-wrap" id="progressChartWrap">
+                  <canvas
+                    class="progress-canvas"
+                    id="progressLineChart"
+                    width="900"
+                    height="260"
+                  ></canvas>
+                  <div class="chart-tooltip" id="chartTooltip" hidden></div>
+                </div>
+
+                <div class="progress-legend">
+                  <span class="muted">
+                    Tip: later you can connect this to your answer tracking JSON
+                    / DB.
+                  </span>
+                </div>
+              </div>
+
+              <!-- Accuracy by weight -->
+              <div class="section-card">
+                <div class="section-head">
+                  <h2>Accuracy by weight</h2>
+                  <span class="pill">TCF weights</span>
+                </div>
+
+                <div class="weight-bars" id="weightBars">
+                  <!-- filled by JS -->
+                </div>
+
+                <div class="progress-note muted">
+                  Higher weight questions matter more for your score. Focus on
+                  what moves your CLB fastest.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REAL TESTS -->
+          <div id="tab-realtests" class="profile-hidden">
+            <div class="progress-head">
+              <div>
+                <h1>Real Tests</h1>
+
+                <p class="muted">
+                  Showing your latest results (placeholders for now).
+                </p>
+              </div>
+              <div
+                class="progress-toggle"
+                role="tablist"
+                aria-label="Real Tests mode"
+                style="margin-top: 10px"
+              >
+                <button
+                  class="progress-toggle-btn"
+                  id="btnRtListening"
+                  aria-pressed="true"
+                  type="button"
+                >
+                  🎧 Listening
+                </button>
+                <button
+                  class="progress-toggle-btn"
+                  id="btnRtReading"
+                  aria-pressed="false"
+                  type="button"
+                >
+                  📖 Reading
+                </button>
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="profile-kpis" style="margin-top: 12px">
+              <div class="profile-kpi">
+                <div class="big" id="rtTotal">—</div>
+                <div class="lbl">Total tests</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="rtBest">—</div>
+                <div class="lbl">Best score</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="rtAvg">—</div>
+                <div class="lbl">Average score</div>
+              </div>
+              <div class="profile-kpi">
+                <div class="big" id="rtLast">—</div>
+                <div class="lbl">Last test</div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-head">
+                <h2>All Real Tests</h2>
+                <span class="pill" id="rtCountPill">Showing 0</span>
+              </div>
+
+              <div class="table-wrap">
+                <table class="profile-table" id="realTestTableAll">
+                  <thead>
+                    <tr>
+                      <th>Test</th>
+                      <th>Date</th>
+                      <th>Correct</th>
+                      <th>CLB</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- filled by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="profile-actions rt-actions">
+                <button
+                  class="profile-btn"
+                  id="loadMoreRealTestsBtn"
+                  type="button"
+                >
+                  Load more (+5)
+                </button>
+                <span class="muted" id="rtHint"
+                  >Only placeholders for now.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- MY ORDERS -->
+          <div id="tab-orders" class="profile-hidden">
+            <h1>My Orders</h1>
+            <p class="muted">Recent Orders (placeholders for now).</p>
+
+            <div class="section-card">
+              <div class="section-head">
+                <h2>Recent Orders</h2>
+                <span class="pill" id="ordersCountPill">Showing 0</span>
+              </div>
+
+              <div class="table-wrap">
+                <table class="profile-table orders-table" id="ordersTable">
+                  <thead>
+                    <tr>
+                      <th>ORDER ID</th>
+                      <th>DATE</th>
+                      <th>ITEMS</th>
+                      <th>TOTAL</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- filled by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="profile-actions orders-actions">
+                <button
+                  class="profile-btn"
+                  id="loadMoreOrdersBtn"
+                  type="button"
+                >
+                  Show older (+3)
+                </button>
+                <span class="muted"
+                  >You’ll connect this to your database later.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- ACCOUNT -->
+          <div id="tab-account" class="profile-hidden">
+            <h1>Account</h1>
+            <p class="muted">
+              Update your personal info and subscription details.
+            </p>
+
+            <div class="account-card">
+              <div class="account-row">
+                <div class="account-label">Name</div>
+                <div class="account-field">
+                  <input
+                    class="account-input"
+                    id="acctNameInput"
+                    type="text"
+                    value=""
+                    disabled
+                    autocomplete="name"
+                  />
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div class="account-label">Email</div>
+                <div class="account-field">
+                  <input
+                    class="account-input"
+                    id="acctEmailInput"
+                    type="email"
+                    value=""
+                    disabled
+                    autocomplete="email"
+                  />
+                  <div class="account-hint">
+                    (Por enquanto isso atualiza só o LocalStorage. Depois você
+                    liga no Firebase.)
+                  </div>
+                </div>
+              </div>
+
+              <div class="account-row">
+                <div class="account-label">Plan</div>
+                <div class="account-field">
+                  <span class="pill" id="acctPlan">—</span>
+                </div>
+              </div>
+
+              <!-- <div class="account-row">
+                <div class="account-label">Data de renovação</div>
+                <div class="account-field">
+                  <span class="pill" id="acctRenewal">—</span>
+                </div>
+              </div> -->
+
+              <div class="account-row">
+                <button class="profile-sidebtn reset-btn" type="button">
+                  <a
+                    href="/passwordReset.html"
+                    style="text-decoration: none; color: white"
+                  >
+                    Password reset
+                  </a>
+                </button>
+              </div>
+
+              <hr class="profile-divider" />
+
+              <div class="profile-actions">
+                <button
+                  class="profile-btn primary"
+                  id="editAccountBtn"
+                  type="button"
+                >
+                  Edit
+                </button>
+                <button
+                  class="profile-btn"
+                  id="saveAccountBtn"
+                  type="button"
+                  disabled
+                >
+                  Save
+                </button>
+                <button
+                  class="profile-btn"
+                  id="cancelAccountBtn"
+                  type="button"
+                  disabled
+                >
+                  Cancel
+                </button>
+
+                <span
+                  class="pill pill-green account-saved"
+                  id="accountSavedPill"
+                  hidden
+                >
+                  Saved ✅
+                </span>
+              </div>
+            </div>
+
+            <div class="profile-actions" style="margin-top: 10px">
+              <button
+                class="profile-btn primary"
+                id="manageSubBtn"
+                type="button"
+              >
+                Manage Subscription
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="profile.js" defer></script>
+  </body>
+</html>

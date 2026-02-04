@@ -1,0 +1,369 @@
+<!-- plan.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Mobile-friendly viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plans | SimpleTCF</title>
+
+    <!-- Your global site styles -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Page-specific styles -->
+    <link rel="stylesheet" href="plan.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <meta
+      name="description"
+      content="Choose your SimpleTCF plan and start training with real TCF Canada logic."
+    />
+  </head>
+
+  <body class="plans page--light">
+    <!-- Header -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
+            <li>
+              <a href="/index.html#contact-section" class="quiz--nav__link">Contact</a>
+            </li>
+
+            <!-- ✅ Auth-controlled nav item -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="plans-main">
+      <!-- HERO PHOTO -->
+      <section
+        class="hero hero--photo"
+        style="--hero-bg: url(/public/general/SimpleTCFPlans.jpg)"
+      >
+        <div class="hero__overlay"></div>
+      </section>
+
+      <div class="plan-container">
+        <!-- DESCRIPTION -->
+        <section class="section section--narrow" id="description">
+          <div class="hero__center">
+            <h1 class="hero__title">Plans.</h1>
+          </div>
+
+          <p class="section__text">
+            SimpleTCF was created to help you pass the TCF Canada by focusing on
+            what truly matters: exam structure, question weight, and
+            CLB-oriented strategy.
+          </p>
+
+          <p class="section__text">
+            The exam is not about perfect French. It’s about understanding how
+            the test works and training your brain to recognize patterns and
+            avoid traps.
+          </p>
+
+          <p class="section__text">
+            Train with a large pool of exam-style questions and focus on the
+            ones you find most challenging. Real-time data shows exactly where
+            you’re losing points, so you can improve faster and more
+            efficiently.
+          </p>
+        </section>
+
+        <!-- WHAT YOU GET -->
+        <section class="section" id="features">
+          <div class="section__header">
+            <h2 class="section__title">What you’ll find inside SimpleTCF</h2>
+            <p class="section__subtitle">
+              Everything is designed to maximize your score — not overwhelm you.
+            </p>
+          </div>
+
+          <div class="features-grid">
+            <div class="feature-card">
+              <h3>Real exam structure</h3>
+              <p>
+                Listening and Reading focused on learning, preparing you to
+                achieve your CLB7+.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h3>Weight-based strategy</h3>
+              <p>
+                Train high-impact questions first and learn where most
+                candidates lose points.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h3>Progress tracking</h3>
+              <p>
+                Track correct ✅ and wrong ❌ answers and identify weak areas
+                instantly.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h3>Writing guidance</h3>
+              <p>
+                Structured support for Expression Écrite with exam-style
+                expectations.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h3>Real test simulations</h3>
+              <p>
+                Full exams with CLB-based scoring so you know exactly where you
+                stand.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h3>Focused practice</h3>
+              <p>No random exercises — only what actually helps you pass.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- PLANS -->
+        <section class="section" id="plans">
+          <div class="section__header">
+            <h2 class="section__title">Choose your plan</h2>
+            <p class="section__subtitle">Pick what fits your timeline.</p>
+          </div>
+
+          <!-- ✅ Carousel wrapper -->
+          <div class="plan-carousel" aria-label="Plans carousel">
+            <button
+              class="plan-carousel__btn plan-carousel__btn--prev"
+              type="button"
+              aria-label="Previous plans"
+              data-dir="-1"
+            >
+              ‹
+            </button>
+
+            <div class="plan-carousel__viewport" id="planCarouselViewport">
+              <div class="plan-grid plan-grid--carousel" id="planCarouselTrack">
+                <!-- ✅ FREE TIER -->
+                <article class="plan" data-badge="Free">
+                  <h3>Free Tier</h3>
+                  <p class="plan__desc">Try SimpleTCF for free</p>
+
+                  <div class="plan__price">$0<span>/free</span></div>
+
+                  <ul>
+                    <li>15 Listening questions</li>
+                    <li>15 Reading questions</li>
+                    <li>3 Writing prompts (templates only)</li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--full start-free-btn"
+                    data-plan="Free"
+                    data-price="0"
+                    data-duration="Free"
+                  >
+                    Start free
+                  </button>
+                </article>
+
+                <!-- Quick -->
+                <article class="plan" data-badge="Bronze">
+                  <h3>Quick Study</h3>
+                  <p class="plan__desc">Last-minute preparation</p>
+
+                  <div class="plan__price">$9.99<span></span></div>
+
+                  <ul>
+                    <li><strong>Listening & Reading practice</strong></li>
+                    <li><strong>Weight-based questions</strong></li>
+                    <li><strong>10 days access</strong></li>
+                    <li style="text-decoration: line-through">
+                      Full Real Test simulations
+                    </li>
+                    <li style="text-decoration: line-through">
+                      “Deserves Attention” mode
+                    </li>
+                    <li style="text-decoration: line-through">
+                      Progress tracking over time
+                    </li>
+                  </ul>
+
+                  <a
+                    href="/checkout.html"
+                    class="btn btn--ghost btn--full price__cta"
+                    data-price="9.99"
+                    data-duration="10 days"
+                    data-badge="Bronze"
+                  >
+                    Choose plan
+                  </a>
+                </article>
+
+                <!-- 30-Day -->
+                <article class="plan plan--featured" data-badge="Silver">
+                  <svg
+                    class="plan-border"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      class="plan-border__rect"
+                      x="1"
+                      y="1"
+                      width="98"
+                      height="98"
+                      rx="6"
+                      ry="6"
+                    ></rect>
+                  </svg>
+
+                  <div class="badge__container">
+                    <div class="plan__badge">Most Popular</div>
+                  </div>
+
+                  <h3>30-Day Intensive</h3>
+                  <p class="plan__desc">Best for CLB 7–8</p>
+
+                  <div class="plan__price">$19.99<span></span></div>
+
+                  <ul>
+                    <li><strong>Listening & Reading practice</strong></li>
+                    <li><strong>Weight-based questions</strong></li>
+                    <li><strong>30 days access</strong></li>
+                    <li><strong>Full Real Test simulations</strong></li>
+                    <li><strong>“Deserves Attention” mode</strong></li>
+                    <li><strong>Progress tracking over time</strong></li>
+                  </ul>
+
+                  <a
+                    href="/checkout.html"
+                    class="btn btn--primary btn--full price__cta"
+                    data-price="19.99"
+                    data-duration="30 days"
+                    data-badge="Silver"
+                  >
+                    Choose plan
+                  </a>
+                </article>
+
+                <!-- Full -->
+                <article class="plan" data-badge="Gold">
+                  <h3>Full Preparation</h3>
+                  <p class="plan__desc">Maximum confidence</p>
+
+                  <div class="plan__price">$34.99<span></span></div>
+
+                  <ul>
+                    <li><strong>Listening & Reading practice</strong></li>
+                    <li><strong>Weight-based questions</strong></li>
+                    <li><strong>60 days access</strong></li>
+                    <li><strong>Full Real Test simulations</strong></li>
+                    <li><strong>“Deserves Attention” mode</strong></li>
+                    <li><strong>Progress tracking over time</strong></li>
+                  </ul>
+
+                  <a
+                    href="/checkout.html"
+                    class="btn btn--ghost btn--full price__cta"
+                    data-price="34.99"
+                    data-duration="60 days"
+                    data-badge="Gold"
+                  >
+                    Choose plan
+                  </a>
+                </article>
+              </div>
+            </div>
+
+            <button
+              class="plan-carousel__btn plan-carousel__btn--next"
+              type="button"
+              aria-label="Next plans"
+              data-dir="1"
+            >
+              ›
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="plan.js"></script>
+  </body>
+</html>

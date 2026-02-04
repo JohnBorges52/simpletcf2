@@ -1,0 +1,839 @@
+/* ===========================
+   PROFILE PAGE (scoped)
+   =========================== */
+
+.profile-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: calc(var(--quiz-header-height, 70px) + 20px);
+  padding-inline: 20px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-card {
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.profile-user {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 22px;
+  background: #f8fafc;
+}
+
+.profile-name {
+  font-weight: 900;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.profile-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 0;
+}
+
+.profile-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-sidebtn {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 16px;
+  font-family: Montserrat;
+}
+
+.profile-sidebtn:hover {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.profile-sidebtn[aria-current="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: Montserrat;
+  font-weight: 300;
+}
+
+.profile-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.profile-btn:hover {
+  background: #f8fafc;
+  font-weight: 900;
+}
+
+
+
+.profile-btn.primary:hover {
+  filter: brightness(0.97);
+}
+
+.profile-hidden {
+  display: none !important;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profile-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .profile-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.profile-kpi {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: #fff;
+}
+
+.profile-kpi .big {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.profile-kpi .lbl {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pill {
+  display: inline-flex;
+  padding: 12px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.pill-green {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.account-info {
+  display: grid;
+  gap: 8px;
+}
+
+/* ===========================
+   ACCOUNT EDIT UI
+   =========================== */
+
+.account-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: #fff;
+}
+
+.account-row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  padding: 20px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 700px) {
+  .account-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.account-label {
+  font-weight: 900;
+}
+
+.account-field {
+  display: grid;
+  gap: 6px;
+}
+
+.account-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 12px;
+  font-weight: 500;
+  outline: none;
+  background: #fff;
+}
+
+.account-input:disabled {
+  background: #f8fafc;
+  color: #0b0f17;
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.account-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.account-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.account-saved {
+  align-self: center;
+}
+
+.reset-btn {
+  background-color: #65a0d7;
+  color: white;
+  font-size: 16px;
+  font-weight: 400;
+  width: fit-content;
+}
+
+.reset-btn a {
+  color: white;
+  text-decoration: none;
+}
+
+.reset-btn:hover {
+  background-color: #2183de;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ===========================
+   REAL TESTS PLACEHOLDHERS
+   =========================== */
+
+.section-card {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: #fff;
+}
+
+.section-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+  background: #fff;
+}
+
+.profile-table th,
+.profile-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  font-size: 13px;
+  text-align: center;
+  /* ✅ default: center for middle columns */
+}
+
+/* ✅ First column: left */
+.profile-table th:first-child,
+.profile-table td:first-child {
+  text-align: left;
+}
+
+/* ✅ Last column: right */
+.profile-table th:last-child,
+.profile-table td:last-child {
+  text-align: right;
+  /* white-space: nowrap; */
+  /* keeps action button from wrapping weirdly */
+}
+
+.profile-table th {
+  background: #f8fafc;
+  font-weight: 900;
+}
+
+
+
+.profile-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rt-actions {
+  margin-top: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* If your action button uses this class, keep it compact and aligned */
+.review-btn {
+  font-weight: 400;
+  display: inline-flex;
+  width: fit-content;
+  font-size: 14px;
+}
+
+
+
+/* ===========================
+   MY ORDERS PLACEHOLDERS
+   =========================== */
+
+.orders-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 12px;
+  color: #64748b;
+  /* slate-ish */
+}
+
+/* Alignments like your screenshot */
+.orders-table th:first-child,
+.orders-table td:first-child {
+  text-align: left;
+}
+
+.orders-table th:nth-child(2),
+.orders-table td:nth-child(2),
+.orders-table th:nth-child(4),
+.orders-table td:nth-child(4) {
+  text-align: center;
+}
+
+.orders-table th:nth-child(5),
+.orders-table td:nth-child(5) {
+  text-align: center;
+}
+
+.orders-table th:last-child,
+.orders-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Order ID style */
+.order-id {
+  font-weight: 900;
+  color: #0b3b2b;
+}
+
+/* Status pills (match screenshot vibe) */
+.pill-status {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px
+}
+
+.pill-ongoing {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #065f46;
+}
+
+.pill-expired {
+  background: rgba(239, 68, 68, 0.28);
+  /* red */
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #991b1b;
+}
+
+.orders-actions {
+  margin-top: 24px;
+  /* ⬅ mais espaço da tabela */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* ⬅ tudo vai para a direita */
+  gap: 16px;
+  /* ⬅ espaço entre botão e mensagem */
+}
+
+/* ===========================
+   MY PROGRESS PLACEHOLDERS
+   =========================== */
+
+.progress-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .progress-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.progress-toggle {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.progress-toggle-btn {
+  border: 1px solid transparent;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 16px
+}
+
+.progress-toggle-btn:hover {
+  font-weight: 900;
+  background: rgb(125, 166, 232, 0.15);
+
+}
+
+.progress-toggle-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.progress-canvas {
+  width: 100%;
+  height: 260px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.progress-legend {
+  margin-top: 8px;
+}
+
+.weight-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.weight-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 60px;
+  gap: 10px;
+  align-items: center;
+}
+
+.weight-label {
+  font-weight: 900;
+}
+
+.weight-track {
+  height: 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.weight-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.weight-val {
+  text-align: right;
+  font-weight: 900;
+}
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .focus-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.focus-box {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.focus-title {
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.focus-list {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.next-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.next-step {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.next-step-title {
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.progress-note {
+  margin-top: 10px;
+}
+
+.chart-wrap {
+  position: relative;
+}
+
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -115%);
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  font-weight: 900;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.weight-fill {
+  transition: width 250ms ease, background 250ms ease;
+}
+
+/* -------------------------------------------
+   Practice dropdown (desktop hover + mobile click)
+-------------------------------------------- */
+
+.quiz--nav__dropdown {
+  position: relative;
+}
+
+.quiz--nav__dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz--nav__caret {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -2px;
+  opacity: 0.8;
+}
+
+/* dropdown panel */
+.quiz--nav__dropdown-menu {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 280px;
+  justify-content: center;
+
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+
+  z-index: 9999;
+}
+
+/* items inside dropdown */
+.quiz--nav__dropdown-menu>li>a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.quiz--nav__dropdown-menu>li>a:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* show on hover/focus (desktop) */
+.quiz--nav__dropdown:hover .quiz--nav__dropdown-menu,
+.quiz--nav__dropdown:focus-within .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* -------------------------------------------
+   Mobile behavior: when header has open-nav,
+   dropdown becomes "inline" and opens via class.
+-------------------------------------------- */
+
+/* If your mobile menu is vertical when .open-nav is on header */
+.quiz--main_h.open-nav .quiz--nav__dropdown-menu {
+  position: static;
+  min-width: auto;
+  box-shadow: none;
+  border-radius: 12px;
+  margin-top: 8px;
+
+  /* keep hidden by default on mobile */
+  opacity: 0;
+  visibility: hidden;
+  transform: none;
+  height: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  border: 0;
+}
+
+/* opened state (JS will toggle this class on the li) */
+.quiz--main_h.open-nav .quiz--nav__dropdown.is-open .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  padding: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+/* rotate caret when open */
+.quiz--nav__dropdown.is-open .quiz--nav__caret {
+  transform: rotate(225deg);
+}
+
+/* -------------------------------------------
+   Practice dropdown (desktop hover + mobile click)
+-------------------------------------------- */
+
+.quiz--nav__dropdown {
+  position: relative;
+}
+
+.quiz--nav__dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz--nav__caret {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -2px;
+  opacity: 0.8;
+}
+
+/* dropdown panel */
+.quiz--nav__dropdown-menu {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 280px;
+  justify-content: center;
+
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+
+  z-index: 9999;
+}
+
+/* items inside dropdown */
+.quiz--nav__dropdown-menu>li>a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+
+.quiz--nav__dropdown-menu>li>a:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* show on hover/focus (desktop) */
+.quiz--nav__dropdown:hover .quiz--nav__dropdown-menu,
+.quiz--nav__dropdown:focus-within .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* -------------------------------------------
+   Mobile behavior: when header has open-nav,
+   dropdown becomes "inline" and opens via class.
+-------------------------------------------- */
+
+/* If your mobile menu is vertical when .open-nav is on header */
+.quiz--main_h.open-nav .quiz--nav__dropdown-menu {
+  position: static;
+  min-width: auto;
+  box-shadow: none;
+  border-radius: 12px;
+  margin-top: 8px;
+
+  /* keep hidden by default on mobile */
+  opacity: 0;
+  visibility: hidden;
+  transform: none;
+  height: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  border: 0;
+}
+
+/* opened state (JS will toggle this class on the li) */
+.quiz--main_h.open-nav .quiz--nav__dropdown.is-open .quiz--nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  padding: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+/* rotate caret when open */
+.quiz--nav__dropdown.is-open .quiz--nav__caret {
+  transform: rotate(225deg);
+}

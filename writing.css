@@ -1,0 +1,481 @@
+/* writing.css — only additions specific to Writing page */
+
+.quiz--page {
+  padding-top: 92px;
+  /* room for header */
+  padding-bottom: 40px;
+}
+
+.quiz--container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* Hero */
+.quiz--hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 18px;
+}
+
+.quiz--title {
+  margin: 0;
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.quiz--subtitle {
+  margin: 8px 0 0;
+  max-width: 68ch;
+  opacity: 0.9;
+  line-height: 1.45;
+}
+
+/* Segmented control */
+.quiz--segmented {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.quiz--segBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  opacity: 0.9;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+.quiz--segBtn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.quiz--segBtn.is-active {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  opacity: 1;
+}
+
+/* Buttons */
+.quiz--btn {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 120ms ease, background 120ms ease, border 120ms ease;
+}
+
+.quiz--btn:hover {
+  transform: translateY(-1px);
+  background: #7e66f5;
+}
+
+.quiz--btnPrimary {
+  background: rgba(59, 130, 246, 0.9);
+  border-color: rgb(45, 110, 215, 0.95);
+  color: #fff;
+}
+
+/* Layout grid (✅ wider left, narrower right) */
+.quiz--grid {
+  display: grid;
+  grid-template-columns: 2.4fr 0.6fr;
+  /* CHANGED */
+  gap: 16px;
+  align-items: start;
+}
+
+/* Card */
+.quiz--card {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 18px;
+  padding: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.08);
+}
+
+.quiz--cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.quiz--cardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.quiz--rightMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Badge + limit pill */
+.quiz--badge {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.quiz--lenPill {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(255, 255, 255, 0.7);
+  min-width: 88px;
+  text-align: center;
+}
+
+/* Range colors (soft) */
+.quiz--lenPill.is-ok {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.10);
+}
+
+.quiz--lenPill.is-over {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.10);
+}
+
+.quiz--rangeHint {
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.quiz--rangeHint.is-ok {
+  color: rgba(37, 99, 235, 0.95);
+}
+
+.quiz--rangeHint.is-over {
+  color: rgba(220, 38, 38, 0.95);
+}
+
+.quiz--divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.35);
+  margin: 12px 0;
+}
+
+.gerate-span {
+  font-weight: 500;
+}
+
+/* Topic box */
+.quiz--topicBox {
+  padding: 12px 12px;
+  border-radius: 14px;
+  font-weight: 600;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  line-height: 1.5;
+  min-height: 64px;
+}
+
+/* Editor header */
+.quiz--editorHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.quiz--editorTitle {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.quiz--editorMeta {
+  font-size: 13px;
+  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz--dot {
+  opacity: 0.7;
+}
+
+/* Textarea (optional: slightly taller) */
+.quiz--textarea {
+  width: 100%;
+  min-height: 420px;
+  /* CHANGED (was 360) */
+  resize: vertical;
+  margin-top: 10px;
+  padding: 14px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.quiz--textarea:focus {
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.quiz--hint {
+  margin-top: 10px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Toast */
+.quiz--toast {
+  margin-top: 10px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 160ms ease, transform 160ms ease, padding 160ms ease;
+}
+
+.quiz--toast.is-show {
+  opacity: 1;
+  transform: translateY(0);
+  padding: 10px 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* Side panel */
+.quiz--side {
+  position: sticky;
+  top: 92px;
+}
+
+/* CAPS toggle */
+.quiz--capsToggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.quiz--capsBtn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 12px;
+  opacity: 0.85;
+  font-family: Montserrat;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+.quiz--capsBtn:hover {
+  transform: translateY(-1px);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.quiz--capsBtn.is-active {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* Special characters: ✅ 3 columns */
+.quiz--charsWrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* CHANGED */
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quiz--charBtn {
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 15px;
+  /* CHANGED */
+  font-weight: 100;
+  line-height: 1.6;
+  /* CHANGED */
+  transition: transform 120ms ease, border 120ms ease;
+}
+
+.quiz--charBtn:hover {
+  transform: translateY(-1px);
+  font-weight: 600;
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 920px) {
+  .quiz--hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .quiz--heroActions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .quiz--grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quiz--side {
+    position: static;
+  }
+
+  /* On mobile you can keep 6-8 columns if you want, but you asked for 3 columns, so keep 3 */
+  .quiz--charsWrap {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Textarea word-range states */
+.quiz--textarea.is-ok {
+  border-color: rgba(59, 130, 246, 0.75);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.quiz--textarea.is-over {
+  border-color: rgba(239, 68, 68, 0.75);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+/* =========================
+   Section 3 documents UI
+========================= */
+
+.quiz--docs {
+  margin-bottom: 12px;
+}
+
+.quiz--docsHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.quiz--docsMeta {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* ✅ FORCE docs stacked ALWAYS */
+.quiz--docsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.quiz--docCard {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 12px;
+}
+
+.quiz--docHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quiz--docBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.10);
+}
+
+.quiz--docBody {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: rgba(15, 23, 42, 0.92);
+  background: rgba(248, 250, 252, 0.7);
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 120px;
+}
+
+/* =========================================================
+   Fix hero actions layout between 921px and 1149px
+   (prevents the Generate button from dropping weirdly)
+========================================================= */
+@media (min-width: 921px) and (max-width: 1149px) {
+  .quiz--hero {
+    align-items: flex-start; /* keep everything aligned at the top */
+  }
+
+  .quiz--heroActions {
+    display: flex;
+    flex-direction: column;   /* stack segmented + button cleanly */
+    align-items: flex-end;    /* keep them right-aligned */
+    gap: 10px;
+    min-width: 320px;         /* enough room so it doesn't wrap awkwardly */
+  }
+
+  /* keep segmented control from stretching weirdly */
+  .quiz--segmented {
+    width: fit-content;
+    justify-content: flex-end;
+  }
+
+  /* make button consistent (no weird shrink/wrap) */
+  #btnGenerateTopic {
+    width: fit-content;
+    white-space: nowrap;
+  }
+}

@@ -1,16 +1,491 @@
-<!DOCTYPE html>
-<html>
+<!-- index.html (FULL) -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1885ed" />
+    <title>SimpleTCF — Homepage</title>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
-</head>
+    <link rel="shortcut icon" href="https://image.ibb.co/fOur3b/favicon.png" />
+    <link rel="stylesheet" href="styles.css" />
 
-<body>
-  Hello world
-  <script src="script.js"></script>
-</body>
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
 
+  <body>
+    <!-- Header -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
+            <li>
+              <a href="#contact-section" class="quiz--nav__link">Contact</a>
+            </li>
+
+            <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="hero sec01">
+      <h1>
+        <span>Real test questions for you to study</span><br />
+        Fastest way to get your CLB7!
+      </h1>
+    </div>
+
+    <!-- Pricing -->
+    <section class="sect sect--padding-bottom sec02">
+      <div class="container">
+        <header class="section-head">
+          <h3 class="section-head__title">Pricing</h3>
+          <p class="section-head__sub">
+            Select the option that best fits your needs?
+          </p>
+        </header>
+
+        <!-- ✅ Pricing carousel (plan.html style: 3 cards visible on desktop) -->
+        <!-- ✅ Pricing carousel (plan.html style: 3 cards visible on desktop) -->
+        <div class="pricing-carousel" aria-roledescription="carousel">
+          <div class="pricing-carousel__viewport" id="pricingViewport">
+            <!-- Card 0 (FREE) -->
+            <article class="price">
+              <div class="price__img price__img--1" aria-hidden="true"></div>
+              <h4 class="price__title">Free Tier</h4>
+              <p class="price__people">Limited access</p>
+
+              <p class="price__discount">
+                <span class="price__dollar">$</span>0<span class="price__unit"
+                  >.00</span
+                >
+              </p>
+              <p class="price__strike">$0.00</p>
+
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li>15 Listening questions</li>
+                <li>15 Reading questions</li>
+                <li>3 Writing prompts (templates only)</li>
+              </ul>
+
+              <a
+                class="btn btn--blue price__cta"
+                href="/checkout.html"
+                data-duration="Free"
+                data-price="0"
+                data-badge="Free"
+                data-requires-auth="true"
+                >Start free</a
+              >
+            </article>
+
+            <!-- Card 1 -->
+            <article class="price">
+              <!-- Quick Study (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--1" aria-hidden="true"></div>
+              <h4 class="price__title">Quick Study</h4>
+              <p class="price__people">10 Days</p>
+              <p class="price__discount">
+                <span class="price__dollar">$</span>9<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">$15.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>10 days access</strong></li>
+                <li style="text-decoration: line-through">
+                  Full Real Test simulations
+                </li>
+                <li style="text-decoration: line-through">
+                  “Deserves Attention” mode
+                </li>
+                <li style="text-decoration: line-through">
+                  Progress tracking over time
+                </li>
+              </ul>
+              <a
+                class="btn btn--purple price__cta"
+                href="/checkout.html"
+                data-duration="10 Days"
+                data-price="9.99"
+                data-badge="Bronze"
+                >Start now</a
+              >
+            </article>
+
+            <!-- Card 2 -->
+            <article class="price gradient-border">
+              <!-- 30 days (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--2" aria-hidden="true"></div>
+              <h4 class="price__title">My test is coming up!</h4>
+              <p class="price__people">30 days</p>
+              <p class="price__discount">
+                <span class="price__dollar">$</span>19<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">$30.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>30 days access</strong></li>
+                <li><strong>Full Real Test simulations</strong></li>
+                <li><strong>“Deserves Attention” mode</strong></li>
+                <li><strong>Progress tracking over time</strong></li>
+              </ul>
+              <a
+                class="btn btn--violet price__cta"
+                href="/checkout.html"
+                data-duration="30 Days"
+                data-price="19.99"
+                data-badge="Silver"
+                >Start now</a
+              >
+              <p class="price__tagline">⭐ Most Popular!</p>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="price">
+              <!-- 60 days (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--3" aria-hidden="true"></div>
+              <h4 class="price__title">I will get CLB7!</h4>
+              <p class="price__people">60 days</p>
+              <p class="price__discount">
+                <span class="price__dollar">$</span>34<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">$50.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>60 days access</strong></li>
+                <li><strong>Full Real Test simulations</strong></li>
+                <li><strong>“Deserves Attention” mode</strong></li>
+                <li><strong>Progress tracking over time</strong></li>
+              </ul>
+              <a
+                class="btn btn--blue price__cta"
+                href="/checkout.html"
+                data-duration="60 Days"
+                data-price="34.99"
+                data-badge="Gold"
+                >Start now</a
+              >
+            </article>
+          </div>
+
+          <div class="pricing-carousel__controls">
+            <button
+              class="carousel__btn"
+              type="button"
+              data-pricing-dir="prev"
+              aria-label="Previous"
+            >
+              ‹
+            </button>
+            <div
+              class="carousel__dots"
+              id="pricingDots"
+              aria-label="Pricing slides"
+            ></div>
+            <button
+              class="carousel__btn"
+              type="button"
+              data-pricing-dir="next"
+              aria-label="Next"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Success stories (Carousel) -->
+    <section id="success-section" class="sect sect--white sec03">
+      <div class="container">
+        <header class="section-head">
+          <h3 class="section-head__title">Success Stories</h3>
+          <p class="section-head__sub">
+            People that got the <span class="muted2">(CLB 7)</span> you need.
+          </p>
+        </header>
+
+        <div class="carousel" aria-roledescription="carousel">
+          <div class="carousel__viewport" role="group" aria-live="polite">
+            <article class="card">
+              <div class="card__content">
+                <img
+                  class="card__logo"
+                  src="/public/general/user1.png"
+                  alt="Aisha"
+                />
+                <h4 class="card__name">Aisha Kumar</h4>
+                <p class="card__text">
+                  I had been struggling for months to improve my French
+                  listening skills before discovering SimpleTCF. After three
+                  weeks of practice — CLB 7!
+                </p>
+              </div>
+              <div class="card__meta">
+                <div class="card__avatar" aria-hidden="true"></div>
+                <p class="card__person">Aisha Kumar</p>
+                <p class="card__role">Kolkata - India</p>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card__content">
+                <img
+                  class="card__logo"
+                  src="/public/general/user3.png"
+                  alt="Diego"
+                />
+                <h4 class="card__name">Diego Alvarez</h4>
+                <p class="card__text">
+                  SimpleTCF changed my approach completely. The exam felt like
+                  just another practice session — Result: CLB 7.
+                </p>
+              </div>
+              <div class="card__meta">
+                <div class="card__avatar" aria-hidden="true"></div>
+                <p class="card__person">Diego Alvarez</p>
+                <p class="card__role">Tijuana - Mexico</p>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card__content">
+                <img
+                  class="card__logo"
+                  src="/public/general/user2.png"
+                  alt="Maria"
+                />
+                <h4 class="card__name">Maria Santos</h4>
+                <p class="card__text">
+                  Avant de découvrir SimpleTCF, je pensais que le TCF Canada
+                  était impossible à réussir. En un mois, j’ai atteint le niveau
+                  CLB 7 !
+                </p>
+              </div>
+              <div class="card__meta">
+                <div class="card__avatar" aria-hidden="true"></div>
+                <p class="card__person">Maria Santos</p>
+                <p class="card__role">Legazpi City - Philippines</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="carousel__controls">
+            <button
+              class="carousel__btn"
+              data-dir="prev"
+              aria-label="Previous slide"
+              type="button"
+            >
+              ‹
+            </button>
+            <div
+              class="carousel__dots"
+              role="tablist"
+              aria-label="Slides"
+            ></div>
+            <button
+              class="carousel__btn"
+              data-dir="next"
+              aria-label="Next slide"
+              type="button"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact-section" class="sect sect--padding-bottom sec04">
+      <div class="container container-contact">
+        <header class="section-head">
+          <h3 class="section-head__title">Contact Us</h3>
+          <p class="section-head__sub">Feel free to ask any questions</p>
+        </header>
+
+        <div class="grid grid--2">
+          <div>
+            <a class="brand-tile" href="#">
+              <img src="https://image.ibb.co/kcVou6/path3000.png" alt="" />
+              <h4>Simple<span class="muted">.TCF</span></h4>
+            </a>
+            <p class="contact-line">
+              tel. <a href="tel:+1234567890">+1 234 567 890</a>
+            </p>
+            <p class="contact-line">
+              email. <a href="mailto:info@simpletcf.com">info@simpletcf.com</a>
+            </p>
+          </div>
+
+          <form class="form" id="contact" novalidate>
+            <label class="field">
+              <span class="field__label">Topic*</span>
+              <select class="field__control">
+                <option value="" selected placeholder="Choose a topic"></option>
+                <option>General Inquiry</option>
+                <option>Success Stories</option>
+                <option>Feedback</option>
+              </select>
+            </label>
+
+            <div class="grid grid--2 gap">
+              <label class="field">
+                <span class="field__label">Name*</span>
+                <input class="field__control" type="text" required />
+              </label>
+              <label class="field">
+                <span class="field__label">Surname</span>
+                <input class="field__control" type="text" />
+              </label>
+            </div>
+
+            <div class="grid grid--2 gap">
+              <label class="field">
+                <span class="field__label">Email*</span>
+                <input class="field__control" type="email" required />
+              </label>
+              <label class="field">
+                <span class="field__label">Phone</span>
+                <input class="field__control" type="tel" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Your message*</span>
+              <textarea
+                class="field__control field__control--textarea"
+                required
+              ></textarea>
+            </label>
+
+            <div class="form__actions">
+              <button
+                id="submit-button"
+                class="submit-button"
+                type="button"
+              ></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container footer__container">
+        <div class="footer__brand">
+          <img
+            class="footer__img"
+            src="https://image.ibb.co/kcVou6/path3000.png"
+            alt=""
+          />
+          <h4 class="footer__title">
+            Simple<span class="footer__light">.TCF</span>
+          </h4>
+        </div>
+
+        <nav class="footer__social" aria-label="Social">
+          <a class="footer__social-l" href="#" aria-label="Twitter">T</a>
+          <a class="footer__social-l" href="#" aria-label="Facebook">F</a>
+          <a class="footer__social-l" href="#" aria-label="LinkedIn">In</a>
+        </nav>
+      </div>
+    </footer>
+
+    <!-- Your existing scripts -->
+    <script type="module" src="script.js"></script>
+    <script type="module" src="config.js"></script>
+    <script type="module" src="checkout.js"></script>
+
+
+  </body>
 </html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TCF Audio Practice</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta
+      name="description"
+      content="Practice TCF audio questions with weights, progress tracking, and transcripts."
+    />
+  </head>
+
+  <body>
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <a href="/plan.html" class="quiz--nav__link">Plans</a>
+            </li>
+            <li>
+              <a href="#contact-section" class="quiz--nav__link">Contact</a>
+            </li>
+
+            <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <section aria-labelledby="filters-title" class="controls">
+      <h2 id="filters-title" class="hidden">Filters</h2>
+
+      <label class="toggle-row" for="onlyUnansweredChk">
+        <input type="checkbox" id="onlyUnansweredChk" />
+        Never responded questions only
+      </label>
+
+      <div class="toolbar" role="toolbar" aria-label="Question weight filters">
+        <button
+          type="button"
+          class="weight-btn"
+          data-all="1"
+          id="allBtn"
+          onclick="filterQuestions('all')"
+        >
+          All Questions
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(33)">
+          Weight-33
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(26)">
+          Weight-26
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(21)">
+          Weight-21
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(15)">
+          Weight-15
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(9)">
+          Weight-09
+        </button>
+        <button type="button" class="weight-btn" onclick="filterQuestions(3)">
+          Weight-03
+        </button>
+
+        <button type="button" id="deservesBtn" class="deserves-btn">
+          📚 Deserves Attention (0)
+        </button>
+
+        <button type="button" id="realTestBtn" class="realtest-btn">
+          🧪 Real Test
+        </button>
+      </div>
+    </section>
+
+    <div id="realTestLoading" class="hidden">
+      <div class="loading-backdrop" id="rtBackdrop"></div>
+      <div class="loading-card">
+        <button class="close-x" id="rtClose">✕</button>
+        <div class="spinner" id="rtSpinner"></div>
+        <p id="rtLoadingText">Loading test…</p>
+        <button id="startRealTestBtn" class="hidden">Start the test</button>
+      </div>
+    </div>
+
+    <section id="realTestContainer" class="hidden">
+      <div id="questionNav"></div>
+      <div class="test-controls">
+        <button id="finishRealTestBtn">Finish Test</button>
+      </div>
+    </section>
+
+    <main id="quiz" class="hidden quiz">
+      <div id="questionNumber" class="question-number"></div>
+      <div id="pictureContainer" class="picture hidden"></div>
+      <audio id="audio" class="audio" controls></audio>
+      <div id="alternatives" class="alternatives"></div>
+
+      <button id="confirmBtn" class="confirm-btn hidden">✅ Confirm</button>
+
+      <div class="buttons">
+        <button type="button" class="directionBtn" onclick="prevQuestion()">
+          ⏪ Previous
+        </button>
+        <button type="button" class="directionBtn" onclick="nextQuestion()">
+          Next ⏩
+        </button>
+      </div>
+
+      <p id="score" class="score"></p>
+
+      <div id="transcriptContainer" class="transcript">
+        <button type="button" id="transcriptBtn" onclick="loadTranscript()">
+          Transcript
+        </button>
+        <div id="transcriptText"></div>
+      </div>
+
+      <button id="statsToggleBtn" class="stats-btn" onclick="toggleStats()">
+        📊 Show Stats
+      </button>
+      <div id="statsGraph" class="stats-graph"></div>
+    </main>
+
+    <section id="realTestResults" class="hidden">
+      <div id="resultsHeader"></div>
+      <div id="clbTable"></div>
+      <div id="resultsDots"></div>
+      <div class="again-wrap">
+        <button id="againBtn">🔁 Do another Real Test</button>
+      </div>
+      <div id="allQuestionsReview"></div>
+    </section>
+
+    <div id="dayCountdown" class="countdown"></div>
+
+    <noscript>
+      <p><strong>JavaScript is required</strong> to run this practice app.</p>
+    </noscript>
+
+    <script src="app.js" defer></script>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="config.js"></script>
+  </body>
+</html>

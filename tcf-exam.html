@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TCF Canada Exam | SimpleTCF</title>
+
+    <!-- Your existing global styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="listening.css" />
+
+    <!-- Page-specific styles -->
+    <link rel="stylesheet" href="tcf-exam.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+
+  <body class="quiz--light page-fade">
+    <!-- Header (keep your existing structure/classes) -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+
+        <button
+          class="quiz--mobile-toggle"
+          id="navToggle"
+          aria-label="Toggle navigation"
+          aria-controls="site-nav"
+          aria-expanded="false"
+          type="button"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav id="site-nav" aria-label="Primary">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li>
+              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+            </li>
+            <li class="quiz--nav__item quiz--nav__dropdown">
+              <a
+                class="quiz--nav__link quiz--nav__dropdown-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Practice
+                <span class="quiz--nav__caret" aria-hidden="true"></span>
+              </a>
+
+              <ul class="quiz--nav__dropdown-menu" role="menu">
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/listening.html"
+                    class="quiz--nav__link"
+                    >Listening</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/reading.html"
+                    class="quiz--nav__link"
+                    >Reading</a
+                  >
+                </li>
+                <li role="none">
+                  <a
+                    role="menuitem"
+                    href="/writing.html"
+                    class="quiz--nav__link"
+                    >Writing</a
+                  >
+                </li>
+              </ul>
+            </li>
+
+            <li>
+              <a href="/plan.html" class="quiz--nav__link">Plans</a>
+            </li>
+            <li>
+              <a href="/index.html#contact-section" class="quiz--nav__link">Contact</a>
+            </li>
+
+            <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="tcf-page">
+      <!-- HERO -->
+      <section class="tcf-hero">
+        <h1 class="main-title">How the TCF Canada works</h1>
+        <p class="tcf-subtitle">
+          The TCF Canada (Test de Connaissance du Français pour le Canada) is an
+          official French-language proficiency test specifically designed for
+          immigration and citizenship applications to Canada. It is developed
+          and administered by France Éducation international and is officially
+          recognized by Immigration, Refugees and Citizenship Canada. The TCF
+          Canada is used to assess a candidate’s ability to communicate
+          effectively in French in everyday, professional, and social
+          situations. It evaluates four language skills through standardized
+          sections: </p>
+        
+
+          <ul class="tcf-hero-list">
+            <li style="list-style: none; color: #6d5f5a; "><strong>- Comprehension Orale</strong> (Listening)</li>
+            <li style="list-style: none; color: #6d5f5a;"><strong>- Compréhension Écrite</strong> (Reading)</li>
+            <li style="list-style: none; color: #6d5f5a;"><strong>- Expression Écrite</strong> (Writing)</li>
+            <li style="list-style: none; color: #6d5f5a;"><strong>- Expression Orale</strong> (Speaking)</li>
+          </ul>
+          <br />
+<p class="tcf-subtitle">
+          Each section is scored independently, and the results are converted
+          into CLB/NCLC levels (Canadian Language Benchmarks / Niveaux de
+          compétence linguistique canadiens). These levels are required by
+          Canadian immigration authorities to determine eligibility for programs
+          such as Express Entry, Permanent Residence, and Canadian Citizenship.
+        </p>
+</br
+        <div class="tcf-toc">
+          <a class="tcf-chip" href="#listening"
+            ><i class="fa-solid fa-headphones"></i> Listening</a
+          >
+          <a class="tcf-chip" href="#reading"
+            ><i class="fa-solid fa-book-open"></i> Reading</a
+          >
+          <a class="tcf-chip" href="#writing"
+            ><i class="fa-solid fa-pen-nib"></i> Writing</a
+          >
+          <a class="tcf-chip" href="#speaking">
+            <i class="fa-solid fa-microphone"></i> Speaking
+          </a>
+          <a class="tcf-chip" href="#scores"
+            ><i class="fa-solid fa-chart-simple"></i> Scores</a
+          >
+          
+        </div>
+      </section>
+
+      <!-- LISTENING -->
+      <section class="tcf-section" id="listening">
+        <div class="tcf-section__title">
+          <h2 class="main-title">
+            <i class="fa-solid fa-headphones"></i> Listening - Compréhension
+            orale
+          </h2>
+          <p class="tcf-subtitle">
+            The Listening section evaluates your ability to understand spoken
+            French in real-life situations. This includes conversations,
+            announcements, interviews, and short reports that you might hear at
+            work, in public places, or in the media. During the test, candidates listen to a series of audio recordings played only once. These recordings vary in length and complexity, ranging from short exchanges to longer monologues. After each audio, candidates must answer multiple-choice questions that test their understanding of the main idea, specific details, intentions of the speaker, and implied meaning.
+          </p>
+        </div>
+
+        <ul class="tcf-meta">
+          <li><i class="fa-regular fa-clock"></i> ~35 minutes</li>
+          <li><i class="fa-solid fa-list-check"></i> 39 questions</li>
+          <li><i class="fa-solid fa-check"></i> 1 correct answer each</li>
+        </ul>
+
+        <div class="tcf-callout">
+          <strong >Tip:</strong> Each question has a different weight, with more complex questions worth more points.
+        </div>
+
+        <table class="tcf-weight-table">
+          <thead>
+            <tr>
+              <th>Question Range</th>
+              <th>Points per Question</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Questions 1 – 4</td>
+              <td>3 points</td>
+            </tr>
+            <tr>
+              <td>Questions 5 – 10</td>
+              <td>9 points</td>
+            </tr>
+            <tr>
+              <td>Questions 11 – 19</td>
+              <td>15 points</td>
+            </tr>
+            <tr>
+              <td>Questions 20 – 29</td>
+              <td>21 points</td>
+            </tr>
+            <tr>
+              <td>Questions 30 – 35</td>
+              <td>26 points</td>
+            </tr>
+            <tr>
+              <td>Questions 36 – 39</td>
+              <td>33 points</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </section>
+
+
+      <!-- READING -->
+      <section class="tcf-section" id="reading">
+        <div class="tcf-section__title">
+          <h2 class="main-title"><i class="fa-solid fa-book-open"></i> Reading</h2>
+          <p class="tcf-subtitle">Candidates are presented with a variety of written texts, such as advertisements, emails, notices, articles, and short informational documents. Each text is followed by multiple-choice questions that assess comprehension of the main idea, specific details, vocabulary in context, and implicit meaning.</p>
+          <br />
+          <p>Multiple-choice questions based on written texts.</p>
+        </div>
+
+        <ul class="tcf-meta">
+          <li><i class="fa-regular fa-clock"></i> 60 minutes</li>
+          <li><i class="fa-solid fa-list-check"></i> 39 questions (MCQ)</li>
+          <li><i class="fa-solid fa-check"></i> 1 correct answer each</li>
+        </ul>
+
+        <div class="tcf-callout">
+          <strong>Tip:</strong> The same rule applies as in the Listening section: each question has a different weight, with more complex questions worth more points.
+        </div>
+        <table class="tcf-weight-table">
+          <thead>
+            <tr>
+              <th>Question Range</th>
+              <th>Points per Question</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Questions 1 – 4</td>
+              <td>3 points</td>
+            </tr>
+            <tr>
+              <td>Questions 5 – 10</td>
+              <td>9 points</td>
+            </tr>
+            <tr>
+              <td>Questions 11 – 19</td>
+              <td>15 points</td>
+            </tr>
+            <tr>
+              <td>Questions 20 – 29</td>
+              <td>21 points</td>
+            </tr>
+            <tr>
+              <td>Questions 30 – 35</td>
+              <td>26 points</td>
+            </tr>
+            <tr>
+              <td>Questions 36 – 39</td>
+              <td>33 points</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- WRITING -->
+      <section class="tcf-section" id="writing">
+        <div class="tcf-section__title">
+          <h2  class="main-title"><i class="fa-solid fa-pen-nib"></i> Writing</h2>
+          <p style="margin-left:14px;">The Writing section of the TCF Canada evaluates a candidate’s ability to express ideas clearly and accurately in written French. This part of the exam focuses on practical writing skills used in everyday, professional, and administrative situations.</p>
+        </div>
+        <ul class="tcf-meta">
+          <li><i class="fa-regular fa-clock"></i> 60 minutes</li>
+          <li><i class="fa-solid fa-list-check"></i> 3 Tasks</li>
+
+        </ul>
+
+        <div class="tcf-grid">
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 1 – Message</h3>
+            <p>
+              Write a short message describing, narrating, or explaining a
+              situation.
+            </p>
+            <div class="tcf-badge">60–120 words</div>
+          </article>
+
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 2 – Letter / Article</h3>
+            <p>
+              Write a longer text (often a letter or article) with structure and
+              clarity.
+            </p>
+            <div class="tcf-badge">120–150 words</div>
+          </article>
+
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 3 – Compare & Give Opinion</h3>
+            <p>
+              Compare viewpoints and clearly express your opinion with
+              connectors.
+            </p>
+            <div class="tcf-badge">120–180 words</div>
+          </article>
+        </div>
+
+        <div class="tcf-callout">
+          <strong>Attention!</strong> he keyboard does not include special characters, so you must click on each one when writing. Use the <a style="color: #0087ff; text-decoration: underline;" href="/writing">Simple.TCF writing session to practice.</a>
+        </div>
+        <div class="tcf-eval">
+          <h3 class="tcf-eval__title">
+            <i class="fa-solid fa-clipboard-check"></i>
+            How evaluators score your Writing
+          </h3>
+
+          <p class="tcf-eval__intro">
+            Your writing is graded using clear criteria. Examiners focus on how well you
+            communicate in French (not your opinions), and how effectively you complete
+            each task.
+          </p>
+
+          <ol class="tcf-eval__list">
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">1</span>
+                <strong>Task completion</strong>
+              </div>
+              <p>
+                Did you answer the prompt correctly and follow the instructions? This
+                includes respecting the format (email/message/article) and covering all
+                required points.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">2</span>
+                <strong>Clarity and organization</strong>
+              </div>
+              <p>
+                Are your ideas easy to follow? Examiners look for clear structure,
+                paragraphs, and connectors (for example: <em>Cependant</em>,
+                <em> Ensuite</em>, <em>De plus</em>).
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">3</span>
+                <strong>Grammar and spelling</strong>
+              </div>
+              <p>
+                Grammar, agreements, verb conjugation, and spelling matter. Small
+                mistakes are normal, but frequent errors that hurt understanding reduce
+                your score.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">4</span>
+                <strong>Vocabulary</strong>
+              </div>
+              <p>
+                Vocabulary should match the situation. You don’t need advanced words—
+                what matters is choosing the <strong>right</strong> words and using them
+                correctly.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">5</span>
+                <strong>Tone and register</strong>
+              </div>
+              <p>
+                Your tone should fit the context (formal vs informal). Using the wrong
+                register can lower your score even if your French is correct.
+              </p>
+            </li>
+          </ol>
+
+          <div class="tcf-callout">
+            <strong>Important:</strong> Each writing task is scored separately, and your
+            final result is converted into a CLB/NCLC level for Canadian immigration and
+            citizenship applications.
+          </div>
+        </div>
+
+       
+      </section>
+      <!-- SPEAKING -->
+      <section class="tcf-section" id="speaking">
+        <div class="tcf-section__title">
+          <h2  class="main-title">
+            <i class="fa-solid fa-microphone"></i>
+            Speaking – Expression orale
+          </h2>
+          <p>
+            The Speaking section of the TCF Canada evaluates your ability to
+            communicate clearly and naturally in spoken French. It focuses on how
+            well you can express ideas, interact with an examiner, and adapt your
+            speech to real-life situations.
+          </p>
+        </div>
+
+        <ul class="tcf-meta">
+          <li><i class="fa-regular fa-clock"></i> ~12 minutes</li>
+          <li><i class="fa-solid fa-list-check"></i> 3 tasks</li>
+          <li><i class="fa-solid fa-user-check"></i> Face to Face</li>
+        </ul>
+
+        <div class="tcf-grid">
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 1 – Directed interview</h3>
+            <p>
+              Answer simple questions about yourself, your daily life, and familiar
+              topics. This task evaluates basic interaction and clarity.
+            </p>
+            <div class="tcf-badge">~ 2–3 minutes</div>
+          </article>
+
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 2 – Role play</h3>
+            <p>
+              Take part in a short conversation where you must ask questions. (for example, requesting
+              information).
+            </p>
+            <div class="tcf-badge">~ 3:30 minutes</div>
+          </article>
+
+          <article class="tcf-card">
+            <h3 class="h3-style">Task 3 – Express an opinion</h3>
+            <p>
+              Present and justify your opinion on a given topic, compare ideas, and
+              use connectors to organize your speech.
+            </p>
+            <div class="tcf-badge">~ 4:30 minutes</div>
+          </article>
+        </div>
+
+        <div class="tcf-eval">
+          <h3 class="tcf-eval__title">
+            <i class="fa-solid fa-clipboard-check"></i>
+            How evaluators score your Speaking
+          </h3>
+
+          <ol class="tcf-eval__list">
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">1</span>
+                <strong>Task fulfillment</strong>
+              </div>
+              <p>
+                Did you respond correctly to the situation and complete the task?
+                Staying on topic is essential.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">2</span>
+                <strong>Fluency and coherence</strong>
+              </div>
+              <p>
+                Evaluators look at how smoothly you speak, how well your ideas are
+                connected, and how naturally your speech flows.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">3</span>
+                <strong>Pronunciation and intonation</strong>
+              </div>
+              <p>
+                Your pronunciation must be understandable. A foreign accent is fine
+                as long as it does not prevent comprehension.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">4</span>
+                <strong>Grammar and vocabulary</strong>
+              </div>
+              <p>
+                Evaluators assess sentence structure, verb tenses, and vocabulary
+                accuracy appropriate to your level.
+              </p>
+            </li>
+
+            <li class="tcf-eval__item">
+              <div class="tcf-eval__head">
+                <span class="tcf-eval__num">5</span>
+                <strong>Interaction</strong>
+              </div>
+              <p>
+                Your ability to listen, respond, ask questions, and adapt to the
+                examiner is an important part of the score.
+              </p>
+            </li>
+          </ol>
+
+          <div class="tcf-callout">
+            <strong>Tip:</strong> Speak clearly, stay calm, and focus on communicating
+            your ideas. Fluency and clarity matter more than perfect grammar.
+          </div>
+        </div>
+      </section>
+
+      <!-- SCORES / CTA -->
+      <section class="tcf-section score-section" id="scores">
+        <div class="tcf-section__title">
+          <h2  class="main-title"><i class="fa-solid fa-chart-simple"></i> Scores</h2>
+          <p>
+            Your final level is based on performance across sections. For
+            immigration, your results map to Canada’s NCLC levels.
+          </p>
+        </div>
+
+        <section class="tcf-section" id="nclc-table">
+          <h2>NCLC (CLB) Score Conversion – TCF Canada</h2>
+
+          <table class="tcf-weight-table">
+            <thead>
+              <tr>
+                <th>NCLC Level</th>
+                <th>Reading</th>
+                <th>Writing</th>
+                <th>Listening</th>
+                <th>Speaking</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>10</td>
+                <td>549–699</td>
+                <td>16–20</td>
+                <td>549–699</td>
+                <td>16–20</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>524–548</td>
+                <td>14–15</td>
+                <td>523–548</td>
+                <td>14–15</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>499–523</td>
+                <td>12–13</td>
+                <td>503–522</td>
+                <td>12–13</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>453–498</td>
+                <td>10–11</td>
+                <td>458–502</td>
+                <td>10–11</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>406–452</td>
+                <td>7–9</td>
+                <td>398–457</td>
+                <td>7–9</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>375–405</td>
+                <td>6</td>
+                <td>369–397</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>342–374</td>
+                <td>4–5</td>
+                <td>331–368</td>
+                <td>4–5</td>
+              </tr>
+            </tbody>
+          </table>
+      </section>
+
+    </main>
+
+    <!-- If you already have a shared auth nav script, keep it; otherwise use tcf-exam.js -->
+    <script src="tcf-exam.js"></script>
+  </body>
+</html>

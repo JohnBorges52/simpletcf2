@@ -1,0 +1,821 @@
+:root {
+  --bg: #fff;
+  --ink: #0f172a;
+  /* slate-900-ish */
+  --muted: #64748b;
+  /* slate-500 */
+  --line: #e5e7eb;
+  /* gray-200 */
+  --line-strong: #d1d5db;
+  /* gray-300 */
+  --brand: #2563eb;
+  /* blue-600 */
+  --brand-700: #1d4ed8;
+  /* blue-700 */
+  --brand-50: #eff6ff;
+  /* blue-50 */
+  --danger: #ef4444;
+  /* red-500 */
+  --card: #ffffff;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .1);
+  --container: 920px;
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  margin: 0
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--ink);
+  background: #f8fafc;
+}
+
+.checkout {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: var(--container);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Header */
+.card__header {
+  /* padding: 16px 24px; */
+  border-bottom: 1px solid var(--line);
+}
+
+.card__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back:hover {
+  color: var(--brand-700)
+}
+
+.back__icon {
+  display: block
+}
+
+.back__text {
+  font-size: .875rem
+}
+
+.signedin__hint {
+  color: var(--muted);
+  font-size: .875rem;
+  margin: 0 0 4px
+}
+
+.signedin__email {
+  margin: 0;
+  font-weight: 700;
+  color: #0b1220
+}
+
+/* Body */
+.card__body {
+  padding: 24px
+}
+
+.h2 {
+  margin: 0 0 16px;
+  font-size: 1.125rem
+}
+
+/* Brands */
+.brands {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 20px
+}
+
+.brands img {
+  height: 14px;
+  width: auto;
+  display: block
+}
+
+
+
+/* Selector (Card/PayPal) */
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* hide radios, keep them accessible to labels */
+.selector__radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.selector__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+
+.selector__option:hover {
+  border-color: var(--line-strong)
+}
+
+.selector__bullet {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selector__icon {
+  color: #475569
+}
+
+.selector__pp {
+  height: 20px;
+  width: auto;
+  display: block
+}
+
+.selector__label {
+  font-weight: 600
+}
+
+/* checked styles via sibling combinators */
+#pm-card:checked+label {
+  border-color: var(--brand);
+  background: var(--brand-50);
+}
+
+#pm-card:checked+label .selector__bullet {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+#pm-card:checked+label .selector__bullet::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 999px;
+}
+
+#pm-paypal:checked+label {
+  border-color: var(--brand);
+  background: var(--brand-50);
+}
+
+#pm-paypal:checked+label .selector__bullet {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+#pm-paypal:checked+label .selector__bullet::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 999px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  gap: 16px
+}
+
+.grid--2 {
+  grid-template-columns: 1fr
+}
+
+.grid__col--full {
+  grid-column: 1/-1
+}
+
+@media (min-width:768px) {
+  .grid--2 {
+    grid-template-columns: 1fr 1fr
+  }
+}
+
+/* Fields */
+.label {
+  display: block;
+  font-size: .875rem;
+  color: var(--muted);
+  margin-bottom: 6px
+}
+
+.labelrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px
+}
+
+.info {
+  color: #94a3b8
+}
+
+.field {
+  position: relative;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.field:focus-within {
+  border-color: var(--brand)
+}
+
+.field__input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  outline: 0;
+  font-size: 1rem;
+  color: var(--ink);
+  background: transparent;
+}
+
+.field--combo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.mini-card {
+  width: 32px;
+  height: 20px;
+  border-radius: 4px;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-card__chip {
+  width: 24px;
+  height: 12px;
+  border-radius: 2px;
+  background: #9ca3af;
+}
+
+/* Select */
+.field--select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 36px;
+}
+
+.field--select .chev {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Actions */
+.actions {
+  padding-top: 8px
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  transition: filter .2s, transform .05s;
+}
+
+.btn--primary {
+  background: var(--brand);
+  color: #fff
+}
+
+.btn--primary:hover {
+  filter: brightness(0.98)
+}
+
+.btn--primary:active {
+  transform: translateY(1px)
+}
+
+/* PayPal box */
+.form {
+  display: none
+}
+
+.form--card {
+  display: block
+}
+
+/* default */
+.ppbox {
+  background: var(--brand-50);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  border: 1px solid var(--line);
+}
+
+.ppbox__logo {
+  height: 48px;
+  width: auto;
+  display: block;
+  margin: 0 auto 16px
+}
+
+.ppbox__text {
+  margin: 0 0 16px;
+  color: #1f2937
+}
+
+/* Toggle visibility based on radio */
+#pm-card:checked~.forms .form--card {
+  display: block
+}
+
+#pm-card:not(:checked)~.forms .form--card {
+  display: none
+}
+
+#pm-paypal:checked~.forms .form--paypal {
+  display: block
+}
+
+.mini-card {
+  width: 40px;
+  height: 24px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mini-card img {
+  width: 30px;
+  height: auto;
+}
+
+.mini-card__chip {
+  width: 22px;
+  height: 12px;
+  border-radius: 2px;
+  background: #94a3b8;
+}
+
+.mini-card.has-logo .mini-card__chip {
+  display: none;
+}
+
+.order-summary-wrap {
+  padding: 24px 24px 0px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.order-summary-card {
+  width: 100%;
+  max-width: var(--order-summary-container);
+  background: var(--order-summary-card);
+  border: 1px solid var(--order-summary-line);
+  border-radius: var(--order-summary-radius);
+  box-shadow: var(--order-summary-shadow);
+  overflow: hidden;
+}
+
+.order-summary-card__header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--order-summary-line);
+}
+
+.order-summary-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.order-summary-card__body {
+  padding: 16px 24px 0px 24px;
+}
+
+.order-summary-block {
+  margin-bottom: 24px;
+}
+
+.order-summary-block--pkg {
+  margin-bottom: 20px;
+}
+
+.order-summary-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.order-summary-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.order-summary-icon__svg {
+  color: #475569;
+}
+
+.order-summary-gold {
+  color: #eab308;
+}
+
+.order-summary-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.order-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  /* Tailwind: py-1 px-3 */
+  border-radius: 9999px;
+  /* rounded-full */
+  font-size: 0.875rem;
+  /* text-sm */
+  font-weight: 500;
+  /* font-medium */
+  line-height: 1.25rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+/* --- GOLD (bg-yellow-100 text-yellow-800 border-yellow-200) --- */
+.order-summary-badge--gold {
+  background-color: #fef9c3;
+  /* bg-yellow-100 */
+  color: #854d0e;
+  /* text-yellow-800 */
+  border-color: #fef08a;
+  /* border-yellow-200 */
+}
+
+/* --- SILVER (gray tone similar to Tailwind) --- */
+.order-summary-badge--silver {
+  background-color: #f3f4f6;
+  /* bg-gray-100 */
+  color: #374151;
+  /* text-gray-700 */
+  border-color: #e5e7eb;
+  /* border-gray-200 */
+}
+
+/* --- BRONZE (amber tone) --- */
+.order-summary-badge--bronze {
+  background-color: #fde68a;
+  /* bg-amber-200 */
+  color: #78350f;
+  /* text-amber-900 */
+  border-color: #fcd34d;
+  /* border-amber-300 */
+}
+
+/* --- FREE (neutral gray tone) --- */
+.order-summary-badge--free {
+  background-color: #f3f4f6;
+  /* bg-gray-100 */
+  color: #1f2937;
+  /* text-gray-800 */
+  border-color: #e5e7eb;
+  /* border-gray-200 */
+}
+
+.order-summary-text {
+  margin: 0;
+  color: var(--order-summary-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.order-summary-block--breakdown {
+  border-top: 1px solid var(--order-summary-line);
+  padding-top: 16px;
+}
+
+.order-summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.order-summary-line--sep {
+  border-top: 1px solid #f3f4f6;
+  margin-top: 8px;
+}
+
+.order-summary-label {
+  color: var(--order-summary-muted);
+}
+
+.order-summary-value {
+  color: #111827;
+  font-weight: 600;
+}
+
+.order-summary-line--total {
+  border-top: 1px solid #f3f4f6;
+
+  margin-top: 12px;
+  padding-top: 14px;
+}
+
+.order-summary-total-label {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.order-summary-total-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--order-summary-brand);
+}
+
+.order-summary-info {
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--order-summary-brand-50);
+  border: 1px solid var(--order-summary-line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.order-summary-info__icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--order-summary-brand);
+}
+
+.order-summary-info__title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.order-summary-info__svg {
+  display: block;
+}
+
+@media (max-width: 520px) {
+  .order-summary-wrap {
+    padding: 16px;
+  }
+
+  .order-summary-card__body {
+    padding: 16px;
+  }
+
+  .order-summary-row {
+    gap: 12px;
+  }
+}
+
+/* ✨ Reflection animation for badges */
+.order-summary-badge {
+  position: relative;
+  overflow: hidden;
+  /* hides the reflection outside the pill */
+  isolation: isolate;
+  /* ensures the pseudo-element blends correctly */
+}
+
+/* pseudo-element that creates the shine */
+.order-summary-badge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-20deg);
+  animation: order-summary-reflect 3.5s infinite;
+}
+
+/* keyframes controlling the sweep motion */
+@keyframes order-summary-reflect {
+  0% {
+    left: -100%;
+  }
+
+  40% {
+    left: 120%;
+  }
+
+  100% {
+    left: 120%;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Smooth fade transition when toggling */
+.payment-sections>* {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.payment-sections>*.hidden {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+/* PayPal box styling */
+.paypal-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+.paypal-container {
+  background-color: #eff6ff;
+  /* subtle blue like PayPal’s checkout */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Logo */
+.paypal-logo {
+  height: 40px;
+  width: auto;
+  margin-bottom: 1.25rem;
+}
+
+/* Text */
+.paypal-text {
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+/* Button */
+.paypal-btn {
+  background-color: #0070ba;
+  /* official PayPal blue */
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paypal-btn:hover {
+  background-color: #005ea6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .paypal-container {
+    padding: 1.5rem;
+  }
+
+  .paypal-btn {
+    width: 100%;
+  }
+}
+
+/* =========================
+   FREE CHECKOUT LOCK UI
+========================= */
+
+body.is-free-checkout #paymentSection {
+  opacity: 0.45;
+  filter: grayscale(0.9);
+  pointer-events: none;
+  /* makes it unclickable */
+  user-select: none;
+}
+
+/* Optional: show a banner above payment section */
+.free-checkout-banner {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.free-checkout-banner strong {
+  font-weight: 800;
+}
+
+.order-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+
+/* FREE */
+.order-summary-badge--free {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #1d4ed8;
+}
+
+/* BRONZE */
+.order-summary-badge--bronze {
+  background: rgba(180, 83, 9, 0.14);
+  border-color: rgba(180, 83, 9, 0.35);
+  color: #b45309;
+}
+
+/* SILVER */
+.order-summary-badge--silver {
+  background: rgba(100, 116, 139, 0.14);
+  border-color: rgba(100, 116, 139, 0.35);
+  color: #475569;
+}
+
+/* GOLD */
+.order-summary-badge--gold {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.40);
+  color: #b45309;
+}
