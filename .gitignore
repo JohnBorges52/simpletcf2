@@ -1,0 +1,14 @@
+ 
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Large media folders (SimpleTCF recommendation)
+public/audios/
+public/pdfs/
+
+# OS files
+.DS_Store
+Thumbs.db
