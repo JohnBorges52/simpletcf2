@@ -8,7 +8,19 @@
          If you have a bigger Real Test implementation already, keep it and
          only merge the COPY + PDF-INNER parts.
 ============================================================================ */
-import { storageDownloadUrl } from "./firebase-storage.js";
+
+let storageDownloadUrl = async () => null;
+
+// Load firebase-storage asynchronously without blocking module execution
+(async () => {
+  try {
+    const mod = await import("./firebase-storage.js");
+    storageDownloadUrl = mod.storageDownloadUrl;
+  } catch (e) {
+    console.error("Failed to load firebase-storage:", e);
+  }
+})();
+
 (() => {
   /* =====================
      1) Constants

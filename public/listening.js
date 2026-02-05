@@ -13,7 +13,17 @@
    - ✅ Transcript button hidden during Real Test (taking test)
 ============================================================================ */
 
-import { storageDownloadUrl } from "./firebase-storage.js";
+let storageDownloadUrl = async () => null;
+
+// Load firebase-storage asynchronously without blocking module execution
+(async () => {
+  try {
+    const mod = await import("./firebase-storage.js");
+    storageDownloadUrl = mod.storageDownloadUrl;
+  } catch (e) {
+    console.error("Failed to load firebase-storage:", e);
+  }
+})();
 
 (() => {
   /* 1) Constants */
@@ -1610,11 +1620,22 @@ const raw = await res.json();
     setResultsMode(false);
   }
 
-  // expose globally before init runs
-  window.filterQuestions = filterQuestions;
-  window.nextQuestion = nextQuestion;
-  window.prevQuestion = prevQuestion;
-  window.loadTranscript = () => loadTranscript();
+  // expose globally - ensure available immediately
+  const globalExports = {
+    filterQuestions: null,
+    nextQuestion: null,
+    prevQuestion: null,
+    loadTranscript: null
+  };
+
+  // Set up exports before init runs
+  globalExports.filterQuestions = filterQuestions;
+  globalExports.nextQuestion = nextQuestion;
+  globalExports.prevQuestion = prevQuestion;
+  globalExports.loadTranscript = () => loadTranscript();
+
+  // Also assign to window immediately
+  Object.assign(window, globalExports);
 
   init();
 })();
