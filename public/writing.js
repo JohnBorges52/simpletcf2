@@ -121,11 +121,7 @@
   // Topics (from JSON) — robust path probing
   // =====================
   const WRITING_JSON_CANDIDATES = [
-    "/expression_ecrite_all.json",
-    "./expression_ecrite_all.json",
-    "expression_ecrite_all.json",
-    "/public/expression_ecrite_all.json",
-    "./public/expression_ecrite_all.json",
+    "/data/expression_ecrite_all.json";
   ];
 
   let QUESTION_BANK = [];
