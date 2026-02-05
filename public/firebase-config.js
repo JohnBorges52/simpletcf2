@@ -1,10 +1,3 @@
-/* global window */
-
-/**
- * Firebase Client Config Loader
- * This MUST be loaded before any module that uses Firebase.
- */
-
 console.log("✅ firebase-config.js LOADED", new Date().toISOString());
 
 (function setFirebaseConfig() {
