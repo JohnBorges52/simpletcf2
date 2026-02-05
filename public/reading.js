@@ -9,17 +9,20 @@
          only merge the COPY + PDF-INNER parts.
 ============================================================================ */
 
-let storageDownloadUrl = async () => null;
+// Fallback for storageDownloadUrl - will be replaced when module loads
+let storageDownloadUrl = async (path) => {
+  console.warn("storageDownloadUrl not yet loaded, please wait");
+  return null;
+};
 
-// Load firebase-storage asynchronously without blocking module execution
-(async () => {
-  try {
-    const mod = await import("./firebase-storage.js");
+// Load firebase-storage module dynamically (non-blocking)
+if (typeof window !== 'undefined' && 'import' in window) {
+  import("./firebase-storage.js").then(mod => {
     storageDownloadUrl = mod.storageDownloadUrl;
-  } catch (e) {
-    console.error("Failed to load firebase-storage:", e);
-  }
-})();
+  }).catch(e => {
+    console.error("Failed to load firebase-storage.js:", e);
+  });
+}
 
 (() => {
   /* =====================
