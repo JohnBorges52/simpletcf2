@@ -13,19 +13,39 @@
    - ✅ Transcript button hidden during Real Test (taking test)
 ============================================================================ */
 
+/* ✅ FAILSAFE GLOBALS (prevents "filterQuestions is not defined" from inline onclick) */
+window.filterQuestions =
+  window.filterQuestions ||
+  function () {
+    console.warn(
+      "filterQuestions called before listening.js finished loading / exported.",
+    );
+  };
+window.nextQuestion = window.nextQuestion || function () {};
+window.prevQuestion = window.prevQuestion || function () {};
+window.loadTranscript = window.loadTranscript || function () {};
+
 // Fallback for storageDownloadUrl - will be replaced when module loads
 let storageDownloadUrl = async (path) => {
-  console.warn("storageDownloadUrl not yet loaded, please wait");
+  console.warn("storageDownloadUrl not yet loaded, please wait", path);
   return null;
 };
 
 // Load firebase-storage module dynamically (non-blocking)
-if (typeof window !== 'undefined' && 'import' in window) {
-  import("./firebase-storage.js").then(mod => {
-    storageDownloadUrl = mod.storageDownloadUrl;
-  }).catch(e => {
-    console.error("Failed to load firebase-storage.js:", e);
-  });
+if (typeof window !== "undefined") {
+  import("./firebase-storage.js")
+    .then((mod) => {
+      if (mod && typeof mod.storageDownloadUrl === "function") {
+        storageDownloadUrl = mod.storageDownloadUrl;
+      } else {
+        console.warn(
+          "firebase-storage.js loaded but did not export storageDownloadUrl()",
+        );
+      }
+    })
+    .catch((e) => {
+      console.error("Failed to load firebase-storage.js:", e);
+    });
 }
 
 (() => {
@@ -238,39 +258,34 @@ if (typeof window !== 'undefined' && 'import' in window) {
     const v = q?.is_picture;
     return v === true || v === "true" || v === 1 || v === "1";
   }
+
   function resolveImageStoragePath(q) {
-  const p = q?.picture || q?.image || q?.picture_url;
-  if (!p) return null;
+    const p = q?.picture || q?.image || q?.picture_url;
+    if (!p) return null;
+    if (/^https?:\/\//i.test(p)) return p;
 
-  // If someone accidentally stored a full URL, leave it as-is
-  if (/^https?:\/\//i.test(p)) return p;
-
-  // normalize: remove leading slashes + remove "public/"
-  let s = String(p).replace(/\\/g, "/").trim();
-  s = s.replace(/^\/+/, "");
-  s = s.replace(/^public\//, "");
-  return s; // expects: "pictures/xxx.png"
-}
+    let s = String(p).replace(/\\/g, "/").trim();
+    s = s.replace(/^\/+/, "");
+    s = s.replace(/^public\//, "");
+    return s; // expects: "pictures/xxx.png"
+  }
 
   function resolveAudioStoragePath(q) {
-  if (!q) return null;
+    if (!q) return null;
 
-  const p = q.audio_local_path || q.audio_url || q.filename;
-  if (!p) return null;
+    const p = q.audio_local_path || q.audio_url || q.filename;
+    if (!p) return null;
 
-  // If someone accidentally stored a full URL, leave it as-is
-  if (/^https?:\/\//i.test(p)) return p;
+    if (/^https?:\/\//i.test(p)) return p;
 
-  let s = String(p).replace(/\\/g, "/").trim();
-  s = s.replace(/^\/+/, "");
-  s = s.replace(/^public\//, "");
+    let s = String(p).replace(/\\/g, "/").trim();
+    s = s.replace(/^\/+/, "");
+    s = s.replace(/^public\//, "");
 
-  // If filename only (no folder), assume audios/
-  if (!s.includes("/")) s = `audios/${s}`;
+    if (!s.includes("/")) s = `audios/${s}`;
 
-  return s; // expects: "audios/xxx.mp3"
-}
-
+    return s; // expects: "audios/xxx.mp3"
+  }
 
   function fmt2or3(n) {
     const num = Number(n);
@@ -341,10 +356,7 @@ if (typeof window !== 'undefined' && 'import' in window) {
     overlay?.classList.remove("quiz--rt-ready");
 
     if (textEl) {
-      safeText(
-        textEl,
-        mode === "score" ? "Scoring test…" : "Preparing Test...",
-      );
+      safeText(textEl, mode === "score" ? "Scoring test…" : "Preparing Test...");
       textEl.classList.remove("quiz--fade-out", "quiz--fade-in");
       textEl.classList.add("quiz--loading-flash");
     }
@@ -393,15 +405,15 @@ if (typeof window !== 'undefined' && 'import' in window) {
   async function loadData() {
     try {
       const res = await fetch(PATHS.DATA, { cache: "no-store" });
-if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-const ct = res.headers.get("content-type") || "";
-if (!ct.includes("application/json")) {
-  const preview = (await res.text()).slice(0, 80);
-  throw new Error(`Not JSON (got ${ct}). First bytes: ${preview}`);
-}
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const preview = (await res.text()).slice(0, 80);
+        throw new Error(`Not JSON (got ${ct}). First bytes: ${preview}`);
+      }
 
-const raw = await res.json();
+      const raw = await res.json();
 
       state.allData = (raw || []).map((q) => ({
         ...q,
@@ -648,63 +660,59 @@ const raw = await res.json();
 
   /* 7) Rendering */
   async function renderPicture(q, displayNumStr) {
-  const picWrap = els.picture();
-  if (!picWrap) return;
+    const picWrap = els.picture();
+    if (!picWrap) return;
 
-  // clear first (prevents old image sticking)
-  picWrap.classList.add(CLS.hidden);
-  picWrap.innerHTML = "";
+    picWrap.classList.add(CLS.hidden);
+    picWrap.innerHTML = "";
 
-  // your original logic: only show pictures for 1–10 if is_picture true
-  if (!(q.question_number >= 1 && q.question_number <= 10 && isPictureTrue(q)))
-    return;
+    if (!(q.question_number >= 1 && q.question_number <= 10 && isPictureTrue(q)))
+      return;
 
-  const p = resolveImageStoragePath(q);
-  if (!p) return;
+    const p = resolveImageStoragePath(q);
+    if (!p) return;
 
-  try {
-    const url = /^https?:\/\//i.test(p) ? p : await storageDownloadUrl(p);
-    const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));
-    picWrap.innerHTML = `<img src="${url}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
-    picWrap.classList.remove(CLS.hidden);
-  } catch (e) {
-    console.error("Image load failed:", p, e);
+    try {
+      const url = /^https?:\/\//i.test(p) ? p : await storageDownloadUrl(p);
+      const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));
+      picWrap.innerHTML = `<img src="${url}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
+      picWrap.classList.remove(CLS.hidden);
+    } catch (e) {
+      console.error("Image load failed:", p, e);
+    }
   }
-}
-
 
   async function renderAudio(q) {
-  const audioEl = els.audio();
-  if (!audioEl) return;
+    const audioEl = els.audio();
+    if (!audioEl) return;
 
-  audioEl.pause?.();
-  audioEl.innerHTML = "";
-  audioEl.removeAttribute("src");
+    audioEl.pause?.();
+    audioEl.innerHTML = "";
+    audioEl.removeAttribute("src");
 
-  const storagePathOrUrl = resolveAudioStoragePath(q);
-  if (!storagePathOrUrl) {
-    audioEl.load();
-    return;
+    const storagePathOrUrl = resolveAudioStoragePath(q);
+    if (!storagePathOrUrl) {
+      audioEl.load();
+      return;
+    }
+
+    try {
+      const url = /^https?:\/\//i.test(storagePathOrUrl)
+        ? storagePathOrUrl
+        : await storageDownloadUrl(storagePathOrUrl);
+
+      const s = document.createElement("source");
+      s.src = url;
+      s.type = url.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+
+      audioEl.appendChild(s);
+      audioEl.src = url;
+      audioEl.load();
+    } catch (e) {
+      console.error("Audio load failed:", storagePathOrUrl, e);
+      audioEl.load();
+    }
   }
-
-  try {
-    const url = /^https?:\/\//i.test(storagePathOrUrl)
-      ? storagePathOrUrl
-      : await storageDownloadUrl(storagePathOrUrl);
-
-    const s = document.createElement("source");
-    s.src = url;
-    s.type = url.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
-
-    audioEl.appendChild(s);
-    audioEl.src = url;
-    audioEl.load();
-  } catch (e) {
-    console.error("Audio load failed:", storagePathOrUrl, e);
-    audioEl.load();
-  }
-}
-
 
   function renderOptions(q, alreadyAnswered, correctIndex) {
     const container = els.options();
@@ -788,7 +796,6 @@ const raw = await res.json();
       transcriptWrap?.classList.remove("quiz--show-btn", "quiz--show-text");
       safeText(els.transcriptText(), "");
 
-      // hide transcript main button when no question
       setTranscriptButtonVisible(false);
 
       updateScore();
@@ -803,17 +810,15 @@ const raw = await res.json();
     safeText(qNum, `Question ${qNumDisplayStr}`);
 
     await renderPicture(q, qNumDisplayStr);
-
     await renderAudio(q);
 
     const alreadyAnswered = q.userAnswerIndex !== undefined;
     const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
 
-    // ✅ Transcript main button behavior
     if (state.realTestMode && !state.realTestFinished) {
       transcriptWrap?.classList.remove("quiz--show-btn", "quiz--show-text");
       safeText(els.transcriptText(), "");
-      setTranscriptButtonVisible(false); // hide completely while taking test
+      setTranscriptButtonVisible(false);
     } else {
       if (alreadyAnswered) transcriptWrap?.classList.add("quiz--show-btn");
       else
@@ -905,13 +910,11 @@ const raw = await res.json();
 
     refreshWeightButtonsLabels();
 
-    // ✅ PRACTICE MODE: re-render so correct/wrong colors + transcript become available
     if (!state.realTestMode) {
-      renderQuestion(); // <-- this is the missing piece
+      renderQuestion();
       return;
     }
 
-    // ✅ REAL TEST MODE (keeps your existing behavior: jump to next unanswered)
     refreshNavDots();
     updateFinishButtonState();
 
@@ -1220,7 +1223,6 @@ const raw = await res.json();
     els.quiz()?.classList.add(CLS.hidden);
     RT.results()?.classList.remove(CLS.hidden);
 
-    // ✅ hide top filters while on results page
     setResultsMode(true);
 
     const { totalCorrect, weightedScore, pct } = scoreRealTest();
@@ -1258,10 +1260,8 @@ const raw = await res.json();
       </div>
     `;
 
-    // ✅ move "Do another Real Test" ABOVE CLB Bands
     moveAgainButtonToTop();
 
-    // ✅ CLB table highlight by CLB value (works even when score < 331)
     const rows = CLB_RANGES.map((r) => {
       const active = Number(r.clb) === Number(clb);
       return `
@@ -1277,7 +1277,6 @@ const raw = await res.json();
       <div style="margin-top:8px">${rows}</div>
     `;
 
-    // dots
     const dots = state.realTestPool
       .map((q, i) => {
         const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
@@ -1294,7 +1293,6 @@ const raw = await res.json();
       <div style="margin-top:8px;line-height:0">${dots}</div>
     `;
 
-    // review (✅ now includes Transcript toggle per card)
     const reviewHtml = state.realTestPool
       .map((q, i) => {
         const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
@@ -1331,8 +1329,9 @@ const raw = await res.json();
 
         const src = resolveAudioStoragePath(q);
 
-        const audioBlock = src && /^https?:\/\//i.test(src)
-  ? `
+        const audioBlock =
+          src && /^https?:\/\//i.test(src)
+            ? `
     <div style="margin-top:10px">
       <audio controls preload="none" style="width:50%">
         <source src="${src}" type="${src.endsWith(".wav") ? "audio/wav" : "audio/mpeg"}" />
@@ -1340,7 +1339,7 @@ const raw = await res.json();
       </audio>
     </div>
   `
-  : `
+            : `
     <div style="margin-top:10px;opacity:.7;font-weight:700">
       🎧 Audio available (will play here after Storage URL wiring)
     </div>
@@ -1448,10 +1447,7 @@ const raw = await res.json();
       applyCompactToolbarLabels();
     });
 
-    /* =========================================================
-       ✅ Header Practice dropdown (hover desktop + tap mobile)
-       Put this inside init() so DOM is ready.
-    ========================================================= */
+    /* Header Practice dropdown */
     (() => {
       const header = document.getElementById("mainHeader");
       const dropdown = document.querySelector(".quiz--nav__dropdown");
@@ -1460,17 +1456,15 @@ const raw = await res.json();
       const toggle = dropdown.querySelector(".quiz--nav__dropdown-toggle");
       if (!toggle) return;
 
-      // Mobile: tap "Practice" to open/close dropdown (only when hamburger menu is open)
       toggle.addEventListener("click", (e) => {
         const navOpen = header.classList.contains("open-nav");
-        if (!navOpen) return; // desktop: allow link normal behavior
+        if (!navOpen) return;
 
-        e.preventDefault(); // prevent jumping to #success-section on mobile tap
+        e.preventDefault();
         const isOpen = dropdown.classList.toggle("is-open");
         toggle.setAttribute("aria-expanded", String(isOpen));
       });
 
-      // Close dropdown when nav closes (hamburger toggled off)
       const navToggle = document.getElementById("navToggle");
       if (navToggle) {
         navToggle.addEventListener("click", () => {
@@ -1482,7 +1476,6 @@ const raw = await res.json();
         });
       }
 
-      // Close dropdown if clicking outside (mobile + nav open)
       document.addEventListener("click", (e) => {
         const navOpen = header.classList.contains("open-nav");
         if (!navOpen) return;
@@ -1493,7 +1486,7 @@ const raw = await res.json();
       });
     })();
 
-    // ✅ Transcript toggle inside Results review cards
+    // Transcript toggles inside Results review cards
     document.addEventListener("click", (e) => {
       const btn = e.target?.closest?.("[data-tr-toggle='1']");
       if (!btn) return;
@@ -1563,34 +1556,28 @@ const raw = await res.json();
         startRealTestFlow();
         return;
       }
-
       if (t && t.id === "deservesBtn") {
         toggleDeserves();
         return;
       }
-
       if (t && t.id === "startRealTestBtn") {
         if (t.disabled) return;
         beginRealTest();
         return;
       }
-
       if (t && t.id === "finishRealTestBtn") {
         finishRealTest();
         return;
       }
-
       if (t && t.id === "againBtn") {
         setResultsMode(false);
         startRealTestFlow({ skipConfirm: true });
         return;
       }
-
       if (t && t.id === "rtClose") {
         closeRealTestPopupOnly();
         return;
       }
-
       if (t && t.id === "rtBackdrop") {
         closeRealTestPopupOnly();
         return;
@@ -1615,7 +1602,6 @@ const raw = await res.json();
       renderQuestion();
     });
 
-    // init initial state
     updateDeservesButton();
     recomputeFiltered();
     renderQuestion();
@@ -1623,22 +1609,11 @@ const raw = await res.json();
     setResultsMode(false);
   }
 
-  // expose globally - ensure available immediately
-  const globalExports = {
-    filterQuestions: null,
-    nextQuestion: null,
-    prevQuestion: null,
-    loadTranscript: null
-  };
-
-  // Set up exports before init runs
-  globalExports.filterQuestions = filterQuestions;
-  globalExports.nextQuestion = nextQuestion;
-  globalExports.prevQuestion = prevQuestion;
-  globalExports.loadTranscript = () => loadTranscript();
-
-  // Also assign to window immediately
-  Object.assign(window, globalExports);
+  /* ✅ EXPORTS — make functions available for inline onclick immediately */
+  window.filterQuestions = filterQuestions;
+  window.nextQuestion = nextQuestion;
+  window.prevQuestion = prevQuestion;
+  window.loadTranscript = loadTranscript;
 
   init();
 })();
