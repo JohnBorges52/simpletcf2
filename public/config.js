@@ -26,20 +26,49 @@ import {
   isSupported,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-import dotenv from "dotenv";
-dotenv.config();
 // -------------------------------
 // Your Firebase Config
 // -------------------------------
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTHDOMAIN,
-  projectId: process.env.FIREBASE_PROJECTID,
-  storageBucket: process.env.FIREBASE_STORAGEBUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGINGSENDERID,
-  appId: process.env.FIREBASE_APPID,
-  measurementId: process.env.FIREBASE_MEASUREMENTID,
-};
+function readFirebaseConfig() {
+  const cfg = window.__FIREBASE_CONFIG__ || null;
+
+  if (cfg) {
+    return cfg;
+  }
+
+  const apiKey = window.FIREBASE_API_KEY;
+  const authDomain = window.FIREBASE_AUTH_DOMAIN;
+  const projectId = window.FIREBASE_PROJECT_ID;
+  const storageBucket = window.FIREBASE_STORAGE_BUCKET;
+  const messagingSenderId = window.FIREBASE_MESSAGING_SENDER_ID;
+  const appId = window.FIREBASE_APP_ID;
+  const measurementId = window.FIREBASE_MEASUREMENT_ID;
+
+  if (
+    apiKey &&
+    authDomain &&
+    projectId &&
+    storageBucket &&
+    messagingSenderId &&
+    appId
+  ) {
+    return {
+      apiKey,
+      authDomain,
+      projectId,
+      storageBucket,
+      messagingSenderId,
+      appId,
+      measurementId,
+    };
+  }
+
+  throw new Error(
+    "[config] Missing Firebase config. Set window.__FIREBASE_CONFIG__ before loading module scripts."
+  );
+}
+
+const firebaseConfig = readFirebaseConfig();
 
 function getUrlParams() {
   try {
