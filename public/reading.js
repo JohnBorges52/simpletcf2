@@ -13,7 +13,7 @@
   /* =====================
      1) Constants
   ===================== */
-  const PATHS = Object.freeze({ DATA: "public/pdfs/all_data_reading.json" });
+  const PATHS = Object.freeze({ DATA: "/data/pdfs/all_data_reading.json" });
 
   const STORAGE_KEYS = Object.freeze({
     TRACKING: "answer_tracking",
