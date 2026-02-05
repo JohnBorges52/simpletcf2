@@ -8,7 +8,7 @@
          If you have a bigger Real Test implementation already, keep it and
          only merge the COPY + PDF-INNER parts.
 ============================================================================ */
-
+import { storageDownloadUrl } from "./firebase-storage.js";
 (() => {
   /* =====================
      1) Constants
@@ -175,22 +175,31 @@
     return null;
   }
 
-  function toRootPath(p) {
-    if (!p) return null;
-    if (/^https?:\/\//i.test(p)) return p;
-    if (p.startsWith("/")) return p;
-    return "/" + p.replace(/^(\.\/)+/, "");
-  }
+  function normalizeStoragePath(p) {
+  if (!p) return null;
 
-  function resolvePdfSrc(q) {
-    const p =
-      q.media_url ||
-      q.pdf_url ||
-      q.file_url ||
-      q.image_url ||
-      q.image_local_path;
-    return toRootPath(p);
-  }
+  // already a full URL
+  if (/^https?:\/\//i.test(p)) return p;
+
+  let s = String(p).replace(/\\/g, "/").trim();
+  s = s.replace(/^\/+/, "");
+  s = s.replace(/^public\//, "");
+  return s; // ex: "pdfs/xxx.pdf"
+}
+
+function resolvePdfStoragePath(q) {
+  const p =
+    q.media_local_path ||
+    q.media_url ||
+    q.pdf_path ||
+    q.pdf_url ||
+    q.file_url ||
+    q.image_url ||
+    q.image_local_path;
+
+  return normalizeStoragePath(p);
+}
+
 
   function getCopyTextForQuestion(q) {
     if (!q) return "";
@@ -363,7 +372,16 @@
   async function loadData() {
     try {
       const res = await fetch(PATHS.DATA, { cache: "no-store" });
-      const raw = await res.json();
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+const ct = res.headers.get("content-type") || "";
+if (!ct.includes("application/json")) {
+  const preview = (await res.text()).slice(0, 80);
+  throw new Error(`Not JSON (got ${ct}). First bytes: ${preview}`);
+}
+
+const raw = await res.json();
+
       state.allData = (raw || []).map((q) => ({
         ...q,
         weight_points: Number(q.weight_points),
@@ -398,7 +416,22 @@
 
     wrap.innerHTML = "";
 
-    const url = resolvePdfSrc(q);
+    const storagePathOrUrl = resolvePdfStoragePath(q);
+if (!storagePathOrUrl) { ... }
+
+let url = storagePathOrUrl;
+
+try {
+  if (!/^https?:\/\//i.test(storagePathOrUrl)) {
+    url = await storageDownloadUrl(storagePathOrUrl);
+  }
+} catch (e) {
+  console.error("PDF Storage URL failed:", storagePathOrUrl, e);
+  wrap.innerHTML = "";
+  wrap.textContent = "Failed to load PDF from Storage.";
+  return;
+}
+
     if (!url) {
       if (myToken !== pdfRenderToken) return;
       wrap.textContent = "No PDF found.";
