@@ -13,6 +13,8 @@
    - ✅ Transcript button hidden during Real Test (taking test)
 ============================================================================ */
 
+import { storageDownloadUrl } from "./firebase-storage.js";
+
 (() => {
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
