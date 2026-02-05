@@ -121,7 +121,7 @@
   // Topics (from JSON) — robust path probing
   // =====================
   const WRITING_JSON_CANDIDATES = [
-    "/data/expression_ecrite_all.json";
+    "/data/expression_ecrite_all.json",
   ];
 
   let QUESTION_BANK = [];
@@ -130,8 +130,15 @@
     for (const url of urls) {
       try {
         const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+const ct = res.headers.get("content-type") || "";
+if (!ct.includes("application/json")) {
+  const preview = (await res.text()).slice(0, 80);
+  throw new Error(`Not JSON (got ${ct}). First bytes: ${preview}`);
+}
+
+const data = await res.json();
         console.log("[Writing] ✅ Loaded JSON from:", url);
         return data;
       } catch (e) {
