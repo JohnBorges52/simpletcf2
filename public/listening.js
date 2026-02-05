@@ -15,7 +15,7 @@
 
 (() => {
   /* 1) Constants */
-  const PATHS = Object.freeze({ DATA: "public/audios/all_quiz_data.json" });
+  const PATHS = Object.freeze({ DATA: "/data/audios/all_quiz_data.json" });
 
   const STORAGE_KEYS = Object.freeze({
     TRACKING: "answer_tracking",
