@@ -225,25 +225,39 @@ import { storageDownloadUrl } from "./firebase-storage.js";
     const v = q?.is_picture;
     return v === true || v === "true" || v === 1 || v === "1";
   }
-  function resolveImageSrc(q) {
-    const p = q?.picture || q?.image || q?.picture_url;
-    if (!p) return null;
-    if (/^https?:\/\//i.test(p)) return p;
-    return p.startsWith("/") ? p : "/" + p.replace(/^(\.\/)+/, "");
-  }
-  function resolveAudioSrc(q) {
-    if (!q) return null;
-    if (q.audio_local_path)
-      return q.audio_local_path.startsWith("/")
-        ? q.audio_local_path
-        : "/" + q.audio_local_path.replace(/^(\.\/)+/, "");
-    if (q.audio_url) {
-      const base = q.audio_url.split("/").pop() || "";
-      if (base) return `/audios/${base}`;
-    }
-    if (q.filename) return `/audios/${q.filename}`;
-    return null;
-  }
+  function resolveImageStoragePath(q) {
+  const p = q?.picture || q?.image || q?.picture_url;
+  if (!p) return null;
+
+  // If someone accidentally stored a full URL, leave it as-is
+  if (/^https?:\/\//i.test(p)) return p;
+
+  // normalize: remove leading slashes + remove "public/"
+  let s = String(p).replace(/\\/g, "/").trim();
+  s = s.replace(/^\/+/, "");
+  s = s.replace(/^public\//, "");
+  return s; // expects: "pictures/xxx.png"
+}
+
+  function resolveAudioStoragePath(q) {
+  if (!q) return null;
+
+  const p = q.audio_local_path || q.audio_url || q.filename;
+  if (!p) return null;
+
+  // If someone accidentally stored a full URL, leave it as-is
+  if (/^https?:\/\//i.test(p)) return p;
+
+  let s = String(p).replace(/\\/g, "/").trim();
+  s = s.replace(/^\/+/, "");
+  s = s.replace(/^public\//, "");
+
+  // If filename only (no folder), assume audios/
+  if (!s.includes("/")) s = `audios/${s}`;
+
+  return s; // expects: "audios/xxx.mp3"
+}
+
 
   function fmt2or3(n) {
     const num = Number(n);
@@ -366,7 +380,16 @@ import { storageDownloadUrl } from "./firebase-storage.js";
   async function loadData() {
     try {
       const res = await fetch(PATHS.DATA, { cache: "no-store" });
-      const raw = await res.json();
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+const ct = res.headers.get("content-type") || "";
+if (!ct.includes("application/json")) {
+  const preview = (await res.text()).slice(0, 80);
+  throw new Error(`Not JSON (got ${ct}). First bytes: ${preview}`);
+}
+
+const raw = await res.json();
+
       state.allData = (raw || []).map((q) => ({
         ...q,
         weight_points: Number(q.weight_points),
@@ -611,37 +634,64 @@ import { storageDownloadUrl } from "./firebase-storage.js";
   }
 
   /* 7) Rendering */
-  function renderPicture(q, displayNumStr) {
-    const picWrap = els.picture();
-    if (!picWrap) return;
+  async function renderPicture(q, displayNumStr) {
+  const picWrap = els.picture();
+  if (!picWrap) return;
 
-    if (q.question_number >= 1 && q.question_number <= 10 && isPictureTrue(q)) {
-      const imgSrc = resolveImageSrc(q);
-      if (imgSrc) {
-        const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));
-        picWrap.innerHTML = `<img src="${imgSrc}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
-        picWrap.classList.remove(CLS.hidden);
-        return;
-      }
-    }
-    picWrap.classList.add(CLS.hidden);
-    picWrap.innerHTML = "";
+  // clear first (prevents old image sticking)
+  picWrap.classList.add(CLS.hidden);
+  picWrap.innerHTML = "";
+
+  // your original logic: only show pictures for 1–10 if is_picture true
+  if (!(q.question_number >= 1 && q.question_number <= 10 && isPictureTrue(q)))
+    return;
+
+  const p = resolveImageStoragePath(q);
+  if (!p) return;
+
+  try {
+    const url = /^https?:\/\//i.test(p) ? p : await storageDownloadUrl(p);
+    const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));
+    picWrap.innerHTML = `<img src="${url}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
+    picWrap.classList.remove(CLS.hidden);
+  } catch (e) {
+    console.error("Image load failed:", p, e);
+  }
+}
+
+
+  async function renderAudio(q) {
+  const audioEl = els.audio();
+  if (!audioEl) return;
+
+  audioEl.pause?.();
+  audioEl.innerHTML = "";
+  audioEl.removeAttribute("src");
+
+  const storagePathOrUrl = resolveAudioStoragePath(q);
+  if (!storagePathOrUrl) {
+    audioEl.load();
+    return;
   }
 
-  function renderAudio(q) {
-    const audioEl = els.audio();
-    if (!audioEl) return;
-    audioEl.innerHTML = "";
-    const src = resolveAudioSrc(q);
-    if (src) {
-      const s = document.createElement("source");
-      s.src = src;
-      s.type = src.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
-      audioEl.appendChild(s);
-      audioEl.src = src;
-    }
+  try {
+    const url = /^https?:\/\//i.test(storagePathOrUrl)
+      ? storagePathOrUrl
+      : await storageDownloadUrl(storagePathOrUrl);
+
+    const s = document.createElement("source");
+    s.src = url;
+    s.type = url.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+
+    audioEl.appendChild(s);
+    audioEl.src = url;
+    audioEl.load();
+  } catch (e) {
+    console.error("Audio load failed:", storagePathOrUrl, e);
     audioEl.load();
   }
+}
+
 
   function renderOptions(q, alreadyAnswered, correctIndex) {
     const container = els.options();
@@ -700,7 +750,7 @@ import { storageDownloadUrl } from "./firebase-storage.js";
     );
   }
 
-  function renderQuestion() {
+  async function renderQuestion() {
     ensureQuestionStatsDOM();
 
     const q = state.filtered[state.index];
@@ -739,8 +789,9 @@ import { storageDownloadUrl } from "./firebase-storage.js";
     const qNumDisplayStr = fmt2or3(headerNum);
     safeText(qNum, `Question ${qNumDisplayStr}`);
 
-    renderPicture(q, qNumDisplayStr);
-    renderAudio(q);
+    await renderPicture(q, qNumDisplayStr);
+
+    await renderAudio(q);
 
     const alreadyAnswered = q.userAnswerIndex !== undefined;
     const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
@@ -1265,21 +1316,22 @@ import { storageDownloadUrl } from "./firebase-storage.js";
           })
           .join("");
 
-        const src = resolveAudioSrc(q);
-        const audioBlock = src
-          ? `
-            <div style="margin-top:10px">
-              <audio controls preload="none" style="width:50%">
-                <source src="${src}" type="${src.endsWith(".wav") ? "audio/wav" : "audio/mpeg"}" />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          `
-          : `
-            <div style="margin-top:10px;opacity:.7;font-weight:700">
-              ⚠️ Audio not available for this question.
-            </div>
-          `;
+        const src = resolveAudioStoragePath(q);
+
+        const audioBlock = src && /^https?:\/\//i.test(src)
+  ? `
+    <div style="margin-top:10px">
+      <audio controls preload="none" style="width:50%">
+        <source src="${src}" type="${src.endsWith(".wav") ? "audio/wav" : "audio/mpeg"}" />
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+  `
+  : `
+    <div style="margin-top:10px;opacity:.7;font-weight:700">
+      🎧 Audio available (will play here after Storage URL wiring)
+    </div>
+  `;
 
         const transcriptBlock =
           q.transcript && q.transcript.trim()
