@@ -1,4 +1,4 @@
-console.log("✅ firebase-config-v3.js parsed + executed");
+console.log("✅ firebase-config.js parsed + executed");
 
 (function () {
   window.__FIREBASE_CONFIG__ = {
