@@ -5,6 +5,8 @@
  * This MUST be loaded before any module that uses Firebase.
  */
 
+console.log("✅ firebase-config.js LOADED", new Date().toISOString());
+
 (function setFirebaseConfig() {
   // Prevent double loading
   if (window.__FIREBASE_CONFIG__) return;
