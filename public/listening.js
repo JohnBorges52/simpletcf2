@@ -2,18 +2,18 @@
    TCF Audio Practice — Full App Script (quiz-- class prefix edition)
    ✅ Includes:
    - Real Test: hide per-question stats line
-   - Real Test: hide KPI pill (empty colored box)
+   - Real Test: hide KPI pill
    - Real Test: after ANY Confirm -> jump to next unanswered (wrap)
    - Finish Test button pulses green when all answered
    - Results page: highlight active CLB row (by CLB, works when score < 331)
    - Results page: hide top filters toolbar
    - Results page: move "Do another Real Test" button to top
    - Overlay: scoring shows ONLY spinner/text (no Start button)
-   - ✅ Results Review cards: Audio player + Transcript toggle per question
+   - ✅ Results Review cards: Transcript toggle per question
    - ✅ Transcript button hidden during Real Test (taking test)
 ============================================================================ */
 
-/* ✅ FAILSAFE GLOBALS (prevents "filterQuestions is not defined" from inline onclick) */
+/* ✅ FAILSAFE GLOBALS (prevents "filterQuestions is not defined") */
 window.filterQuestions =
   window.filterQuestions ||
   function () {
@@ -79,17 +79,12 @@ if (typeof window !== "undefined") {
     optionCorrect: "quiz--correct",
     optionIncorrect: "quiz--incorrect",
 
-    transcript: "quiz--transcript",
     transcriptShowBtn: "quiz--show-btn",
     transcriptShowText: "quiz--show-text",
 
     qdot: "quiz--qdot",
     qdotActive: "quiz--active",
 
-    btn: "quiz--btn",
-    pill: "quiz--pill",
-
-    // ✅ Finish button pulse when ready
     finishReady: "quiz--finish-ready",
   });
 
@@ -172,16 +167,6 @@ if (typeof window !== "undefined") {
   }
   function setTracking(o) {
     localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(o || {}));
-  }
-  function getEvents() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.EVENTS) || "[]");
-    } catch {
-      return [];
-    }
-  }
-  function setEvents(a) {
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(a || []));
   }
 
   function tlDefault() {
@@ -267,7 +252,7 @@ if (typeof window !== "undefined") {
     let s = String(p).replace(/\\/g, "/").trim();
     s = s.replace(/^\/+/, "");
     s = s.replace(/^public\//, "");
-    return s; // expects: "pictures/xxx.png"
+    return s;
   }
 
   function resolveAudioStoragePath(q) {
@@ -283,8 +268,7 @@ if (typeof window !== "undefined") {
     s = s.replace(/^public\//, "");
 
     if (!s.includes("/")) s = `audios/${s}`;
-
-    return s; // expects: "audios/xxx.mp3"
+    return s;
   }
 
   function fmt2or3(n) {
@@ -293,11 +277,13 @@ if (typeof window !== "undefined") {
     const width = num > 99 ? 3 : 2;
     return String(num).padStart(width, "0");
   }
+
   function getHeaderNumber(q) {
     if (!q) return null;
     if (state.realTestMode) return state.index + 1;
     if (state.currentWeight == null && q.overall_question_number != null)
       return Number(q.overall_question_number);
+
     const raw = q.question_number;
     if (raw == null) return null;
     if (typeof raw === "string") {
@@ -307,9 +293,6 @@ if (typeof window !== "undefined") {
     return Number(raw);
   }
 
-  /* ===========================
-     ✅ Hide KPI pill(s) during Real Test
-     =========================== */
   function updateKpiVisibility() {
     const kpis = document.querySelectorAll(".quiz--kpi");
     kpis.forEach((kpi) => {
@@ -321,9 +304,6 @@ if (typeof window !== "undefined") {
     });
   }
 
-  /* ===========================
-     ✅ Results mode: hide top filters on results page
-     =========================== */
   function setResultsMode(on) {
     document.body.classList.toggle("quiz--results-mode", !!on);
   }
@@ -335,18 +315,12 @@ if (typeof window !== "undefined") {
     header.insertAdjacentElement("afterend", wrap);
   }
 
-  /* ===========================
-     ✅ Transcript main button visibility (hide during Real Test)
-     =========================== */
   function setTranscriptButtonVisible(visible) {
     const btn = document.getElementById("transcriptBtn");
     if (!btn) return;
     btn.classList.toggle(CLS.hidden, !visible);
   }
 
-  /* ===========================
-     ✅ Overlay (prepare vs score)
-     =========================== */
   function showOverlay(mode = "prepare") {
     const textEl = RT.loadingText();
     const startBtn = RT.startBtn();
@@ -414,7 +388,6 @@ if (typeof window !== "undefined") {
       }
 
       const raw = await res.json();
-
       state.allData = (raw || []).map((q) => ({
         ...q,
         weight_points: Number(q.weight_points),
@@ -425,15 +398,8 @@ if (typeof window !== "undefined") {
     }
   }
 
-  /* ===========================
-     ✅ MOBILE LABELS
-     =========================== */
+  /* ✅ MOBILE LABELS */
   const COMPACT_MQ = window.matchMedia("(max-width: 520px)");
-
-  function setBtnLabel(btn, label) {
-    if (!btn) return;
-    btn.textContent = label;
-  }
 
   function applyCompactToolbarLabels() {
     const compact = !!COMPACT_MQ.matches;
@@ -449,14 +415,14 @@ if (typeof window !== "undefined") {
       }
 
       if (btn.dataset.all === "1") {
-        setBtnLabel(btn, "All");
+        btn.textContent = "All";
         return;
       }
 
       const w = Number(btn.dataset.weight || "");
       if (Number.isFinite(w)) {
         const two = String(w).padStart(2, "0");
-        setBtnLabel(btn, `›${two}`);
+        btn.textContent = `›${two}`;
       }
     });
 
@@ -475,8 +441,7 @@ if (typeof window !== "undefined") {
     if (rt) {
       if (!rt.dataset.originalLabel)
         rt.dataset.originalLabel = (rt.textContent || "").trim();
-      if (compact) rt.textContent = "Real Test";
-      else rt.textContent = rt.dataset.originalLabel || "🧪 Real Test";
+      rt.textContent = compact ? "Real Test" : rt.dataset.originalLabel || "🧪 Real Test";
     }
   }
 
@@ -620,7 +585,6 @@ if (typeof window !== "undefined") {
     state.filtered = items;
   }
 
-  /* === Per-Question Stats DOM & Updater ============================== */
   function ensureQuestionStatsDOM() {
     if (els.qStats()) return;
     const anchor =
@@ -658,7 +622,6 @@ if (typeof window !== "undefined") {
     safeText(node, `: ✅ ${correct} | ❌ ${wrong} (total ${total})`);
   }
 
-  /* 7) Rendering */
   async function renderPicture(q, displayNumStr) {
     const picWrap = els.picture();
     if (!picWrap) return;
@@ -795,7 +758,6 @@ if (typeof window !== "undefined") {
 
       transcriptWrap?.classList.remove("quiz--show-btn", "quiz--show-text");
       safeText(els.transcriptText(), "");
-
       setTranscriptButtonVisible(false);
 
       updateScore();
@@ -836,11 +798,9 @@ if (typeof window !== "undefined") {
     updateKpiVisibility();
   }
 
-  /* 8) Tracking + events */
   function trackAnswerLocally(qObj, isCorrect) {
     const testId = qObj.test_id || "unknownTest";
     const questionNumber = qObj.question_number;
-    const weight_points = qObj.weight_points;
 
     const key = `${testId}-question${questionNumber}`;
     const tracking = getTracking();
@@ -848,18 +808,6 @@ if (typeof window !== "undefined") {
     isCorrect ? tracking[key].correct++ : tracking[key].wrong++;
     tracking[key].lastAnswered = Date.now();
     setTracking(tracking);
-
-    const events = getEvents();
-    events.push({
-      ts: Date.now(),
-      test_id: testId,
-      question_number: questionNumber,
-      question_weight: weight_points,
-      weight: weight_points,
-      correct: !!isCorrect,
-    });
-    if (events.length > 20000) events.splice(0, events.length - 20000);
-    setEvents(events);
 
     tlBumpAnswer(qObj, !!isCorrect);
     updateDeservesButton();
@@ -963,7 +911,7 @@ if (typeof window !== "undefined") {
     tWrap?.classList.add("quiz--show-text");
   }
 
-  /* 9) Real Test */
+  /* Real Test */
   const REAL_TEST_COUNTS = Object.freeze({
     3: 4,
     9: 6,
@@ -1327,24 +1275,6 @@ if (typeof window !== "undefined") {
           })
           .join("");
 
-        const src = resolveAudioStoragePath(q);
-
-        const audioBlock =
-          src && /^https?:\/\//i.test(src)
-            ? `
-    <div style="margin-top:10px">
-      <audio controls preload="none" style="width:50%">
-        <source src="${src}" type="${src.endsWith(".wav") ? "audio/wav" : "audio/mpeg"}" />
-        Your browser does not support the audio element.
-      </audio>
-    </div>
-  `
-            : `
-    <div style="margin-top:10px;opacity:.7;font-weight:700">
-      🎧 Audio available (will play here after Storage URL wiring)
-    </div>
-  `;
-
         const transcriptBlock =
           q.transcript && q.transcript.trim()
             ? `
@@ -1390,9 +1320,6 @@ if (typeof window !== "undefined") {
                 ${ok ? "Correct" : "Wrong"}
               </div>
             </div>
-
-            ${audioBlock}
-
             <div style="margin-top:10px">${alts}</div>
             ${transcriptBlock}
           </section>
@@ -1447,46 +1374,7 @@ if (typeof window !== "undefined") {
       applyCompactToolbarLabels();
     });
 
-    /* Header Practice dropdown */
-    (() => {
-      const header = document.getElementById("mainHeader");
-      const dropdown = document.querySelector(".quiz--nav__dropdown");
-      if (!header || !dropdown) return;
-
-      const toggle = dropdown.querySelector(".quiz--nav__dropdown-toggle");
-      if (!toggle) return;
-
-      toggle.addEventListener("click", (e) => {
-        const navOpen = header.classList.contains("open-nav");
-        if (!navOpen) return;
-
-        e.preventDefault();
-        const isOpen = dropdown.classList.toggle("is-open");
-        toggle.setAttribute("aria-expanded", String(isOpen));
-      });
-
-      const navToggle = document.getElementById("navToggle");
-      if (navToggle) {
-        navToggle.addEventListener("click", () => {
-          const navOpen = header.classList.contains("open-nav");
-          if (!navOpen) {
-            dropdown.classList.remove("is-open");
-            toggle.setAttribute("aria-expanded", "false");
-          }
-        });
-      }
-
-      document.addEventListener("click", (e) => {
-        const navOpen = header.classList.contains("open-nav");
-        if (!navOpen) return;
-        if (!dropdown.contains(e.target)) {
-          dropdown.classList.remove("is-open");
-          toggle.setAttribute("aria-expanded", "false");
-        }
-      });
-    })();
-
-    // Transcript toggles inside Results review cards
+    // ✅ Transcript toggle inside Results review cards
     document.addEventListener("click", (e) => {
       const btn = e.target?.closest?.("[data-tr-toggle='1']");
       if (!btn) return;
@@ -1525,30 +1413,7 @@ if (typeof window !== "undefined") {
       if (e.key === KEYS.LEFT) prevQuestion();
     });
 
-    function closeRealTestPopupOnly() {
-      if (rtPrepareTimer) {
-        clearTimeout(rtPrepareTimer);
-        rtPrepareTimer = null;
-      }
-
-      hideOverlay();
-
-      state.realTestMode = false;
-      state.realTestFinished = false;
-      state.realTestPool = [];
-
-      disableFiltersDuringRealTest(false);
-      els.quiz()?.classList.remove(CLS.hidden);
-
-      safeText(RT.loadingText(), "Preparing Test...");
-      RT.loadingText()?.classList.add("quiz--loading-flash");
-
-      updateFinishButtonState();
-      updateKpiVisibility();
-      setResultsMode(false);
-    }
-
-    // Click handlers
+    // Click handlers (for buttons with ids)
     document.addEventListener("click", (e) => {
       const t = e.target;
 
@@ -1575,11 +1440,13 @@ if (typeof window !== "undefined") {
         return;
       }
       if (t && t.id === "rtClose") {
-        closeRealTestPopupOnly();
+        hideOverlay();
+        exitRealTest();
         return;
       }
       if (t && t.id === "rtBackdrop") {
-        closeRealTestPopupOnly();
+        hideOverlay();
+        exitRealTest();
         return;
       }
     });
@@ -1609,7 +1476,7 @@ if (typeof window !== "undefined") {
     setResultsMode(false);
   }
 
-  /* ✅ EXPORTS — make functions available for inline onclick immediately */
+  /* ✅ EXPORTS */
   window.filterQuestions = filterQuestions;
   window.nextQuestion = nextQuestion;
   window.prevQuestion = prevQuestion;
