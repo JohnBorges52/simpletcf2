@@ -1608,13 +1608,13 @@ const raw = await res.json();
     renderQuestion();
     updateKpiVisibility();
     setResultsMode(false);
-
-    // expose
-    window.filterQuestions = filterQuestions;
-    window.nextQuestion = nextQuestion;
-    window.prevQuestion = prevQuestion;
-    window.loadTranscript = () => loadTranscript();
   }
+
+  // expose globally before init runs
+  window.filterQuestions = filterQuestions;
+  window.nextQuestion = nextQuestion;
+  window.prevQuestion = prevQuestion;
+  window.loadTranscript = () => loadTranscript();
 
   init();
 })();

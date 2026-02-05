@@ -1071,12 +1071,12 @@ try {
     recomputeFiltered();
     showSelectWeightEmptyState();
     updateDeservesButton();
-
-    // Expose for inline HTML onclick + nav buttons
-    window.filterQuestions = filterQuestions;
-    window.nextQuestion = nextQuestion;
-    window.prevQuestion = prevQuestion;
   }
+
+  // Expose for inline HTML onclick + nav buttons (before init runs)
+  window.filterQuestions = filterQuestions;
+  window.nextQuestion = nextQuestion;
+  window.prevQuestion = prevQuestion;
 
   init();
 })();
