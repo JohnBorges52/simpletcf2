@@ -7,7 +7,7 @@
 
 (() => {
   /* 1) Constants */
-  const PATHS = Object.freeze({ DATA: "public/audios/all_quiz_data.json" });
+  const PATHS = Object.freeze({ DATA: "/data/audios/all_quiz_data.json" });
 
   // Legacy (kept so other parts of your app keep working)
   const STORAGE_KEYS = Object.freeze({
