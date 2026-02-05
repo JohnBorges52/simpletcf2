@@ -239,9 +239,9 @@ import { storageDownloadUrl } from "./firebase-storage.js";
         : "/" + q.audio_local_path.replace(/^(\.\/)+/, "");
     if (q.audio_url) {
       const base = q.audio_url.split("/").pop() || "";
-      if (base) return `/public/audios/${base}`;
+      if (base) return `/audios/${base}`;
     }
-    if (q.filename) return `/public/audios/${q.filename}`;
+    if (q.filename) return `/audios/${q.filename}`;
     return null;
   }
 
