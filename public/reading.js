@@ -417,9 +417,13 @@ const raw = await res.json();
     wrap.innerHTML = "";
 
     const storagePathOrUrl = resolvePdfStoragePath(q);
-if (!storagePathOrUrl) { ... }
+    if (!storagePathOrUrl) {
+      if (myToken !== pdfRenderToken) return;
+      wrap.textContent = "No PDF found.";
+      return;
+    }
 
-let url = storagePathOrUrl;
+    let url = storagePathOrUrl;
 
 try {
   if (!/^https?:\/\//i.test(storagePathOrUrl)) {
