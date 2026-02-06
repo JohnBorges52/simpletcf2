@@ -484,6 +484,83 @@ function makeWeeklyLabels(n) {
   return Array.from({ length: n }, (_, i) => `W${i + 1}`);
 }
 
+function calcStreakFromTimestamps(timestamps = []) {
+  const activeDates = new Set(
+    timestamps
+      .filter((ts) => Number.isFinite(Number(ts)) && Number(ts) > 0)
+      .map((ts) => {
+        const d = new Date(Number(ts));
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString().split("T")[0];
+      }),
+  );
+
+  const sortedDates = Array.from(activeDates).sort().reverse();
+  if (!sortedDates.length) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const todayKey = today.toISOString().split("T")[0];
+  const yesterdayKey = yesterday.toISOString().split("T")[0];
+
+  if (sortedDates[0] !== todayKey && sortedDates[0] !== yesterdayKey) return 0;
+
+  let streak = 1;
+  let currentDate = new Date(sortedDates[0]);
+  for (let i = 1; i < sortedDates.length; i++) {
+    const expectedDate = new Date(currentDate);
+    expectedDate.setDate(expectedDate.getDate() - 1);
+    const expectedKey = expectedDate.toISOString().split("T")[0];
+
+    if (sortedDates[i] !== expectedKey) break;
+    streak++;
+    currentDate = expectedDate;
+  }
+
+  return streak;
+}
+
+function applyLegacyProgressFallback(data, legacyTracking, legacyListening) {
+  const readingRows = Object.values(legacyTracking || {}).filter(
+    (v) => v && typeof v === "object",
+  );
+  const listeningRows = Object.values(legacyListening?.answers || {}).filter(
+    (v) => v && typeof v === "object",
+  );
+
+  const fillMode = (mode, rows) => {
+    const totals = rows.reduce(
+      (acc, row) => {
+        const correct = Number(row.correct || 0);
+        const wrong = Number(row.wrong || 0);
+        const total = correct + wrong;
+
+        if (total <= 0) return acc;
+
+        acc.answered += total;
+        acc.correct += correct;
+        if (Number(row.lastAnswered) > 0) acc.timestamps.push(Number(row.lastAnswered));
+        return acc;
+      },
+      { answered: 0, correct: 0, timestamps: [] },
+    );
+
+    if (totals.answered === 0) return;
+
+    data[mode].kpis.answered = totals.answered;
+    data[mode].kpis.correct = totals.correct;
+    data[mode].kpis.accuracy = Math.round((totals.correct / totals.answered) * 100);
+    data[mode].kpis.streak = calcStreakFromTimestamps(totals.timestamps);
+  };
+
+  fillMode("reading", readingRows);
+  fillMode("listening", listeningRows);
+}
+
+
 async function seedProgressPlaceholders() {
   // Placeholder datasets
   let data = {
@@ -505,6 +582,7 @@ async function seedProgressPlaceholders() {
   try {
     const auth = await window.__authReady;
     if (auth && auth.currentUser && window.dbService) {
+      let usedResponsesStats = false;
       // Load listening statistics
       const [listeningStats, listeningDaily, listeningWeekly, listeningStreak] = await Promise.all([
         window.dbService.getUserStatistics(auth.currentUser.uid, { questionType: "listening" }),
@@ -514,6 +592,7 @@ async function seedProgressPlaceholders() {
       ]);
       
       if (listeningStats) {
+         if ((listeningStats.totalResponses || 0) > 0) usedResponsesStats = true;
         data.listening.kpis.answered = listeningStats.totalResponses;
         data.listening.kpis.correct = listeningStats.correctResponses;
         data.listening.kpis.accuracy = parseFloat(listeningStats.accuracy) || 0;
@@ -541,6 +620,7 @@ async function seedProgressPlaceholders() {
       ]);
       
       if (readingStats) {
+        if ((readingStats.totalResponses || 0) > 0) usedResponsesStats = true;
         data.reading.kpis.answered = readingStats.totalResponses;
         data.reading.kpis.correct = readingStats.correctResponses;
         data.reading.kpis.accuracy = parseFloat(readingStats.accuracy) || 0;
@@ -558,9 +638,29 @@ async function seedProgressPlaceholders() {
       // Set daily and weekly data
       data.reading.daily = readingDaily.map(d => d.accuracy);
       data.reading.weekly = readingWeekly.map(w => w.accuracy);
+
+       // Fallback for users with legacy progress, but no questionResponses rows yet.
+      if (!usedResponsesStats) {
+        const [legacyTracking, legacyListening] = await Promise.all([
+          getTracking(),
+          getTCFListening(),
+        ]);
+        applyLegacyProgressFallback(data, legacyTracking, legacyListening);
+      }
     }
   } catch (error) {
     console.error("Failed to load progress statistics from Firestore:", error);
+    // If the new query path fails (e.g. missing Firestore indexes),
+    // still show progress from legacy stores.
+    try {
+      const [legacyTracking, legacyListening] = await Promise.all([
+        getTracking(),
+        getTCFListening(),
+      ]);
+      applyLegacyProgressFallback(data, legacyTracking, legacyListening);
+    } catch (fallbackError) {
+      console.error("Failed to load legacy progress fallback:", fallbackError);
+    }
   }
 
   let currentMode = "listening";
