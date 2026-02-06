@@ -595,7 +595,8 @@ async function getTestResults(userId, options = {}) {
       // Calculate percentage scores for fair comparison
       const percentageScores = results.map(r => {
         const total = r.totalQuestions;
-        if (!total || total === 0) return 0; // Return 0 for invalid data
+        // Return 0 for invalid data to prevent division by zero and misleading percentages
+        if (!total || total === 0) return 0;
         return Math.round((r.correctAnswers || 0) / total * 100);
       });
       stats.bestScore = Math.max(...percentageScores);

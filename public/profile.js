@@ -220,24 +220,40 @@ async function seedRealTests() {
         window.dbService.getTestResults(auth.currentUser.uid, { testType: "reading" }),
       ]);
       
-      // Helper function to convert test results to display format
-      const formatTestResults = (results) => results.map(r => ({
-        id: r.testId || r.id,
-        date: r.completedAt ? new Date(r.completedAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric"
-        }) : "—",
-        correct: `${r.correctAnswers || 0}/${r.totalQuestions || 0}`,
-        clb: r.clbScore || "—",
-      }));
-      
       // Convert to display format
       datasets.listening = formatTestResults(listeningResults.results);
       datasets.reading = formatTestResults(readingResults.results);
     }
   } catch (error) {
     console.error("Failed to load real test results from Firestore:", error);
+  }
+
+  // Helper function to format date
+  function formatDate(date) {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  // Helper function to convert test results to display format
+  function formatTestResults(results) {
+    return results.map(r => ({
+      id: r.testId || r.id,
+      date: formatDate(r.completedAt),
+      correct: `${r.correctAnswers || 0}/${r.totalQuestions || 0}`,
+      clb: r.clbScore || "—",
+    }));
+  }
+
+  // Helper function to set default KPI values
+  function setDefaultKPIs(all, slice) {
+    if (kTotal) kTotal.textContent = all.length;
+    if (kBest) kBest.textContent = "—";
+    if (kAvg) kAvg.textContent = "—";
+    if (kLast) kLast.textContent = slice[0]?.date || "—";
   }
 
   async function setMode(nextMode) {
@@ -290,27 +306,13 @@ async function seedRealTests() {
         if (kTotal) kTotal.textContent = stats.totalTests;
         if (kBest) kBest.textContent = stats.bestScore > 0 ? `${stats.bestScore}%` : "—";
         if (kAvg) kAvg.textContent = stats.averageScore > 0 ? `${stats.averageScore}%` : "—";
-        if (kLast) kLast.textContent = stats.lastTest 
-          ? new Date(stats.lastTest).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric"
-            })
-          : "—";
+        if (kLast) kLast.textContent = formatDate(stats.lastTest);
       } else {
-        // Default values
-        if (kTotal) kTotal.textContent = all.length;
-        if (kBest) kBest.textContent = "—";
-        if (kAvg) kAvg.textContent = "—";
-        if (kLast) kLast.textContent = slice[0]?.date || "—";
+        setDefaultKPIs(all, slice);
       }
     } catch (error) {
       console.error("Error loading test statistics:", error);
-      // Default values
-      if (kTotal) kTotal.textContent = all.length;
-      if (kBest) kBest.textContent = "—";
-      if (kAvg) kAvg.textContent = "—";
-      if (kLast) kLast.textContent = slice[0]?.date || "—";
+      setDefaultKPIs(all, slice);
     }
 
     // Count pill
