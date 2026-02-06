@@ -939,8 +939,8 @@ async function loadAndDisplayAnswerHistory() {
           })
         : "—";
 
-      // Determine if latest was correct or wrong
-      const latestResult = answer.correct > answer.wrong ? "Correct" : "Wrong";
+      // Determine overall performance (majority)
+      const overallResult = answer.correct > answer.wrong ? "Mostly Correct" : "Needs Practice";
       const resultClass = answer.correct > answer.wrong ? "correct" : "incorrect";
 
       // Accuracy styling
@@ -952,7 +952,7 @@ async function loadAndDisplayAnswerHistory() {
       row.innerHTML = `
         <td>${date}</td>
         <td><strong>${answer.section}</strong>: ${answer.questionKey}</td>
-        <td><span class="result-badge ${resultClass}">${latestResult}</span></td>
+        <td><span class="result-badge ${resultClass}">${overallResult}</span></td>
         <td>${answer.correct}</td>
         <td>${answer.wrong}</td>
         <td class="accuracy-cell ${accuracyClass}">${answer.accuracy}%</td>
@@ -964,11 +964,8 @@ async function loadAndDisplayAnswerHistory() {
     // Show table
     tableWrapEl.style.display = "block";
 
-    // Show "show more" button if there are more answers
-    const showMoreWrap = $("#answerHistoryShowMore");
-    if (showMoreWrap && answers.length > 50) {
-      showMoreWrap.style.display = "flex";
-    }
+    // Note: "Show More" functionality would load additional answers beyond 50
+    // Currently limited to 50 for performance. Future enhancement could add pagination.
 
   } catch (error) {
     console.error("Error loading answer history:", error);
