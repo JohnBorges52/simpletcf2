@@ -5,6 +5,11 @@
    ✅ Re-renders on resize to keep perfect fit
 ============================================================================ */
 
+import {
+  getTracking as getTrackingFS,
+  setTracking as setTrackingFS,
+} from "./firestore-storage.js";
+
 (() => {
   /* =====================
      1) Constants
@@ -103,46 +108,41 @@
     return arr;
   }
 
-  function getTracking() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.TRACKING) || "{}");
-    } catch {
-      return {};
-    }
+  async function getTracking() {
+    return getTrackingFS();
   }
 
-  function setTracking(o) {
-    try {
-      localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(o || {}));
-    } catch {}
+  async function setTracking(o) {
+    return setTrackingFS(o || {});
   }
 
   function keyFor(q) {
     return `${q.test_id || "unknownTest"}-question${q.question_number}`;
   }
 
-  function readLifetime(q) {
-    const t = getTracking();
+  async function readLifetime(q) {
+    const t = await getTracking();
     const rec = t[keyFor(q)] || { correct: 0, wrong: 0 };
     const correct = Number(rec.correct || 0);
     const wrong = Number(rec.wrong || 0);
     return { correct, wrong, total: correct + wrong };
   }
 
-  function bumpLifetime(q, isCorrect) {
+  async function bumpLifetime(q, isCorrect) {
     const key = keyFor(q);
-    const tracking = getTracking();
+    const tracking = await getTracking();
     if (!tracking[key]) tracking[key] = { correct: 0, wrong: 0 };
 
     if (isCorrect) tracking[key].correct = Number(tracking[key].correct || 0) + 1;
     else tracking[key].wrong = Number(tracking[key].wrong || 0) + 1;
 
     tracking[key].lastAnswered = Date.now();
-    setTracking(tracking);
+    await setTracking(tracking);
   }
 
-  function isUnansweredLifetime(q) {
-    return readLifetime(q).total === 0;
+  async function isUnansweredLifetime(q) {
+    const lifetime = await readLifetime(q);
+    return lifetime.total === 0;
   }
 
   function fmt2or3(n) {
@@ -260,7 +260,7 @@
     anchor.insertAdjacentElement("afterend", stats);
   }
 
-  function updateQuestionStats(q) {
+  async function updateQuestionStats(q) {
     ensureQuestionStatsDOM();
     const node = els.qStats();
     if (!node) return;
@@ -268,37 +268,38 @@
       safeText(node, "");
       return;
     }
-    const { correct, wrong, total } = readLifetime(q);
+    const { correct, wrong, total } = await readLifetime(q);
     safeText(node, `: ✅ ${correct} | ❌ ${wrong} (total ${total})`);
   }
 
-  function updateDeservesButton() {
+  async function updateDeservesButton() {
     const btn = els.deservesBtn();
     if (!btn) return;
 
-    const count = countDeservesAttentionForCurrentScope();
+    const count = await countDeservesAttentionForCurrentScope();
     btn.textContent = `📚 Deserves Attention (${count})`;
     btn.classList.toggle("quiz--toggled", !!state.deservesMode);
     btn.setAttribute("aria-pressed", state.deservesMode ? "true" : "false");
   }
 
-  function deservesFromTracking(q) {
-    const { correct, wrong, total } = readLifetime(q);
+  async function deservesFromTracking(q) {
+    const { correct, wrong, total } = await readLifetime(q);
     if (total === 0) return false;
     return Math.abs(correct - wrong) < 2;
   }
 
-  function countDeservesAttentionForCurrentScope() {
+  async function countDeservesAttentionForCurrentScope() {
     if (state.currentWeight == null) return 0;
 
     let pool = state.allData;
     if (state.currentWeight !== "all") {
       pool = pool.filter((q) => Number(q.weight_points) === Number(state.currentWeight));
     }
-    return pool.filter(deservesFromTracking).length;
+    const results = await Promise.all(pool.map(deservesFromTracking));
+    return results.filter(Boolean).length;
   }
 
-  function recomputeFiltered() {
+  async function recomputeFiltered() {
     if (!state.realTestMode && state.currentWeight == null) {
       state.filtered = [];
       return;
@@ -312,13 +313,18 @@
       }
     }
 
-    if (state.deservesMode) items = items.filter(deservesFromTracking);
-    else if (state.onlyUnanswered) items = items.filter(isUnansweredLifetime);
+    if (state.deservesMode) {
+      const results = await Promise.all(items.map(deservesFromTracking));
+      items = items.filter((_, i) => results[i]);
+    } else if (state.onlyUnanswered) {
+      const results = await Promise.all(items.map(isUnansweredLifetime));
+      items = items.filter((_, i) => results[i]);
+    }
 
     state.filtered = items;
   }
 
-  function showSelectWeightEmptyState() {
+  async function showSelectWeightEmptyState() {
     els.emptyState()?.classList.remove(CLS.hidden);
     els.quiz()?.classList.add(CLS.hidden);
 
@@ -330,7 +336,7 @@
     if (els.options()) els.options().innerHTML = "";
     els.confirmBtn()?.classList.add(CLS.hidden);
     safeText(els.score(), "");
-    updateQuestionStats(null);
+    await updateQuestionStats(null);
   }
 
   function hideEmptyState() {
@@ -583,7 +589,13 @@
       container.appendChild(div);
     });
 
-    if (confirmBtn) confirmBtn.onclick = () => confirmAnswer(q);
+    if (confirmBtn) confirmBtn.onclick = async () => {
+      try {
+        await confirmAnswer(q);
+      } catch (err) {
+        console.error("Error confirming answer:", err);
+      }
+    };
   }
 
   function updateScore() {
@@ -600,11 +612,11 @@
   /* =====================
      8) Render Question
   ===================== */
-  function renderQuestion() {
+  async function renderQuestion() {
     ensureQuestionStatsDOM();
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
+      await showSelectWeightEmptyState();
       return;
     }
 
@@ -612,7 +624,7 @@
     state.currentQuestion = q || null;
 
     if (!q) {
-      showSelectWeightEmptyState();
+      await showSelectWeightEmptyState();
       return;
     }
 
@@ -642,13 +654,13 @@
     renderOptions(q, alreadyAnswered, correctIndex);
 
     updateScore();
-    updateQuestionStats(q);
+    await updateQuestionStats(q);
   }
 
   /* =====================
      9) Confirm Answer
   ===================== */
-  function confirmAnswer(q) {
+  async function confirmAnswer(q) {
     if (q.userAnswerIndex !== undefined && q.userAnswerIndex !== null) {
       els.confirmBtn()?.classList.add(CLS.hidden);
       return;
@@ -669,7 +681,7 @@
     if (isCorrect) state.score++;
     state.answered++;
 
-    bumpLifetime(q, isCorrect);
+    await bumpLifetime(q, isCorrect);
 
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
@@ -699,18 +711,18 @@
   /* =====================
      10) Navigation
   ===================== */
-  function nextQuestion() {
+  async function nextQuestion() {
     if (!state.filtered.length) return;
     if (state.index < state.filtered.length - 1) state.index++;
 
-    renderQuestion();
+    await renderQuestion();
     if (state.realTestMode) renderRealTestDots();
   }
 
-  function prevQuestion() {
+  async function prevQuestion() {
     if (!state.filtered.length) return;
     if (state.index > 0) state.index--;
-    renderQuestion();
+    await renderQuestion();
     if (state.realTestMode) renderRealTestDots();
   }
 
@@ -736,11 +748,11 @@
           );
     selectedBtn?.classList.add(CLS.selectedWeight);
 
-    recomputeFiltered();
+    await recomputeFiltered();
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
-      updateDeservesButton();
+      await showSelectWeightEmptyState();
+      await updateDeservesButton();
       return;
     }
 
@@ -752,11 +764,11 @@
     state.answered = 0;
 
     els.quiz()?.classList.remove(CLS.hidden);
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
   }
 
-  function toggleDeserves() {
+  async function toggleDeserves() {
     state.deservesMode = !state.deservesMode;
 
     if (state.deservesMode) {
@@ -765,7 +777,7 @@
       if (chk) chk.checked = false;
     }
 
-    recomputeFiltered();
+    await recomputeFiltered();
     shuffle(state.filtered);
 
     state.index = 0;
@@ -773,15 +785,15 @@
     state.answered = 0;
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
-      updateDeservesButton();
+      await showSelectWeightEmptyState();
+      await updateDeservesButton();
       return;
     }
 
     hideEmptyState();
     els.quiz()?.classList.remove(CLS.hidden);
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
   }
 
   // ============================
@@ -912,9 +924,9 @@
 
       if (i === state.index) dot.classList.add("quiz--active");
 
-      dot.addEventListener("click", () => {
+      dot.addEventListener("click", async () => {
         state.index = i;
-        renderQuestion();
+        await renderQuestion();
         renderRealTestDots();
       });
 
@@ -922,7 +934,7 @@
     });
   }
 
-  function startRealTest() {
+  async function startRealTest() {
     closeRealTestOverlay();
 
     state.realTestMode = true;
@@ -944,11 +956,11 @@
     els.quiz()?.classList.remove(CLS.hidden);
     hideEmptyState();
 
-    renderQuestion();
+    await renderQuestion();
     renderRealTestDots();
   }
 
-  function finishRealTest() {
+  async function finishRealTest() {
     state.realTestFinished = true;
     state.realTestMode = false;
 
@@ -960,8 +972,8 @@
     state.filtered = [];
     state.index = 0;
 
-    showSelectWeightEmptyState();
-    updateDeservesButton();
+    await showSelectWeightEmptyState();
+    await updateDeservesButton();
   }
 
   /* =====================
@@ -994,16 +1006,16 @@
     document.getElementById("startRealTestBtn")?.addEventListener("click", startRealTest);
     document.getElementById("finishRealTestBtn")?.addEventListener("click", finishRealTest);
 
-    els.onlyChk()?.addEventListener("click", (e) => {
+    els.onlyChk()?.addEventListener("click", async (e) => {
       state.onlyUnanswered = !!e.target.checked;
 
       if (state.onlyUnanswered) state.deservesMode = false;
 
-      updateDeservesButton();
-      recomputeFiltered();
+      await updateDeservesButton();
+      await recomputeFiltered();
 
       if (!state.realTestMode && state.currentWeight == null) {
-        showSelectWeightEmptyState();
+        await showSelectWeightEmptyState();
         return;
       }
 
@@ -1011,7 +1023,7 @@
       state.index = 0;
       state.score = 0;
       state.answered = 0;
-      renderQuestion();
+      await renderQuestion();
     });
 
     window.addEventListener("keydown", (e) => {
@@ -1045,9 +1057,9 @@
     state.onlyUnanswered = false;
     state.deservesMode = false;
 
-    recomputeFiltered();
-    showSelectWeightEmptyState();
-    updateDeservesButton();
+    await recomputeFiltered();
+    await showSelectWeightEmptyState();
+    await updateDeservesButton();
   }
 
   window.filterQuestions = filterQuestions;

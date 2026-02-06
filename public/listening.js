@@ -13,6 +13,15 @@
    - ✅ Transcript button hidden during Real Test (taking test)
 ============================================================================ */
 
+import {
+  getTracking as getTrackingFS,
+  setTracking as setTrackingFS,
+  getEvents as getEventsFS,
+  setEvents as setEventsFS,
+  getTCFListening as getTCFListeningFS,
+  setTCFListening as setTCFListeningFS,
+} from "./firestore-storage.js";
+
 (() => {
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
@@ -128,49 +137,35 @@
     return arr;
   }
 
-  function getTracking() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.TRACKING) || "{}");
-    } catch {
-      return {};
-    }
+  async function getTracking() {
+    return await getTrackingFS();
   }
-  function setTracking(o) {
-    localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(o || {}));
+  async function setTracking(o) {
+    await setTrackingFS(o);
   }
-  function getEvents() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.EVENTS) || "[]");
-    } catch {
-      return [];
-    }
+  async function getEvents() {
+    return await getEventsFS();
   }
-  function setEvents(a) {
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(a || []));
+  async function setEvents(a) {
+    await setEventsFS(a);
   }
 
   function tlDefault() {
     return { answers: {}, tests: { count: 0, items: [] } };
   }
-  function tlGet() {
-    try {
-      const raw = localStorage.getItem(TL_KEY);
-      if (!raw) return tlDefault();
-      const obj = JSON.parse(raw);
-      if (!obj.answers) obj.answers = {};
-      if (!obj.tests) obj.tests = { count: 0, items: [] };
-      if (typeof obj.tests.count !== "number")
-        obj.tests.count = Number(obj.tests.count || 0);
-      if (!Array.isArray(obj.tests.items)) obj.tests.items = [];
-      return obj;
-    } catch {
-      return tlDefault();
+  async function tlGet() {
+    const data = await getTCFListeningFS();
+    // Ensure structure is valid
+    if (!data.answers) data.answers = {};
+    if (!data.tests) data.tests = { count: 0, items: [] };
+    if (typeof data.tests.count !== "number") {
+      data.tests.count = Number(data.tests.count || 0);
     }
+    if (!Array.isArray(data.tests.items)) data.tests.items = [];
+    return data;
   }
-  function tlSet(obj) {
-    try {
-      localStorage.setItem(TL_KEY, JSON.stringify(obj || tlDefault()));
-    } catch {}
+  async function tlSet(obj) {
+    await setTCFListeningFS(obj || tlDefault());
   }
   function tlQuestionKey(q) {
     return (
@@ -181,22 +176,23 @@
         .padStart(4, "0")}`
     );
   }
-  function tlReadAnswer(q) {
+  async function tlReadAnswer(q) {
     const key = tlQuestionKey(q);
-    return tlGet().answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
+    const data = await tlGet();
+    return data.answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
   }
-  function tlBumpAnswer(q, isCorrect) {
-    const store = tlGet();
+  async function tlBumpAnswer(q, isCorrect) {
+    const store = await tlGet();
     const key = tlQuestionKey(q);
     const rec = store.answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
     if (isCorrect) rec.correct++;
     else rec.wrong++;
     rec.lastAnswered = Date.now();
     store.answers[key] = rec;
-    tlSet(store);
+    await tlSet(store);
   }
-  function tlRecordTest({ weightedScore, pct, clb, band, totalCorrect }) {
-    const store = tlGet();
+  async function tlRecordTest({ weightedScore, pct, clb, band, totalCorrect }) {
+    const store = await tlGet();
     const next = (store.tests.count || 0) + 1;
     const entry = {
       number: next,
@@ -209,11 +205,11 @@
     };
     store.tests.count = next;
     store.tests.items.push(entry);
-    tlSet(store);
+    await tlSet(store);
   }
 
-  function deservesFromTL(q) {
-    const rec = tlReadAnswer(q);
+  async function deservesFromTL(q) {
+    const rec = await tlReadAnswer(q);
     const total = (rec.correct || 0) + (rec.wrong || 0);
     if (total === 0) return false;
     return Math.abs((rec.correct || 0) - (rec.wrong || 0)) < 2;
@@ -528,40 +524,41 @@
 
     selectedBtn?.classList.add(CLS.selectedWeight);
 
-    recomputeFiltered();
+    await recomputeFiltered();
     shuffle(state.filtered);
     state.index = 0;
     state.score = 0;
     state.answered = 0;
 
     els.quiz()?.classList.remove(CLS.hidden);
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
     refreshWeightButtonsLabels();
   }
 
-  function countDeservesAttentionForCurrentScope() {
+  async function countDeservesAttentionForCurrentScope() {
     let pool = state.allData;
     if (state.currentWeight != null) {
       pool = pool.filter(
         (q) => Number(q.weight_points) === Number(state.currentWeight),
       );
     }
-    return pool.filter(deservesFromTL).length;
+    const results = await Promise.all(pool.map((q) => deservesFromTL(q)));
+    return results.filter(Boolean).length;
   }
 
-  function updateDeservesButton() {
+  async function updateDeservesButton() {
     const btn = els.deservesBtn();
     if (!btn) return;
 
-    btn.textContent = `📚 Deserves Attention (${countDeservesAttentionForCurrentScope()})`;
+    btn.textContent = `📚 Deserves Attention (${await countDeservesAttentionForCurrentScope()})`;
     btn.classList.toggle(CLS.toggled, state.deservesMode);
     btn.setAttribute("aria-pressed", state.deservesMode ? "true" : "false");
 
     applyCompactToolbarLabels();
   }
 
-  function toggleDeserves() {
+  async function toggleDeserves() {
     if (state.realTestMode && state.realTestFinished) {
       if (
         !confirm(
@@ -577,16 +574,16 @@
       const chk = els.onlyChk();
       if (chk) chk.checked = false;
     }
-    recomputeFiltered();
+    await recomputeFiltered();
     shuffle(state.filtered);
     state.index = 0;
     state.score = 0;
     state.answered = 0;
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
   }
 
-  function recomputeFiltered() {
+  async function recomputeFiltered() {
     let items = state.allData.slice();
 
     if (state.currentWeight != null) {
@@ -596,10 +593,12 @@
     }
 
     if (state.deservesMode) {
-      items = items.filter(deservesFromTL);
+      const results = await Promise.all(items.map((q) => deservesFromTL(q)));
+      items = items.filter((_, i) => results[i]);
     } else if (state.onlyUnanswered) {
-      items = items.filter((q) => {
-        const tl = tlReadAnswer(q);
+      const tlResults = await Promise.all(items.map((q) => tlReadAnswer(q)));
+      items = items.filter((_, i) => {
+        const tl = tlResults[i];
         return (tl.correct || 0) + (tl.wrong || 0) === 0;
       });
     }
@@ -622,7 +621,7 @@
     anchor.insertAdjacentElement("afterend", stats);
   }
 
-  function updateQuestionStats(q) {
+  async function updateQuestionStats(q) {
     ensureQuestionStatsDOM();
     const node = els.qStats();
     if (!node) return;
@@ -637,7 +636,7 @@
       return;
     }
 
-    const tl = tlReadAnswer(q);
+    const tl = await tlReadAnswer(q);
     const correct = Number(tl.correct || 0);
     const wrong = Number(tl.wrong || 0);
     const total = correct + wrong;
@@ -742,7 +741,13 @@
       container.appendChild(div);
     });
 
-    if (confirmBtn) confirmBtn.onclick = () => confirmAnswer(q);
+    if (confirmBtn) confirmBtn.onclick = async () => {
+      try {
+        await confirmAnswer(q);
+      } catch (err) {
+        console.error("Error confirming answer:", err);
+      }
+    };
   }
 
   function updateScore() {
@@ -756,7 +761,7 @@
     );
   }
 
-  function renderQuestion() {
+  async function renderQuestion() {
     ensureQuestionStatsDOM();
 
     const q = state.filtered[state.index];
@@ -785,7 +790,7 @@
       setTranscriptButtonVisible(false);
 
       updateScore();
-      updateQuestionStats(null);
+      await updateQuestionStats(null);
       updateFinishButtonState();
       updateKpiVisibility();
       return;
@@ -816,7 +821,7 @@
 
     renderOptions(q, alreadyAnswered, correctIndex);
     updateScore();
-    updateQuestionStats(q);
+    await updateQuestionStats(q);
 
     if (state.realTestMode) refreshNavDots();
     updateFinishButtonState();
@@ -824,19 +829,19 @@
   }
 
   /* 8) Tracking + events */
-  function trackAnswerLocally(qObj, isCorrect) {
+  async function trackAnswerLocally(qObj, isCorrect) {
     const testId = qObj.test_id || "unknownTest";
     const questionNumber = qObj.question_number;
     const weight_points = qObj.weight_points;
 
     const key = `${testId}-question${questionNumber}`;
-    const tracking = getTracking();
+    const tracking = await getTracking();
     if (!tracking[key]) tracking[key] = { correct: 0, wrong: 0 };
     isCorrect ? tracking[key].correct++ : tracking[key].wrong++;
     tracking[key].lastAnswered = Date.now();
-    setTracking(tracking);
+    await setTracking(tracking);
 
-    const events = getEvents();
+    const events = await getEvents();
     events.push({
       ts: Date.now(),
       test_id: testId,
@@ -846,10 +851,10 @@
       correct: !!isCorrect,
     });
     if (events.length > 20000) events.splice(0, events.length - 20000);
-    setEvents(events);
+    await setEvents(events);
 
-    tlBumpAnswer(qObj, !!isCorrect);
-    updateDeservesButton();
+    await tlBumpAnswer(qObj, !!isCorrect);
+    await updateDeservesButton();
   }
 
   function rtFindNextUnanswered(fromIndex) {
@@ -879,7 +884,7 @@
     else btn.classList.remove(CLS.finishReady);
   }
 
-  function confirmAnswer(q) {
+  async function confirmAnswer(q) {
     if (state.selectedOptionIndex === null) return;
 
     const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
@@ -890,7 +895,7 @@
     if (isCorrect) state.score++;
     state.answered++;
 
-    trackAnswerLocally(q, isCorrect);
+    await trackAnswerLocally(q, isCorrect);
 
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
@@ -915,7 +920,7 @@
 
     // ✅ PRACTICE MODE: re-render so correct/wrong colors + transcript become available
     if (!state.realTestMode) {
-      renderQuestion(); // <-- this is the missing piece
+      await renderQuestion(); // <-- this is the missing piece
       return;
     }
 
@@ -927,24 +932,24 @@
       const nextIdx = rtFindNextUnanswered(state.index);
       if (nextIdx != null) {
         state.index = nextIdx;
-        renderQuestion();
+        await renderQuestion();
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        renderQuestion();
+        await renderQuestion();
       }
     }
 
     updateKpiVisibility();
   }
 
-  function nextQuestion() {
+  async function nextQuestion() {
     if (state.index < state.filtered.length - 1) state.index++;
-    renderQuestion();
+    await renderQuestion();
   }
-  function prevQuestion() {
+  async function prevQuestion() {
     if (state.index > 0) {
       state.index--;
-      renderQuestion();
+      await renderQuestion();
     }
   }
 
@@ -1051,7 +1056,7 @@
     state.realTestMode = true;
     state.realTestFinished = false;
     state.deservesMode = false;
-    updateDeservesButton();
+    await updateDeservesButton();
 
     disableFiltersDuringRealTest(true);
 
@@ -1074,12 +1079,12 @@
     }, 3000);
   }
 
-  function beginRealTest() {
+  async function beginRealTest() {
     hideOverlay();
     RT.container()?.classList.remove(CLS.hidden);
     els.quiz()?.classList.remove(CLS.hidden);
     buildNavDots();
-    renderQuestion();
+    await renderQuestion();
     updateFinishButtonState();
     updateKpiVisibility();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1098,18 +1103,22 @@
       dot.textContent = String(i + 1);
       dot.dataset.index = String(i);
 
-      dot.addEventListener("click", () => {
-        if (!state.realTestFinished) {
-          state.index = i;
-          renderQuestion();
-          refreshNavDots();
-          updateFinishButtonState();
-          updateKpiVisibility();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-          const target = document.getElementById(`qsec-${i + 1}`);
-          if (target)
-            target.scrollIntoView({ behavior: "smooth", block: "start" });
+      dot.addEventListener("click", async () => {
+        try {
+          if (!state.realTestFinished) {
+            state.index = i;
+            await renderQuestion();
+            refreshNavDots();
+            updateFinishButtonState();
+            updateKpiVisibility();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            const target = document.getElementById(`qsec-${i + 1}`);
+            if (target)
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        } catch (err) {
+          console.error("Error in dot navigation:", err);
         }
       });
 
@@ -1436,7 +1445,7 @@
     updateKpiVisibility();
   }
 
-  function exitRealTest() {
+  async function exitRealTest() {
     state.realTestMode = false;
     state.realTestFinished = false;
 
@@ -1451,10 +1460,10 @@
     disableFiltersDuringRealTest(false);
 
     els.quiz()?.classList.remove(CLS.hidden);
-    updateDeservesButton();
+    await updateDeservesButton();
     refreshWeightButtonsLabels();
-    recomputeFiltered();
-    renderQuestion();
+    await recomputeFiltered();
+    await renderQuestion();
 
     updateFinishButtonState();
     updateKpiVisibility();
@@ -1628,27 +1637,31 @@
     });
 
     // Only-unanswered checkbox
-    els.onlyChk()?.addEventListener("click", (e) => {
-      if (state.realTestMode && !state.realTestFinished) {
-        e.preventDefault();
-        return;
-      }
-      state.onlyUnanswered = !!e.target.checked;
-      if (state.onlyUnanswered) state.deservesMode = false;
-      updateDeservesButton();
+    els.onlyChk()?.addEventListener("click", async (e) => {
+      try {
+        if (state.realTestMode && !state.realTestFinished) {
+          e.preventDefault();
+          return;
+        }
+        state.onlyUnanswered = !!e.target.checked;
+        if (state.onlyUnanswered) state.deservesMode = false;
+        await updateDeservesButton();
 
-      recomputeFiltered();
-      shuffle(state.filtered);
-      state.index = 0;
-      state.score = 0;
-      state.answered = 0;
-      renderQuestion();
+        await recomputeFiltered();
+        shuffle(state.filtered);
+        state.index = 0;
+        state.score = 0;
+        state.answered = 0;
+        await renderQuestion();
+      } catch (err) {
+        console.error("Error updating filter:", err);
+      }
     });
 
     // init initial state
-    updateDeservesButton();
-    recomputeFiltered();
-    renderQuestion();
+    await updateDeservesButton();
+    await recomputeFiltered();
+    await renderQuestion();
     updateKpiVisibility();
     setResultsMode(false);
   }
