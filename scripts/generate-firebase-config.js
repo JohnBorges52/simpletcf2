@@ -4,12 +4,17 @@ const path = require("path");
 // Optionally load environment variables from .env.local when present.
 // Don't fail if `dotenv` is not installed (CI environments already provide env vars).
 try {
-  const envPath = path.join(__dirname, "..", ".env.local");
-  if (fs.existsSync(envPath)) {
+  const envPaths = [".env", ".env.local"].map((file) =>
+    path.join(__dirname, "..", file),
+  );
+  const existing = envPaths.filter((envPath) => fs.existsSync(envPath));
+  if (existing.length) {
     try {
-      require("dotenv").config({ path: envPath });
+      require("dotenv").config({ path: existing });
     } catch (e) {
-      console.warn("Optional dependency 'dotenv' not available — skipping .env.local load.");
+      console.warn(
+        "Optional dependency 'dotenv' not available — skipping .env/.env.local load.",
+      );
     }
   }
 } catch (e) {
