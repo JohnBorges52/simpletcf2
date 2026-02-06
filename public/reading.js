@@ -468,12 +468,19 @@
 
     // Use iframe to display PDF (no CORS issues)
     wrap.innerHTML = "";
+    const wrapWidth = wrap.clientWidth || 900;
+    const pdfHeight = Math.round(wrapWidth * 1.414); // A4-ish aspect ratio
+    wrap.style.background = "#fff";
+    wrap.style.overflow = "hidden";
+    wrap.style.height = `${pdfHeight}px`;
     const iframe = document.createElement("iframe");
     const pdfViewerParams = "#toolbar=0&navpanes=0&scrollbar=0&view=FitH";
     iframe.src = url.includes("#") ? `${url}&toolbar=0&navpanes=0&scrollbar=0&view=FitH` : `${url}${pdfViewerParams}`;
     iframe.style.width = "100%";
-    iframe.style.height = "780px";
+    iframe.style.height = "100%";
     iframe.style.border = "0";
+    iframe.style.display = "block";
+    iframe.style.background = "#fff";
     iframe.loading = "lazy";
 
     activePdfRenderController.signal.addEventListener("abort", () => {
