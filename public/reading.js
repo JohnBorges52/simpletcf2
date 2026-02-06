@@ -441,11 +441,21 @@
 
     wrap.innerHTML = "";
 
-    const url = resolvePdfSrc(q);
+    let url = resolvePdfSrc(q);
     if (!url) {
       if (myToken !== pdfRenderToken) return;
       wrap.textContent = "No PDF found.";
       return;
+    }
+
+    // Try to get Firebase Storage URL if it's a relative path
+    if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
+      try {
+        const storageUrl = await window.getFirebaseStorageUrl(url);
+        if (storageUrl) url = storageUrl;
+      } catch (err) {
+        console.warn("Storage URL failed for PDF, using local:", url);
+      }
     }
 
     const loading = document.createElement("div");
@@ -1077,12 +1087,12 @@
     recomputeFiltered();
     showSelectWeightEmptyState();
     updateDeservesButton();
-
-    // Expose for inline HTML onclick + nav buttons
-    window.filterQuestions = filterQuestions;
-    window.nextQuestion = nextQuestion;
-    window.prevQuestion = prevQuestion;
   }
+
+  // Expose for inline HTML onclick + nav buttons
+  window.filterQuestions = filterQuestions;
+  window.nextQuestion = nextQuestion;
+  window.prevQuestion = prevQuestion;
 
   init();
 })();
