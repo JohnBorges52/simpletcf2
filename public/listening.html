@@ -1,185 +1,238 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
+  <head>
+    <meta charset="UTF-8" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TCF Audio Practice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TCF Audio Practice</title>
 
-<link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="listening.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="listening.css" />
 
-<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
 
-<meta name="description" content="Practice TCF audio questions with weights, progress tracking, and transcripts." />
-</head>
+    <meta
+      name="description"
+      content="Practice TCF audio questions with weights, progress tracking, and transcripts."
+    />
+  </head>
 
-<body class="quiz--light">
+  <body class="quiz--light">
+    <!-- HEADER -->
+    <header class="quiz--main_h quiz--sticky" id="mainHeader">
+      <div class="quiz--row">
+        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
 
-<!-- HEADER -->
-<header class="quiz--main_h quiz--sticky" id="mainHeader">
-<div class="quiz--row">
+        <button class="quiz--mobile-toggle" id="navToggle" type="button">
+          <span></span><span></span><span></span>
+        </button>
 
-<a class="quiz--logo" href="/index.html">Simple.TCF</a>
+        <nav id="site-nav">
+          <ul>
+            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li><a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a></li>
 
-<button class="quiz--mobile-toggle" id="navToggle" type="button">
-<span></span><span></span><span></span>
-</button>
+            <li class="quiz--nav__dropdown">
+              <a class="quiz--nav__link">Practice</a>
 
-<nav id="site-nav">
-<ul>
+              <ul class="quiz--nav__dropdown-menu">
+                <li>
+                  <a href="/listening.html" class="quiz--nav__link">Listening</a>
+                </li>
+                <li>
+                  <a href="/reading.html" class="quiz--nav__link">Reading</a>
+                </li>
+                <li>
+                  <a href="/writing.html" class="quiz--nav__link">Writing</a>
+                </li>
+              </ul>
+            </li>
 
-<li><a href="/index.html" class="quiz--nav__link">Home</a></li>
-<li><a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a></li>
+            <li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
+            <li>
+              <a href="#contact-section" class="quiz--nav__link">Contact</a>
+            </li>
 
-<li class="quiz--nav__dropdown">
-<a class="quiz--nav__link">Practice</a>
+            <li id="auth-item">
+              <a
+                id="auth-link"
+                href="/login.html"
+                class="quiz--nav__link bold-text"
+                >Sign In</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
 
-<ul class="quiz--nav__dropdown-menu">
-<li><a href="/listening.html" class="quiz--nav__link">Listening</a></li>
-<li><a href="/reading.html" class="quiz--nav__link">Reading</a></li>
-<li><a href="/writing.html" class="quiz--nav__link">Writing</a></li>
-</ul>
-</li>
+    <div class="quiz--wrap">
+      <!-- FILTER CONTROLS -->
+      <section class="quiz--controls">
+        <label class="quiz--toggle">
+          <input type="checkbox" id="onlyUnansweredChk" />
+          <span>Never responded questions only</span>
+        </label>
 
-<li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
-<li><a href="#contact-section" class="quiz--nav__link">Contact</a></li>
+        <div class="quiz--toolbar">
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            data-all="1"
+            onclick="window.filterQuestions('all')"
+          >
+            All Weights
+          </button>
 
-<li id="auth-item">
-<a id="auth-link" href="/login.html" class="quiz--nav__link bold-text">Sign In</a>
-</li>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(33)"
+          >
+            Weight-33
+          </button>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(26)"
+          >
+            Weight-26
+          </button>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(21)"
+          >
+            Weight-21
+          </button>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(15)"
+          >
+            Weight-15
+          </button>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(9)"
+          >
+            Weight-09
+          </button>
+          <button
+            class="quiz--btn quiz--pill quiz--weight-btn"
+            onclick="window.filterQuestions(3)"
+          >
+            Weight-03
+          </button>
 
-</ul>
-</nav>
-</div>
-</header>
+          <button id="deservesBtn" class="quiz--btn quiz--pill">
+            📚 Deserves Attention (0)
+          </button>
 
-<div class="quiz--wrap">
+          <button id="realTestBtn" class="quiz--btn quiz--pill">🧪 Real Test</button>
+        </div>
+      </section>
 
-<!-- FILTER CONTROLS -->
-<section class="quiz--controls">
+      <!-- REAL TEST OVERLAY -->
+      <div id="realTestLoading" class="quiz--hidden">
+        <div class="quiz--loading-backdrop" id="rtBackdrop"></div>
 
-<label class="quiz--toggle">
-<input type="checkbox" id="onlyUnansweredChk" />
-<span>Never responded questions only</span>
-</label>
+        <div class="quiz--loading-card">
+          <button class="quiz--close-x" id="rtClose">✕</button>
 
-<div class="quiz--toolbar">
+          <div class="spinner-box">
+            <div class="circle-border">
+              <div class="circle-core"></div>
+            </div>
+          </div>
 
-<button class="quiz--btn quiz--pill quiz--weight-btn" data-all="1" onclick="filterQuestions('all')">
-All Weights
-</button>
+          <p id="rtLoadingText" class="quiz--loading-text">Preparing Test...</p>
 
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(33)">Weight-33</button>
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(26)">Weight-26</button>
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(21)">Weight-21</button>
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(15)">Weight-15</button>
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(9)">Weight-09</button>
-<button class="quiz--btn quiz--pill quiz--weight-btn" onclick="filterQuestions(3)">Weight-03</button>
+          <button id="startRealTestBtn" class="quiz--btn quiz--pill" disabled>
+            Start the test
+          </button>
+        </div>
+      </div>
 
-<button id="deservesBtn" class="quiz--btn quiz--pill">📚 Deserves Attention (0)</button>
+      <!-- REAL TEST NAV -->
+      <section id="realTestContainer" class="quiz--hidden">
+        <div id="questionNav" class="quiz--question-nav"></div>
 
-<button id="realTestBtn" class="quiz--btn quiz--pill">🧪 Real Test</button>
+        <div class="quiz--test-controls">
+          <button id="finishRealTestBtn" class="quiz--btn quiz--pill">
+            Finish Test
+          </button>
+        </div>
+      </section>
 
-</div>
-</section>
+      <!-- QUIZ -->
+      <main id="quiz" class="quiz--hidden quiz--card">
+        <div class="quiz--meta">
+          <span id="questionNumber"></span>
+        </div>
 
-<!-- REAL TEST OVERLAY -->
-<div id="realTestLoading" class="quiz--hidden">
-<div class="quiz--loading-backdrop" id="rtBackdrop"></div>
+        <div id="pictureContainer" class="quiz--media"></div>
 
-<div class="quiz--loading-card">
-<button class="quiz--close-x" id="rtClose">✕</button>
+        <audio id="audio" class="quiz--audio" controls></audio>
 
-<div class="spinner-box">
-<div class="circle-border">
-<div class="circle-core"></div>
-</div>
-</div>
+        <div id="alternatives" class="quiz--choices"></div>
 
-<p id="rtLoadingText" class="quiz--loading-text">Preparing Test...</p>
+        <button id="confirmBtn" class="quiz--btn quiz--pill quiz--hidden">
+          ✅ Confirm
+        </button>
 
-<button id="startRealTestBtn" class="quiz--btn quiz--pill" disabled>
-Start the test
-</button>
-</div>
-</div>
+        <div class="quiz--nav quiz--nav-bottom">
+          <button class="quiz--btn" onclick="window.prevQuestion()">← Previous</button>
+          <button class="quiz--btn" onclick="window.nextQuestion()">Next →</button>
+        </div>
 
-<!-- REAL TEST NAV -->
-<section id="realTestContainer" class="quiz--hidden">
-<div id="questionNav" class="quiz--question-nav"></div>
+        <div class="quiz--meta">
+          <span id="score" class="quiz--score"></span>
+        </div>
 
-<div class="quiz--test-controls">
-<button id="finishRealTestBtn" class="quiz--btn quiz--pill">Finish Test</button>
-</div>
-</section>
+        <div id="transcriptContainer" class="quiz--transcript">
+          <button
+            id="transcriptBtn"
+            class="quiz--btn quiz--pill"
+            onclick="window.loadTranscript()"
+          >
+            Transcript
+          </button>
+          <div id="transcriptText"></div>
+        </div>
+      </main>
 
-<!-- QUIZ -->
-<main id="quiz" class="quiz--hidden quiz--card">
+      <!-- RESULTS -->
+      <section id="realTestResults" class="quiz--hidden">
+        <div id="resultsHeader"></div>
+        <div id="clbTable"></div>
+        <div id="resultsDots"></div>
 
-<div class="quiz--meta">
-<span id="questionNumber"></span>
-</div>
+        <div class="quiz--again-wrap">
+          <button id="againBtn" class="quiz--btn quiz--pill">
+            🔁 Do another Real Test
+          </button>
+        </div>
 
-<div id="pictureContainer" class="quiz--media"></div>
+        <div id="allQuestionsReview"></div>
+      </section>
 
-<audio id="audio" class="quiz--audio" controls></audio>
+      <noscript>
+        <p><strong>JavaScript is required</strong></p>
+      </noscript>
 
-<div id="alternatives" class="quiz--choices"></div>
+      <!-- =========================
+      Firebase Config Loader
+      MUST be before module scripts
+      ========================= -->
+      <script src="firebase-config.js"></script>
 
-<button id="confirmBtn" class="quiz--btn quiz--pill quiz--hidden">
-✅ Confirm
-</button>
-
-<div class="quiz--nav quiz--nav-bottom">
-<button class="quiz--btn" onclick="prevQuestion()">← Previous</button>
-<button class="quiz--btn" onclick="nextQuestion()">Next →</button>
-</div>
-
-<div class="quiz--meta">
-<span id="score" class="quiz--score"></span>
-</div>
-
-<div id="transcriptContainer" class="quiz--transcript">
-<button id="transcriptBtn" class="quiz--btn quiz--pill" onclick="loadTranscript()">
-Transcript
-</button>
-<div id="transcriptText"></div>
-</div>
-
-</main>
-
-<!-- RESULTS -->
-<section id="realTestResults" class="quiz--hidden">
-<div id="resultsHeader"></div>
-<div id="clbTable"></div>
-<div id="resultsDots"></div>
-
-<div class="quiz--again-wrap">
-<button id="againBtn" class="quiz--btn quiz--pill">
-🔁 Do another Real Test
-</button>
-</div>
-
-<div id="allQuestionsReview"></div>
-</section>
-
-<noscript>
-<p><strong>JavaScript is required</strong></p>
-</noscript>
-
-<!-- =========================
-Firebase Config Loader
-MUST be before module scripts
-========================= -->
-<script src="firebase-config.js"></script>
-
-<!-- =========================
-Main App Script
-========================= -->
-<script src="listening.js"></script>
-
-</div>
-</body>
+      <!-- =========================
+      Main App Script
+      ========================= -->
+      <script src="listening.js" defer></script>
+    </div>
+  </body>
 </html>
