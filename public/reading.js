@@ -109,11 +109,11 @@ import {
   }
 
   async function getTracking() {
-    return await getTrackingFS();
+    return getTrackingFS();
   }
 
   async function setTracking(o) {
-    await setTrackingFS(o || {});
+    return setTrackingFS(o || {});
   }
 
   function keyFor(q) {
@@ -314,17 +314,11 @@ import {
     }
 
     if (state.deservesMode) {
-      const results = await Promise.all(items.map(async (q) => ({
-        q,
-        deserves: await deservesFromTracking(q)
-      })));
-      items = results.filter(r => r.deserves).map(r => r.q);
+      const results = await Promise.all(items.map(deservesFromTracking));
+      items = items.filter((_, i) => results[i]);
     } else if (state.onlyUnanswered) {
-      const results = await Promise.all(items.map(async (q) => ({
-        q,
-        unanswered: await isUnansweredLifetime(q)
-      })));
-      items = results.filter(r => r.unanswered).map(r => r.q);
+      const results = await Promise.all(items.map(isUnansweredLifetime));
+      items = items.filter((_, i) => results[i]);
     }
 
     state.filtered = items;
