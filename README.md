@@ -25,3 +25,35 @@ Removing accidentally committed secrets:
 - If secrets were committed previously, remove them from your git history (use `git filter-repo` or the BFG repo cleaner), rotate the exposed credentials, and invalidate any tokens.
 - For CI (Cloud Build/GitHub Actions) prefer project/secret managers or repository secrets instead of hardcoding values in repo files.
 
+## Firestore Database Setup
+
+**Quick Answer:** YES, you need to enable Firestore in Firebase Console!
+
+### Required Steps:
+
+1. **Enable Firestore** in [Firebase Console](https://console.firebase.google.com/):
+   - Go to Build → Firestore Database
+   - Click "Create database"
+   - Choose "Start in production mode"
+   - Select your region
+   - Click "Enable"
+
+2. **Deploy security rules**:
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+3. **Use the app** - Collections and documents are created automatically when:
+   - Users register/login (creates `/users/{userId}`)
+   - Users answer questions (creates `/questionResponses/{responseId}`)
+
+### Documentation:
+
+- 📋 **Checklist:** [FIRESTORE_CHECKLIST.md](FIRESTORE_CHECKLIST.md) - Step-by-step setup checklist
+- 📖 **Quick Start:** [FIRESTORE_QUICKSTART.md](FIRESTORE_QUICKSTART.md) - "Do I need to create a database?"
+- 📚 **Setup Guide:** [FIRESTORE_SETUP.md](FIRESTORE_SETUP.md) - Detailed setup instructions
+- 🗄️ **Database Schema:** [FIRESTORE_DATABASE.md](FIRESTORE_DATABASE.md) - Complete API reference
+- ✅ **Implementation:** [FIRESTORE_IMPLEMENTATION.md](FIRESTORE_IMPLEMENTATION.md) - What was built
+
+**Note:** You don't need to manually create collections or documents - they're created automatically by the application code!
+
