@@ -247,7 +247,7 @@ async function seedRealTests() {
     console.error("Failed to load real test results from Firestore:", error);
   }
 
-  function setMode(nextMode) {
+  async function setMode(nextMode) {
     mode = nextMode;
     visibleCount = 5; // reset to last 5 when switching
 
@@ -259,7 +259,7 @@ async function seedRealTests() {
     if (bR)
       bR.setAttribute("aria-pressed", mode === "reading" ? "true" : "false");
 
-    render();
+    await render();
   }
 
   function rowHTML(t) {
@@ -335,15 +335,19 @@ async function seedRealTests() {
     }
   }
 
-  // Wire toggle buttons
-  $("#btnRtListening")?.addEventListener("click", () => setMode("listening"));
-  $("#btnRtReading")?.addEventListener("click", () => setMode("reading"));
+  // Wire toggle buttons (handle async)
+  $("#btnRtListening")?.addEventListener("click", () => {
+    setMode("listening").catch(console.error);
+  });
+  $("#btnRtReading")?.addEventListener("click", () => {
+    setMode("reading").catch(console.error);
+  });
 
   // Load more
   loadMoreBtn?.addEventListener("click", () => {
     const all = datasets[mode];
     visibleCount = Math.min(visibleCount + 5, all.length);
-    render();
+    render().catch(console.error);
   });
 
   // Initial render
