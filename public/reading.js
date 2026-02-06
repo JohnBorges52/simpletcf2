@@ -595,7 +595,13 @@ import {
       container.appendChild(div);
     });
 
-    if (confirmBtn) confirmBtn.onclick = () => { confirmAnswer(q); };
+    if (confirmBtn) confirmBtn.onclick = async () => {
+      try {
+        await confirmAnswer(q);
+      } catch (err) {
+        console.error("Error confirming answer:", err);
+      }
+    };
   }
 
   function updateScore() {
