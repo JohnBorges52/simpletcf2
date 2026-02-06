@@ -4,6 +4,7 @@ import {
   getTracking,
   getTCFListening,
   isUserAuthenticated,
+  getCurrentUserId,
 } from "./firestore-storage.js";
 
 function $(sel) {
@@ -22,13 +23,13 @@ function getLS(key, fallback = "") {
   }
 }
 
-function setAuthNavFromLocalStorage() {
+async function setAuthNavFromFirebase() {
   const link = $("#auth-link");
   if (!link) return;
 
-  const isLoggedIn = getLS("isLoggedIn", "false") === "true";
+  const authenticated = await isUserAuthenticated();
 
-  if (isLoggedIn) {
+  if (authenticated) {
     link.textContent = "Profile";
     link.href = "/profile.html";
   } else {
@@ -37,9 +38,9 @@ function setAuthNavFromLocalStorage() {
   }
 }
 
-function requireLoginOrRedirect() {
-  const isLoggedIn = getLS("isLoggedIn", "false") === "true";
-  if (!isLoggedIn) {
+async function requireLoginOrRedirect() {
+  const authenticated = await isUserAuthenticated();
+  if (!authenticated) {
     window.location.replace("/login.html");
     return false;
   }
@@ -1052,60 +1053,63 @@ async function loadAndDisplayAnswerHistory() {
       return;
     }
 
-    // Fetch data from Firestore
-    const [tracking, tcfListening] = await Promise.all([
-      getTracking(),
-      getTCFListening(),
-    ]);
-
-    // Combine and process answer data
-    const answers = [];
-
-    // Process tracking data (reading)
-    if (tracking && typeof tracking === "object") {
-      Object.entries(tracking).forEach(([key, value]) => {
-        if (value && typeof value === "object") {
-          const correct = Number(value.correct || 0);
-          const wrong = Number(value.wrong || 0);
-          const total = correct + wrong;
-          
-          if (total > 0) {
-            answers.push({
-              questionKey: key,
-              section: "Reading",
-              correct,
-              wrong,
-              total,
-              accuracy: ((correct / total) * 100).toFixed(1),
-              lastAnswered: value.lastAnswered || 0,
-            });
-          }
-        }
-      });
+    // Get userId for querying
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      loadingEl.style.display = "none";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "Unable to fetch user ID.";
+      return;
     }
 
-    // Process TCF Listening data
-    if (tcfListening && tcfListening.answers && typeof tcfListening.answers === "object") {
-      Object.entries(tcfListening.answers).forEach(([key, value]) => {
-        if (value && typeof value === "object") {
-          const correct = Number(value.correct || 0);
-          const wrong = Number(value.wrong || 0);
-          const total = correct + wrong;
-          
-          if (total > 0) {
-            answers.push({
-              questionKey: key,
-              section: "Listening",
-              correct,
-              wrong,
-              total,
-              accuracy: ((correct / total) * 100).toFixed(1),
-              lastAnswered: value.lastAnswered || 0,
-            });
-          }
-        }
-      });
+    // Fetch data from questionResponses collection
+    if (!window.dbService || !window.dbService.getRecentResponses) {
+      loadingEl.style.display = "none";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "Database service not available.";
+      return;
     }
+
+    // Get recent responses from questionResponses collection
+    const responses = await window.dbService.getRecentResponses(userId, 100);
+
+    // Process responses into answer summary by questionId
+    const answerMap = new Map();
+    
+    responses.forEach((response) => {
+      const questionId = response.questionId || "unknown";
+      const questionType = response.questionType || "unknown";
+      const key = `${questionType}-${questionId}`;
+      
+      if (!answerMap.has(key)) {
+        answerMap.set(key, {
+          questionId: questionId,
+          questionType: questionType,
+          section: questionType === "reading" ? "Reading" : questionType === "listening" ? "Listening" : "Unknown",
+          correct: 0,
+          wrong: 0,
+          total: 0,
+          lastAnswered: 0,
+        });
+      }
+      
+      const entry = answerMap.get(key);
+      if (response.isCorrect) {
+        entry.correct++;
+      } else {
+        entry.wrong++;
+      }
+      entry.total++;
+      
+      // Track most recent answer
+      const answeredTime = response.answeredAt?.getTime?.() || 0;
+      if (answeredTime > entry.lastAnswered) {
+        entry.lastAnswered = answeredTime;
+      }
+    });
+
+    // Convert map to array
+    const answers = Array.from(answerMap.values());
 
     // Hide loading
     loadingEl.style.display = "none";
@@ -1140,18 +1144,19 @@ async function loadAndDisplayAnswerHistory() {
       const resultClass = answer.correct > answer.wrong ? "correct" : "incorrect";
 
       // Accuracy styling
-      const accuracy = parseFloat(answer.accuracy);
+      const accuracy = answer.total > 0 ? ((answer.correct / answer.total) * 100).toFixed(1) : "0.0";
+      const accuracyNum = parseFloat(accuracy);
       let accuracyClass = "accuracy-high";
-      if (accuracy < 70) accuracyClass = "accuracy-medium";
-      if (accuracy < 50) accuracyClass = "accuracy-low";
+      if (accuracyNum < 70) accuracyClass = "accuracy-medium";
+      if (accuracyNum < 50) accuracyClass = "accuracy-low";
 
       row.innerHTML = `
         <td>${date}</td>
-        <td><strong>${answer.section}</strong>: ${answer.questionKey}</td>
+        <td><strong>${answer.section}</strong>: ${answer.questionId}</td>
         <td><span class="result-badge ${resultClass}">${overallResult}</span></td>
         <td>${answer.correct}</td>
         <td>${answer.wrong}</td>
-        <td class="accuracy-cell ${accuracyClass}">${answer.accuracy}%</td>
+        <td class="accuracy-cell ${accuracyClass}">${accuracy}%</td>
       `;
 
       bodyEl.appendChild(row);
@@ -1184,9 +1189,9 @@ function wireActions() {
    BOOT
    =========================== */
 
-document.addEventListener("DOMContentLoaded", () => {
-  setAuthNavFromLocalStorage();
-  if (!requireLoginOrRedirect()) return;
+document.addEventListener("DOMContentLoaded", async () => {
+  await setAuthNavFromFirebase();
+  if (!(await requireLoginOrRedirect())) return;
 
   renderUserHeader();
 
@@ -1212,9 +1217,10 @@ document.addEventListener("DOMContentLoaded", () => {
   switchTab("overview");
 
   // Sync if auth changes in another tab
-  window.addEventListener("storage", () => {
-    setAuthNavFromLocalStorage();
-    if (getLS("isLoggedIn", "false") !== "true") {
+  window.addEventListener("storage", async () => {
+    await setAuthNavFromFirebase();
+    const authenticated = await isUserAuthenticated();
+    if (!authenticated) {
       window.location.replace("/login.html");
     } else {
       renderUserHeader();
