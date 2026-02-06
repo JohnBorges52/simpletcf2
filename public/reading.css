@@ -1,3 +1,9 @@
+/* ============================================================================
+   reading.css — FULL (PDF iframe “page-width” fit + copy overlay)
+   Fixes: tiny PDF inside big dark area by forcing page-width rendering and
+   giving the iframe a stable A4-ish viewport.
+============================================================================ */
+
 /* ============================
    Reading – PDF selectable text layer (optional)
 ============================ */
@@ -12,12 +18,9 @@
 .pdf-wrapper {
   position: relative;
   display: block;
-  /* ✅ was inline-block */
   width: 100%;
-  /* ✅ fill the card, don't exceed */
   max-width: 100%;
 }
-
 
 /* ----------------------------------------
    Reading – Question text (JSON)
@@ -126,38 +129,72 @@
 }
 
 /* ============================
-   ✅ Copy button overlay (top-right of PDF container)
+   ✅ PDF container + iframe sizing (FIX)
+   - Removes “huge dark area”
+   - Forces a stable A4-like viewport
+   - Makes iframe fill that viewport
 ============================ */
 .quiz--pdf-wrap {
   position: relative;
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  /* ✅ prevents any child from sticking out */
   border-radius: 16px;
-  /* optional: match your card */
+  background: #ffffff; /* ✅ avoid dark empty area */
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
+/* This is the box that defines the PDF viewport */
 .quiz--pdf-inner {
   width: 100%;
+  /* A4-ish aspect ratio (portrait) */
+  aspect-ratio: 1 / 1.414;
+  background: #ffffff;
 }
 
-/* overlay button */
+/* If the browser doesn't support aspect-ratio, give a fallback height */
+@supports not (aspect-ratio: 1 / 1.414) {
+  .quiz--pdf-inner {
+    height: 70vh;
+    min-height: 520px;
+  }
+}
+
+/* Make iframe fill */
+.quiz--pdf-inner iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+/* ============================
+   ✅ Copy button overlay (top-right of PDF container)
+============================ */
 .quiz--copybtn-overlay {
   position: absolute;
-  top: 0px;
+  top: 10px;
   right: 10px;
   z-index: 20;
 
   padding: 10px 12px;
   font-weight: 800;
 
-  background: rgba(255, 255, 255);
-  border: 2px solid rgb(0, 0, 0, 0.9);
+  background: rgba(255, 255, 255, 1);
+  border: 2px solid rgba(0, 0, 0, 0.9);
   box-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
 }
 
-/* small status bubble */
+.quiz--copybtn-overlay.is-copied {
+  background: rgba(16, 185, 129, 1);
+  border-color: rgba(0, 0, 0, 1);
+  color: #ffffff;
+}
+
+/* (optional) small status bubble */
 .quiz--copy-status-overlay {
   position: absolute;
   top: 14px;
@@ -176,32 +213,20 @@
   }
 }
 
-/* Copy button "Copied" state */
-.quiz--copybtn-overlay.is-copied {
-  background: rgba(16, 185, 129);
-  /* soft green */
-  border-color: rgb(0, 0, 0);
-  color: #ffffff;
-}
-
 /* ============================
    Collapsible reading text
 ============================ */
-
 .quiz--question-wrap {
   position: relative;
 }
 
-/* Collapsed state */
 .quiz--question.quiz--collapsed {
   max-height: 50px;
-  /* adjust: ~4–5 lines */
   overflow: hidden;
   position: relative;
   transition: max-height 0.4s ease;
 }
 
-/* Fade-out effect at bottom */
 .quiz--question.quiz--collapsed::after {
   content: "";
   position: absolute;
@@ -209,23 +234,21 @@
   right: 0;
   bottom: 0;
   height: 64px;
-  background: linear-gradient(to bottom,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 1));
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 1)
+  );
 }
 
-/* Expanded state */
 .quiz--question.quiz--expanded {
   max-height: 2000px;
-  /* big enough for any passage */
 }
 
-/* Remove fade when expanded */
 .quiz--question.quiz--expanded::after {
   display: none;
 }
 
-/* Expand / collapse button */
 .quiz--expand-btn {
   margin-top: 10px;
   background: none;
