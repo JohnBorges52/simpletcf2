@@ -55,6 +55,18 @@ const firebaseConfig = (() => {
   return {};
 })();
 
+const hasFirebaseConfig =
+  firebaseConfig && typeof firebaseConfig === "object"
+    ? Object.keys(firebaseConfig).length > 0
+    : false;
+
+if (!hasFirebaseConfig) {
+  console.warn(
+    "⚠️ Firebase config not found. Ensure public/firebase-config.js is generated " +
+      "via `npm run generate-config` and includes storageBucket.",
+  );
+}
+
 
 function getUrlParams() {
   try {
