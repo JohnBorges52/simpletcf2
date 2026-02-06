@@ -55,6 +55,18 @@ const firebaseConfig = (() => {
   return {};
 })();
 
+const hasFirebaseConfig =
+  firebaseConfig && typeof firebaseConfig === "object"
+    ? Object.keys(firebaseConfig).length > 0
+    : false;
+
+if (!hasFirebaseConfig) {
+  console.warn(
+    "⚠️ Firebase config not found. Ensure public/firebase-config.js is generated " +
+      "via `npm run generate-config` and includes storageBucket.",
+  );
+}
+
 
 function getUrlParams() {
   try {
@@ -958,6 +970,7 @@ window.getFirebaseStorageUrl = async (path) => {
       console.error(
         "❌ Firebase config is missing 'storageBucket' property. \n" +
         "   - Ensure firebase-config.js is created with your Firebase credentials\n" +
+         "   - Run: npm run generate-config\n" +
         "   - It should include: storageBucket: 'your-project-name.appspot.com'"
       );
       return null;
