@@ -13,6 +13,7 @@ const vars = {
 
 const out = `window.firebaseConfig = ${JSON.stringify(vars, null, 2)};
 window.__FIREBASE_CONFIG__ = window.firebaseConfig;
+var firebaseConfig = window.firebaseConfig;
 `;
 
 const dest = path.join(__dirname, "..", "public", "firebase-config.js");
