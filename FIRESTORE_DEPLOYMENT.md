@@ -1,5 +1,13 @@
 # Firestore Migration Deployment Guide
 
+## ⚠️ UPDATED: Recent Security Rules Fix
+
+**Important:** This document covers the initial Firestore migration. For deploying the **recent security rules update** (PR #6), see:
+
+📖 **[DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md)** - Deploy updated Firestore rules to Google Cloud
+
+---
+
 ## Overview
 This migration changes the application's quiz answer storage from browser localStorage to Firestore Database, enabling data persistence across devices and browsers.
 
@@ -29,6 +37,8 @@ firebase deploy --only firestore:rules
 ```
 
 This will deploy the security rules that ensure users can only access their own data.
+
+**📖 For detailed deployment instructions, see:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md)
 
 ### 2. Deploy Hosting
 ```bash

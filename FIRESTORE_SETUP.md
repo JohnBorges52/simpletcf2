@@ -2,6 +2,14 @@
 
 This guide will help you set up Firestore Database for the SimpleTCF2 application.
 
+## ⚠️ Important: Recent Update
+
+If you're here because of the **recent Firestore rules fix (PR #6)**, see:
+- 🚀 **Quick Deploy:** [QUICK_DEPLOY.md](QUICK_DEPLOY.md) - Fast deployment steps
+- 📖 **Detailed Guide:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) - Complete deployment documentation
+
+---
+
 ## Prerequisites
 
 - Firebase project created and configured
@@ -35,6 +43,10 @@ The rules are defined in `firestore.rules` and will:
 - Allow users to read/write only their own data
 - Validate data structure and types
 - Prevent modification of logged responses
+
+**📖 For detailed deployment instructions and troubleshooting, see:**
+- [QUICK_DEPLOY.md](QUICK_DEPLOY.md) - Quick reference
+- [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) - Complete guide
 
 ## Step 3: Create Firestore Indexes
 
