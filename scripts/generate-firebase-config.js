@@ -1,6 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
+// ✅ Load environment variables from .env.local
+require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
+
 const vars = {
   apiKey: process.env.FIREBASE_API_KEY || "",
   authDomain: process.env.FIREBASE_AUTHDOMAIN || "",

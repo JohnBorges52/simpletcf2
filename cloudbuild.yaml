@@ -1,0 +1,37 @@
+steps:
+  # Install dependencies
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['install']
+
+  # Generate Firebase config from environment variables
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['run', 'generate-config']
+    env:
+      - 'FIREBASE_API_KEY=${_FIREBASE_API_KEY}'
+      - 'FIREBASE_AUTHDOMAIN=${_FIREBASE_AUTHDOMAIN}'
+      - 'FIREBASE_PROJECTID=${_FIREBASE_PROJECTID}'
+      - 'FIREBASE_STORAGEBUCKET=${_FIREBASE_STORAGEBUCKET}'
+      - 'FIREBASE_MESSAGINGSENDERID=${_FIREBASE_MESSAGINGSENDERID}'
+      - 'FIREBASE_APPID=${_FIREBASE_APPID}'
+      - 'FIREBASE_MEASUREMENTID=${_FIREBASE_MEASUREMENTID}'
+
+  # Deploy to Firebase Hosting
+  - name: 'gcr.io/firebase/deploy'
+    args:
+      - deploy
+      - --project=${PROJECT_ID}
+      - --only=hosting
+
+substitutions:
+  _FIREBASE_API_KEY: 'AIzaSyAAQrh2cqH7mgjMOQ5SkoGR3V6nKdYRPm8'
+  _FIREBASE_AUTHDOMAIN: 'simpletcf.firebaseapp.com'
+  _FIREBASE_PROJECTID: 'simpletcf'
+  _FIREBASE_STORAGEBUCKET: 'simpletcf.firebasestorage.app'
+  _FIREBASE_MESSAGINGSENDERID: '233851428734'
+  _FIREBASE_APPID: '1:233851428734:web:a1bd5148731c8845825d2f'
+  _FIREBASE_MEASUREMENTID: 'G-K63ZE5JTL9'
+
+options:
+  machineType: 'N1_HIGHCPU_8'

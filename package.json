@@ -2,9 +2,12 @@
   "dependencies": {
     "assemblyai": "^4.17.0",
     "axios": "^1.12.2",
-    "firebase": "^12.4.0"
+    "firebase": "^12.4.0",
+    "dotenv": "^16.0.3"
   }
   ,"scripts":{
-    "generate-config":"node ./scripts/generate-firebase-config.js"
+    "generate-config": "node ./scripts/generate-firebase-config.js",
+    "build": "npm run generate-config",
+    "deploy": "npm run build && firebase deploy"
   }
 }
