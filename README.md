@@ -54,13 +54,20 @@ See [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) for detailed deployme
    ```
    📖 **See detailed guide:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md)
 
-3. **Use the app** - Collections and documents are created automatically when:
+3. **Deploy Firestore indexes** (REQUIRED for statistics to work):
+   ```bash
+   firebase deploy --only firestore:indexes
+   ```
+   📖 **See detailed guide:** [DEPLOY_FIRESTORE_INDEXES.md](DEPLOY_FIRESTORE_INDEXES.md)
+
+4. **Use the app** - Collections and documents are created automatically when:
    - Users register/login (creates `/users/{userId}`)
    - Users answer questions (creates `/questionResponses/{responseId}`)
 
 ### Documentation:
 
 - 🚀 **DEPLOY RULES:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) - Deploy updated rules to Google Cloud
+- 🔍 **DEPLOY INDEXES:** [DEPLOY_FIRESTORE_INDEXES.md](DEPLOY_FIRESTORE_INDEXES.md) - Deploy indexes for statistics (REQUIRED)
 - 📋 **Checklist:** [FIRESTORE_CHECKLIST.md](FIRESTORE_CHECKLIST.md) - Step-by-step setup checklist
 - 📖 **Quick Start:** [FIRESTORE_QUICKSTART.md](FIRESTORE_QUICKSTART.md) - "Do I need to create a database?"
 - 📚 **Setup Guide:** [FIRESTORE_SETUP.md](FIRESTORE_SETUP.md) - Detailed setup instructions
