@@ -1,8 +1,8 @@
 /* ============================================================================
-   reading.js — FULL (Listening-style UI) — FIXED PDF sizing
-   ✅ Forces Chrome PDF viewer to "page-width" inside iframe
-   ✅ Keeps overlay button intact by rendering PDF into #pdfInner only
-   ✅ Stable A4 viewport via CSS (aspect-ratio), no JS height hacks
+   reading.js — FULL
+   ✅ Uses PDF.js canvas render (NO black PDF viewer background)
+   ✅ Keeps copy overlay button
+   ✅ Re-renders on resize to keep perfect fit
 ============================================================================ */
 
 (() => {
@@ -72,7 +72,7 @@
     quiz: () => $("#quiz"),
     qNumber: () => $("#questionNumber"),
     pictureContainer: () => $("#pictureContainer"),
-    pdfInner: () => $("#pdfInner"), // must exist inside pictureContainer
+    pdfInner: () => $("#pdfInner"),
     qText: () => $("#questionText"),
     options: () => $("#alternatives"),
     confirmBtn: () => $("#confirmBtn"),
@@ -85,8 +85,6 @@
     realTestBtn: () => $("#realTestBtn"),
     deservesBtn: () => $("#deservesBtn"),
     emptyState: () => $("#emptyState"),
-
-    // Copy overlay button (MUST be unique)
     copyBtn: () => $("#copyReadingBtn"),
   };
 
@@ -136,8 +134,7 @@
     const tracking = getTracking();
     if (!tracking[key]) tracking[key] = { correct: 0, wrong: 0 };
 
-    if (isCorrect)
-      tracking[key].correct = Number(tracking[key].correct || 0) + 1;
+    if (isCorrect) tracking[key].correct = Number(tracking[key].correct || 0) + 1;
     else tracking[key].wrong = Number(tracking[key].wrong || 0) + 1;
 
     tracking[key].lastAnswered = Date.now();
@@ -165,8 +162,7 @@
       }
       return Number(q.question_number);
     }
-    if (q.overall_question_number != null)
-      return Number(q.overall_question_number);
+    if (q.overall_question_number != null) return Number(q.overall_question_number);
     return null;
   }
 
@@ -297,9 +293,7 @@
 
     let pool = state.allData;
     if (state.currentWeight !== "all") {
-      pool = pool.filter(
-        (q) => Number(q.weight_points) === Number(state.currentWeight),
-      );
+      pool = pool.filter((q) => Number(q.weight_points) === Number(state.currentWeight));
     }
     return pool.filter(deservesFromTracking).length;
   }
@@ -314,9 +308,7 @@
 
     if (!state.realTestMode) {
       if (state.currentWeight !== "all") {
-        items = items.filter(
-          (q) => Number(q.weight_points) === Number(state.currentWeight),
-        );
+        items = items.filter((q) => Number(q.weight_points) === Number(state.currentWeight));
       }
     }
 
@@ -333,9 +325,9 @@
     safeText(els.qNumber(), "");
     safeText(els.qText(), "");
 
-    els.pdfInner() && (els.pdfInner().innerHTML = "");
+    if (els.pdfInner()) els.pdfInner().innerHTML = "";
 
-    els.options() && (els.options().innerHTML = "");
+    if (els.options()) els.options().innerHTML = "";
     els.confirmBtn()?.classList.add(CLS.hidden);
     safeText(els.score(), "");
     updateQuestionStats(null);
@@ -395,42 +387,22 @@
     if (!state.allData.length) await loadData();
   }
 
-async function getPdfAspectRatio(url) {
+  /* =====================
+     6) PDF rendering (PDF.js CANVAS)
+  ===================== */
+  function ensurePdfJsWorker() {
     const lib = window.pdfjsLib;
-    if (!lib?.getDocument) return null;
+    if (!lib) return false;
 
-    try {
-      const task = lib.getDocument({
-        url,
-        disableStream: true,
-        disableAutoFetch: true,
-        disableWorker: true,
-      });
-      const pdf = await task.promise;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1 });
-      const width = Number(viewport?.width || 0);
-      const height = Number(viewport?.height || 0);
-
-      try {
-        await pdf.destroy();
-      } catch {}
-
-      if (!width || !height) return null;
-      return width / height;
-    } catch (err) {
-      console.warn("Could not detect PDF ratio, using fallback", err);
-      return null;
+    if (!lib.GlobalWorkerOptions.workerSrc) {
+      lib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
     }
+    return true;
   }
 
-
-   
-  /* =====================
-     6) PDF rendering (IFRAME)
-  ===================== */
   async function renderPdf(q) {
-    const wrap = els.pdfInner() || els.pictureContainer();
+    const wrap = els.pdfInner();
     if (!wrap) return;
 
     const myToken = ++pdfRenderToken;
@@ -451,8 +423,8 @@ async function getPdfAspectRatio(url) {
       return;
     }
 
-    // If you have a helper that converts storage paths to signed download URLs
-    if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
+    // If you have helper: storage path -> download URL
+    if (!/^https?:\/\//i.test(url) && window.getFirebaseStorageUrl) {
       try {
         const storageUrl = await window.getFirebaseStorageUrl(url);
         if (storageUrl) url = storageUrl;
@@ -461,52 +433,95 @@ async function getPdfAspectRatio(url) {
       }
     }
 
+    if (!ensurePdfJsWorker()) {
+      wrap.textContent = "PDF.js not loaded.";
+      return;
+    }
+
     const loading = document.createElement("div");
     loading.style.cssText =
       "padding:10px 12px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;opacity:.75;font-weight:700;";
     loading.textContent = "Loading page…";
     wrap.appendChild(loading);
 
-    if (myToken !== pdfRenderToken) return;
+    const renderToCanvas = async () => {
+      if (myToken !== pdfRenderToken) return;
+      if (activePdfRenderController.signal.aborted) return;
 
-    // ✅ Use iframe to display PDF (no CORS issues)
-    wrap.innerHTML = "";
-    wrap.style.width = "100%";
-    const pdfAspect = await getPdfAspectRatio(url);
-    wrap.style.aspectRatio = pdfAspect ? String(pdfAspect) : "1 / 1.414";
-    wrap.style.height = "auto";
-    wrap.style.overflow = "hidden";
-    wrap.style.background = "#fff";
-    wrap.style.position = "relative";
+      wrap.innerHTML = "";
 
-    const iframe = document.createElement("iframe");
+      const canvas = document.createElement("canvas");
+      canvas.className = "quiz--pdf-canvas";
+      wrap.appendChild(canvas);
 
-    // ✅ KEY FIX: force built-in PDF viewer zoom to page width
-    const params = "#zoom=page-width&toolbar=0&navpanes=0&scrollbar=0";
+      const lib = window.pdfjsLib;
 
-    iframe.src = url.includes("#")
-      ? `${url}&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0`
-      : `${url}${params}`;
+      const task = lib.getDocument({
+        url,
+        disableStream: true,
+        disableAutoFetch: true,
+      });
 
-    iframe.style.position = "absolute";
-    iframe.style.inset = "0";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "0";
-    iframe.style.display = "block";
-    iframe.style.background = "#fff";
-    iframe.loading = "lazy";
-    iframe.style.pointerEvents = "none";
-    iframe.setAttribute("scrolling", "no");
+      const pdf = await task.promise;
+      if (activePdfRenderController.signal.aborted) {
+        try {
+          await pdf.destroy();
+        } catch {}
+        return;
+      }
+
+      const page = await pdf.getPage(1);
+
+      const containerWidth = wrap.clientWidth || 800;
+      const viewport1 = page.getViewport({ scale: 1 });
+
+      const scale = containerWidth / viewport1.width;
+      const viewport = page.getViewport({ scale });
+
+      const ctx = canvas.getContext("2d", { alpha: false });
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      try {
+        await pdf.destroy();
+      } catch {}
+    };
+
+    try {
+      await renderToCanvas();
+    } catch (err) {
+      if (myToken !== pdfRenderToken) return;
+      console.error("PDF render failed:", err);
+      wrap.innerHTML = "";
+      wrap.textContent = "Failed to render PDF.";
+      return;
+    }
+
+    const onResize = () => {
+      if (activePdfRenderController.signal.aborted) return;
+      clearTimeout(renderPdf._t);
+      renderPdf._t = setTimeout(() => {
+        renderToCanvas().catch(() => {});
+      }, 120);
+    };
+
+    window.removeEventListener("resize", renderPdf._resizeHandler);
+    renderPdf._resizeHandler = onResize;
+    window.addEventListener("resize", onResize);
 
     activePdfRenderController.signal.addEventListener("abort", () => {
-      try {
-        iframe.src = "about:blank";
-      } catch {}
+      window.removeEventListener("resize", onResize);
     });
-
-    if (myToken !== pdfRenderToken) return;
-    wrap.appendChild(iframe);
   }
 
   /* =====================
@@ -578,7 +593,7 @@ async function getPdfAspectRatio(url) {
     }
     safeText(
       els.score(),
-      `✅ ${state.score} correct out of ${state.answered} answered.`,
+      `✅ ${state.score} correct out of ${state.answered} answered.`
     );
   }
 
@@ -621,8 +636,8 @@ async function getPdfAspectRatio(url) {
       typeof q.correct_index === "number"
         ? Number(q.correct_index)
         : Array.isArray(q.alternatives)
-          ? q.alternatives.findIndex((a) => a?.is_correct === true)
-          : -1;
+        ? q.alternatives.findIndex((a) => a?.is_correct === true)
+        : -1;
 
     renderOptions(q, alreadyAnswered, correctIndex);
 
@@ -645,8 +660,8 @@ async function getPdfAspectRatio(url) {
       typeof q.correct_index === "number"
         ? Number(q.correct_index)
         : Array.isArray(q.alternatives)
-          ? q.alternatives.findIndex((a) => a?.is_correct === true)
-          : -1;
+        ? q.alternatives.findIndex((a) => a?.is_correct === true)
+        : -1;
 
     q.userAnswerIndex = state.selectedOptionIndex;
 
@@ -701,7 +716,7 @@ async function getPdfAspectRatio(url) {
       state.currentWeight === "all"
         ? document.querySelector(`.${CLS.weightBtn}[data-all="1"]`)
         : document.querySelector(
-            `.${CLS.weightBtn}[data-weight="${state.currentWeight}"]`,
+            `.${CLS.weightBtn}[data-weight="${state.currentWeight}"]`
           );
     selectedBtn?.classList.add(CLS.selectedWeight);
 
@@ -957,20 +972,11 @@ async function getPdfAspectRatio(url) {
 
     els.realTestBtn()?.addEventListener("click", openRealTestOverlay);
 
-    document
-      .getElementById("rtClose")
-      ?.addEventListener("click", closeRealTestOverlay);
-    document
-      .getElementById("rtBackdrop")
-      ?.addEventListener("click", closeRealTestOverlay);
+    document.getElementById("rtClose")?.addEventListener("click", closeRealTestOverlay);
+    document.getElementById("rtBackdrop")?.addEventListener("click", closeRealTestOverlay);
 
-    document
-      .getElementById("startRealTestBtn")
-      ?.addEventListener("click", startRealTest);
-
-    document
-      .getElementById("finishRealTestBtn")
-      ?.addEventListener("click", finishRealTest);
+    document.getElementById("startRealTestBtn")?.addEventListener("click", startRealTest);
+    document.getElementById("finishRealTestBtn")?.addEventListener("click", finishRealTest);
 
     els.onlyChk()?.addEventListener("click", (e) => {
       state.onlyUnanswered = !!e.target.checked;
