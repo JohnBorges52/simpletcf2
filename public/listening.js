@@ -672,17 +672,22 @@
       // ✅ Fetch Firebase Storage URL if the path is relative (async in background)
       if (!(/^https?:\/\//i.test(src))) {
         if (window.getFirebaseStorageUrl) {
-          window.getFirebaseStorageUrl(src).then((storageUrl) => {
-            if (storageUrl && audioEl.src !== storageUrl) {
-              audioEl.src = storageUrl;
+          // ✅ Wait for Firebase to be ready before fetching storage URLs
+          (async () => {
+            await window.__authReady;
+            try {
+              const storageUrl = await window.getFirebaseStorageUrl(src);
+              if (storageUrl && audioEl.src !== storageUrl) {
+                audioEl.src = storageUrl;
+                audioEl.load();
+              }
+            } catch (err) {
+              console.warn("Failed to get Firebase Storage URL for audio:", err);
+              // Fallback to original path
+              audioEl.src = src;
               audioEl.load();
             }
-          }).catch((err) => {
-            console.warn("Failed to get Firebase Storage URL for audio:", err);
-            // Fallback to original path
-            audioEl.src = src;
-            audioEl.load();
-          });
+          })();
         } else {
           // Storage helper not available yet
           audioEl.src = src;
@@ -1399,19 +1404,21 @@
 
     // ✅ Process audio elements to fetch Firebase Storage URLs
     (async () => {
+      await window.__authReady; // ✅ Wait for Firebase to be ready
       const audioElements = RT.review()?.querySelectorAll("audio source");
       if (audioElements) {
-        audioElements.forEach((source) => {
+        audioElements.forEach(async (source) => {
           const src = source.getAttribute("src");
           if (src && !(/^https?:\/\//i.test(src)) && window.getFirebaseStorageUrl) {
-            window.getFirebaseStorageUrl(src).then((storageUrl) => {
+            try {
+              const storageUrl = await window.getFirebaseStorageUrl(src);
               if (storageUrl) {
                 source.setAttribute("src", storageUrl);
                 source.parentElement?.load?.();
               }
-            }).catch((err) => {
+            } catch (err) {
               console.warn("Failed to fetch Firebase Storage URL for review audio:", err);
-            });
+            }
           }
         });
       }
@@ -1447,6 +1454,10 @@
 
   /* 11) Init & bindings */
   async function init() {
+    // ✅ Wait for Firebase to initialize before using Storage
+    await window.__authReady;
+    console.log('✅ Firebase ready, initializing listening page...');
+    
     await loadData();
     ensureWeightButtonsOriginalLabels();
     refreshWeightButtonsLabels();
