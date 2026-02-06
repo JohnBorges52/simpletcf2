@@ -440,6 +440,12 @@
 
     // ✅ Use iframe to display PDF (no CORS issues)
     wrap.innerHTML = "";
+    wrap.style.width = "100%";
+    wrap.style.aspectRatio = "1 / 1.414";
+    wrap.style.height = "auto";
+    wrap.style.overflow = "hidden";
+    wrap.style.background = "#fff";
+    wrap.style.position = "relative";
 
     const iframe = document.createElement("iframe");
 
@@ -450,12 +456,16 @@
       ? `${url}&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0`
       : `${url}${params}`;
 
+    iframe.style.position = "absolute";
+    iframe.style.inset = "0";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "0";
     iframe.style.display = "block";
     iframe.style.background = "#fff";
     iframe.loading = "lazy";
+    iframe.style.pointerEvents = "none";
+    iframe.setAttribute("scrolling", "no");
 
     activePdfRenderController.signal.addEventListener("abort", () => {
       try {
