@@ -406,14 +406,8 @@
 
     async function loadData() {
       const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
-      const candidates = [
-        PATHS.DATA,
-        origin + PATHS.DATA,
-        "/data/all_data_reading.json",
-        "./data/all_data_reading.json",
-        "data/all_data_reading.json",
-        "all_data_reading.json",
-      ];
+      const candidates = ["/data/all_data_reading.json"];
+
       try {
         const raw = await fetchJsonFirstWorking(candidates);
         state.allData = (raw || []).map((q) => ({ ...q }));

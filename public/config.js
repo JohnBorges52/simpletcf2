@@ -25,6 +25,11 @@ import {
   getAnalytics,
   isSupported,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 
 // -------------------------------
@@ -295,6 +300,10 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     window.__auth = auth;
     resolveAuthReady(auth);
     console.log("✅ Firebase initialized + persistence set");
+
+    // ✅ Initialize Storage
+    const storage = getStorage(app);
+    window.__storage = storage;
 
     try {
       if (await isSupported()) {
@@ -928,6 +937,36 @@ document.addEventListener("DOMContentLoaded", () => {
     eyeOffId: "login-eye-off",
   });
 });
+
+// =====================================================
+// ✅ Firebase Storage URL Helper (for audio/images)
+// =====================================================
+window.getFirebaseStorageUrl = async (path) => {
+  if (!path) return null;
+  try {
+    // If it's already an absolute URL, return as-is
+    if (/^https?:\/\//i.test(path)) return path;
+    
+    const storage = window.__storage;
+    if (!storage) {
+      console.warn("Storage not initialized yet");
+      return null;
+    }
+
+    // Clean up the path (remove leading slashes)
+    const cleanPath = path.replace(/^\/+/, "");
+    
+    // Create a reference to the file in Firebase Storage
+    const fileRef = ref(storage, cleanPath);
+    
+    // Get the download URL
+    const downloadUrl = await getDownloadURL(fileRef);
+    return downloadUrl;
+  } catch (err) {
+    console.error(`Failed to get Firebase Storage URL for ${path}:`, err);
+    return null;
+  }
+};
 
 // =====================================================
 // PASSWORD RESET FLOW (for passwordReset.html)

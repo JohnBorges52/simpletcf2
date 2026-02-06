@@ -667,15 +667,36 @@
     const audioEl = els.audio();
     if (!audioEl) return;
     audioEl.innerHTML = "";
-    const src = resolveAudioSrc(q);
+    let src = resolveAudioSrc(q);
     if (src) {
-      const s = document.createElement("source");
-      s.src = src;
-      s.type = src.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
-      audioEl.appendChild(s);
-      audioEl.src = src;
+      // ✅ Fetch Firebase Storage URL if the path is relative (async in background)
+      if (!(/^https?:\/\//i.test(src))) {
+        if (window.getFirebaseStorageUrl) {
+          window.getFirebaseStorageUrl(src).then((storageUrl) => {
+            if (storageUrl && audioEl.src !== storageUrl) {
+              audioEl.src = storageUrl;
+              audioEl.load();
+            }
+          }).catch((err) => {
+            console.warn("Failed to get Firebase Storage URL for audio:", err);
+            // Fallback to original path
+            audioEl.src = src;
+            audioEl.load();
+          });
+        } else {
+          // Storage helper not available yet
+          audioEl.src = src;
+          audioEl.load();
+        }
+      } else {
+        const s = document.createElement("source");
+        s.src = src;
+        s.type = src.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+        audioEl.appendChild(s);
+        audioEl.src = src;
+        audioEl.load();
+      }
     }
-    audioEl.load();
   }
 
   function renderOptions(q, alreadyAnswered, correctIndex) {
@@ -1375,6 +1396,26 @@
       <div style="margin-top:18px;font-weight:800;font-size:1.10rem">Review</div>
       ${reviewHtml}
     `;
+
+    // ✅ Process audio elements to fetch Firebase Storage URLs
+    (async () => {
+      const audioElements = RT.review()?.querySelectorAll("audio source");
+      if (audioElements) {
+        audioElements.forEach((source) => {
+          const src = source.getAttribute("src");
+          if (src && !(/^https?:\/\//i.test(src)) && window.getFirebaseStorageUrl) {
+            window.getFirebaseStorageUrl(src).then((storageUrl) => {
+              if (storageUrl) {
+                source.setAttribute("src", storageUrl);
+                source.parentElement?.load?.();
+              }
+            }).catch((err) => {
+              console.warn("Failed to fetch Firebase Storage URL for review audio:", err);
+            });
+          }
+        });
+      }
+    })();
 
     tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
     updateKpiVisibility();
