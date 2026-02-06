@@ -448,15 +448,8 @@
       return;
     }
 
-    // Try to get Firebase Storage URL if it's a relative path
-    if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
-      try {
-        const storageUrl = await window.getFirebaseStorageUrl(url);
-        if (storageUrl) url = storageUrl;
-      } catch (err) {
-        console.warn("Storage URL failed for PDF, using local:", url);
-      }
-    }
+    // Store original path for Firebase Storage download
+    const originalPath = url;
 
     const loading = document.createElement("div");
     loading.style.cssText =
@@ -491,15 +484,32 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
     try {
-      // Fetch PDF as blob to avoid CORS issues with Firebase Storage
-      let pdfData = url;
-      if (url.includes('firebasestorage.googleapis.com')) {
+      // Use Firebase Storage SDK to download PDF bytes (avoids CORS issues)
+      let pdfData = originalPath;
+      
+      if (!(/^https?:\/\//i.test(originalPath)) && window.__storage) {
         try {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          pdfData = await blob.arrayBuffer();
-        } catch (fetchErr) {
-          console.warn("Failed to fetch PDF as blob, trying direct:", fetchErr);
+          // Wait for storage to be ready
+          await window.__storageReady;
+          
+          // Remove leading slash if present
+          const storagePath = originalPath.startsWith('/') ? originalPath.slice(1) : originalPath;
+          
+          // Get reference and download bytes
+          const { ref, getBytes } = window.firebaseStorageExports;
+          const storageRef = ref(window.__storage, storagePath);
+          const bytes = await getBytes(storageRef);
+          pdfData = bytes;
+          
+          console.log("✅ Downloaded PDF from Storage:", storagePath);
+        } catch (storageErr) {
+          console.warn("Storage download failed, trying URL:", storageErr);
+          // Fallback to URL if available
+          if (window.getFirebaseStorageUrl) {
+            try {
+              pdfData = await window.getFirebaseStorageUrl(originalPath);
+            } catch {}
+          }
         }
       }
 

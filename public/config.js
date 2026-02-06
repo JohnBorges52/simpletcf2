@@ -29,6 +29,7 @@ import {
   getStorage,
   ref,
   getDownloadURL,
+  getBytes,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 import {
   getRemoteConfig,
@@ -313,6 +314,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     // Storage
     const storage = getStorage(app);
     window.__storage = storage;
+    window.firebaseStorageExports = { ref, getDownloadURL, getBytes };
     resolveStorageReady(storage);
     console.log("✅ Storage ready");
 
