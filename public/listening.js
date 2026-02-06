@@ -15,7 +15,7 @@
 
 (() => {
   /* 1) Constants */
-  const PATHS = Object.freeze({ DATA: "/data/audios/all_quiz_data.json" });
+  const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
 
   const STORAGE_KEYS = Object.freeze({
     TRACKING: "answer_tracking",
@@ -231,15 +231,18 @@
   }
   function resolveAudioSrc(q) {
     if (!q) return null;
+    // Prefer explicit audio_url (use as-is if absolute or rooted)
+    if (q.audio_url) {
+      if (/^https?:\/\//i.test(q.audio_url)) return q.audio_url;
+      return q.audio_url.startsWith("/")
+        ? q.audio_url
+        : "/" + q.audio_url.replace(/^(\.\/)+/, "");
+    }
     if (q.audio_local_path)
       return q.audio_local_path.startsWith("/")
         ? q.audio_local_path
         : "/" + q.audio_local_path.replace(/^(\.\/)+/, "");
-    if (q.audio_url) {
-      const base = q.audio_url.split("/").pop() || "";
-      if (base) return `/data/audios/${base}`;
-    }
-    if (q.filename) return `/data/audios/${q.filename}`;
+    if (q.filename) return q.filename.startsWith("/") ? q.filename : "/" + q.filename;
     return null;
   }
 
@@ -361,10 +364,49 @@
   }
 
   /* 5) Data */
+  async function fetchJsonFirstWorking(urls) {
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) {
+          console.warn("JSON candidate returned non-ok status", url, res.status);
+          continue;
+        }
+        const ct = res.headers.get("content-type") || "";
+        if (!/application\/json/i.test(ct)) {
+          // try to parse anyway but capture body for better diagnostics
+          const text = await res.text();
+          try {
+            const parsed = JSON.parse(text);
+            console.log("Loaded JSON (content-type mismatch) from:", url);
+            return parsed;
+          } catch (err) {
+            console.warn("Not JSON at", url, "body starts:", text.slice(0, 200));
+            continue;
+          }
+        }
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
+        continue;
+      }
+    }
+    throw new Error("All JSON URL candidates failed.");
+  }
+
   async function loadData() {
+    const candidates = [
+      PATHS.DATA,
+      "/data/all_quiz_data.json",
+      "/data/audios/all_quiz_data.json",
+      "/data/audios/all_quiz_data.json",
+      "data/all_quiz_data.json",
+      "data/audios/all_quiz_data.json",
+      "/all_quiz_data.json",
+    ];
     try {
-      const res = await fetch(PATHS.DATA, { cache: "no-store" });
-      const raw = await res.json();
+      const raw = await fetchJsonFirstWorking(candidates);
       state.allData = (raw || []).map((q) => ({
         ...q,
         weight_points: Number(q.weight_points),
