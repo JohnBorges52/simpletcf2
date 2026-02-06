@@ -741,7 +741,13 @@ import {
       container.appendChild(div);
     });
 
-    if (confirmBtn) confirmBtn.onclick = async () => await confirmAnswer(q);
+    if (confirmBtn) confirmBtn.onclick = async () => {
+      try {
+        await confirmAnswer(q);
+      } catch (err) {
+        console.error("Error confirming answer:", err);
+      }
+    };
   }
 
   function updateScore() {
@@ -1082,17 +1088,21 @@ import {
       dot.dataset.index = String(i);
 
       dot.addEventListener("click", async () => {
-        if (!state.realTestFinished) {
-          state.index = i;
-          await renderQuestion();
-          refreshNavDots();
-          updateFinishButtonState();
-          updateKpiVisibility();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-          const target = document.getElementById(`qsec-${i + 1}`);
-          if (target)
-            target.scrollIntoView({ behavior: "smooth", block: "start" });
+        try {
+          if (!state.realTestFinished) {
+            state.index = i;
+            await renderQuestion();
+            refreshNavDots();
+            updateFinishButtonState();
+            updateKpiVisibility();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            const target = document.getElementById(`qsec-${i + 1}`);
+            if (target)
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        } catch (err) {
+          console.error("Error in dot navigation:", err);
         }
       });
 
@@ -1612,20 +1622,24 @@ import {
 
     // Only-unanswered checkbox
     els.onlyChk()?.addEventListener("click", async (e) => {
-      if (state.realTestMode && !state.realTestFinished) {
-        e.preventDefault();
-        return;
-      }
-      state.onlyUnanswered = !!e.target.checked;
-      if (state.onlyUnanswered) state.deservesMode = false;
-      await updateDeservesButton();
+      try {
+        if (state.realTestMode && !state.realTestFinished) {
+          e.preventDefault();
+          return;
+        }
+        state.onlyUnanswered = !!e.target.checked;
+        if (state.onlyUnanswered) state.deservesMode = false;
+        await updateDeservesButton();
 
-      await recomputeFiltered();
-      shuffle(state.filtered);
-      state.index = 0;
-      state.score = 0;
-      state.answered = 0;
-      await renderQuestion();
+        await recomputeFiltered();
+        shuffle(state.filtered);
+        state.index = 0;
+        state.score = 0;
+        state.answered = 0;
+        await renderQuestion();
+      } catch (err) {
+        console.error("Error updating filter:", err);
+      }
     });
 
     // init initial state
