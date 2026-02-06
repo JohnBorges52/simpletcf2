@@ -491,7 +491,19 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
     try {
-      const task = pdfjsLib.getDocument(url);
+      // Fetch PDF as blob to avoid CORS issues with Firebase Storage
+      let pdfData = url;
+      if (url.includes('firebasestorage.googleapis.com')) {
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          pdfData = await blob.arrayBuffer();
+        } catch (fetchErr) {
+          console.warn("Failed to fetch PDF as blob, trying direct:", fetchErr);
+        }
+      }
+
+      const task = pdfjsLib.getDocument(pdfData);
       const pdf = await task.promise;
       if (myToken !== pdfRenderToken) return;
 
