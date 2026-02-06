@@ -1073,6 +1073,13 @@ async function loadAndDisplayAnswerHistory() {
     // Get recent responses from questionResponses collection
     const responses = await window.dbService.getRecentResponses(userId, 100);
 
+    // Helper to format section name
+    const getSectionName = (type) => {
+      if (type === "reading") return "Reading";
+      if (type === "listening") return "Listening";
+      return "Unknown";
+    };
+
     // Process responses into answer summary by questionId
     const answerMap = new Map();
     
@@ -1085,7 +1092,7 @@ async function loadAndDisplayAnswerHistory() {
         answerMap.set(key, {
           questionId: questionId,
           questionType: questionType,
-          section: questionType === "reading" ? "Reading" : questionType === "listening" ? "Listening" : "Unknown",
+          section: getSectionName(questionType),
           correct: 0,
           wrong: 0,
           total: 0,

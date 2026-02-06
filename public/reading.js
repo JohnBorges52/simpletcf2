@@ -125,9 +125,7 @@ import {
     return (
       q?.question_ID ||
       q?.number_ID ||
-      `${q?.test_id || "unknownTest"}-q${String(q?.question_number ?? "")
-        .toString()
-        .padStart(4, "0")}`
+      `${q?.test_id || "unknownTest"}-q${String(q?.question_number || 0).padStart(4, "0")}`
     );
   }
 
