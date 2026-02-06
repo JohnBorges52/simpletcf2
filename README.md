@@ -25,6 +25,16 @@ Removing accidentally committed secrets:
 - If secrets were committed previously, remove them from your git history (use `git filter-repo` or the BFG repo cleaner), rotate the exposed credentials, and invalidate any tokens.
 - For CI (Cloud Build/GitHub Actions) prefer project/secret managers or repository secrets instead of hardcoding values in repo files.
 
+## ⚠️ IMPORTANT: Deploy Updated Firestore Rules
+
+**Recent Fix (PR #6):** Firestore security rules were updated to fix permission errors. You MUST deploy the updated rules:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+See [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) for detailed deployment instructions.
+
 ## Firestore Database Setup
 
 **Quick Answer:** YES, you need to enable Firestore in Firebase Console!
@@ -38,10 +48,11 @@ Removing accidentally committed secrets:
    - Select your region
    - Click "Enable"
 
-2. **Deploy security rules**:
+2. **Deploy security rules** (REQUIRED after recent update):
    ```bash
    firebase deploy --only firestore:rules
    ```
+   📖 **See detailed guide:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md)
 
 3. **Use the app** - Collections and documents are created automatically when:
    - Users register/login (creates `/users/{userId}`)
@@ -49,6 +60,7 @@ Removing accidentally committed secrets:
 
 ### Documentation:
 
+- 🚀 **DEPLOY RULES:** [DEPLOY_FIRESTORE_RULES.md](DEPLOY_FIRESTORE_RULES.md) - Deploy updated rules to Google Cloud
 - 📋 **Checklist:** [FIRESTORE_CHECKLIST.md](FIRESTORE_CHECKLIST.md) - Step-by-step setup checklist
 - 📖 **Quick Start:** [FIRESTORE_QUICKSTART.md](FIRESTORE_QUICKSTART.md) - "Do I need to create a database?"
 - 📚 **Setup Guide:** [FIRESTORE_SETUP.md](FIRESTORE_SETUP.md) - Detailed setup instructions
