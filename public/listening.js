@@ -896,6 +896,23 @@
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     refreshWeightButtonsLabels();
+    
+    // ✅ Log to Firestore
+    if (window.dbService && window.dbService.logQuestionResponse) {
+      const selectedLetter = q.alternatives?.[state.selectedOptionIndex]?.letter || 
+                            q.alternatives?.[q.userAnswerIndex]?.letter || "";
+      window.dbService.logQuestionResponse({
+        questionId: q.question_ID || q.id || "unknown",
+        questionType: "listening",
+        testId: q.test_id || null,
+        questionNumber: q.question_number || q.overall_question_number?.toString() || "",
+        weight: q.weight_points || 0,
+        selectedOption: selectedLetter,
+        isCorrect: isCorrect,
+      }).catch(err => {
+        console.warn("Failed to log listening response to Firestore:", err);
+      });
+    }
 
     // ✅ PRACTICE MODE: re-render so correct/wrong colors + transcript become available
     if (!state.realTestMode) {

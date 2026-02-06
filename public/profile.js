@@ -152,11 +152,30 @@ function wireAccountEditor() {
    OVERVIEW KPIs (placeholder)
    =========================== */
 
-function seedKpis() {
-  const answered = 0;
-  const accuracy = "—";
-  const realTests = 0;
-  const streak = "—";
+async function seedKpis() {
+  // Default values
+  let answered = 0;
+  let accuracy = "—";
+  let realTests = 0;
+  let streak = "—";
+  
+  // Try to load statistics from Firestore
+  try {
+    const auth = await window.__authReady;
+    if (auth && auth.currentUser && window.dbService) {
+      const stats = await window.dbService.getUserStatistics(auth.currentUser.uid);
+      
+      if (stats) {
+        answered = stats.totalResponses || 0;
+        accuracy = stats.accuracy ? `${stats.accuracy}%` : "—";
+        
+        // For now, realTests and streak remain placeholders
+        // These could be calculated based on response patterns in the future
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load statistics from Firestore:", error);
+  }
 
   $("#kpiAnswered") && ($("#kpiAnswered").textContent = answered);
   $("#kpiAccuracy") && ($("#kpiAccuracy").textContent = accuracy);
@@ -424,42 +443,70 @@ function makeWeeklyLabels(n) {
   return Array.from({ length: n }, (_, i) => `W${i + 1}`);
 }
 
-function seedProgressPlaceholders() {
+async function seedProgressPlaceholders() {
   // Placeholder datasets
-  const data = {
+  let data = {
     listening: {
-      kpis: { accuracy: 72, answered: 180, correct: 130, streak: 6 },
-      daily: [
-        55, 56, 57, 58, 57, 59, 60, 61, 60, 62, 63, 64, 63, 65, 66, 67, 66, 68,
-        69, 68, 70, 71, 70, 72, 73, 72, 74, 74, 73, 72,
-      ],
-      weekly: [55, 60, 62, 58, 65, 66, 70, 68, 72, 71, 73, 72],
-      weights: [
-        { w: 33, pct: 64 },
-        { w: 26, pct: 70 },
-        { w: 21, pct: 76 },
-        { w: 15, pct: 79 },
-        { w: 9, pct: 82 },
-        { w: 3, pct: 90 },
-      ],
+      kpis: { accuracy: 0, answered: 0, correct: 0, streak: 0 },
+      daily: [],
+      weekly: [],
+      weights: [],
     },
     reading: {
-      kpis: { accuracy: 68, answered: 140, correct: 95, streak: 6 },
-      daily: [
-        50, 51, 52, 52, 53, 54, 55, 55, 56, 57, 58, 58, 59, 60, 60, 61, 62, 63,
-        63, 64, 65, 65, 66, 67, 67, 68, 68, 68, 68, 68,
-      ],
-      weekly: [50, 54, 56, 58, 60, 61, 63, 64, 66, 67, 68, 68],
-      weights: [
-        { w: 33, pct: 58 },
-        { w: 26, pct: 63 },
-        { w: 21, pct: 70 },
-        { w: 15, pct: 72 },
-        { w: 9, pct: 78 },
-        { w: 3, pct: 88 },
-      ],
+      kpis: { accuracy: 0, answered: 0, correct: 0, streak: 0 },
+      daily: [],
+      weekly: [],
+      weights: [],
     },
   };
+
+  // Try to load statistics from Firestore
+  try {
+    const auth = await window.__authReady;
+    if (auth && auth.currentUser && window.dbService) {
+      // Load listening statistics
+      const listeningStats = await window.dbService.getUserStatistics(
+        auth.currentUser.uid,
+        { questionType: "listening" }
+      );
+      
+      if (listeningStats) {
+        data.listening.kpis.answered = listeningStats.totalResponses;
+        data.listening.kpis.correct = listeningStats.correctResponses;
+        data.listening.kpis.accuracy = parseFloat(listeningStats.accuracy) || 0;
+        
+        // Build weights data
+        data.listening.weights = Object.entries(listeningStats.byWeight || {})
+          .map(([w, stats]) => ({
+            w: parseInt(w),
+            pct: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
+          }))
+          .sort((a, b) => b.w - a.w);
+      }
+      
+      // Load reading statistics
+      const readingStats = await window.dbService.getUserStatistics(
+        auth.currentUser.uid,
+        { questionType: "reading" }
+      );
+      
+      if (readingStats) {
+        data.reading.kpis.answered = readingStats.totalResponses;
+        data.reading.kpis.correct = readingStats.correctResponses;
+        data.reading.kpis.accuracy = parseFloat(readingStats.accuracy) || 0;
+        
+        // Build weights data
+        data.reading.weights = Object.entries(readingStats.byWeight || {})
+          .map(([w, stats]) => ({
+            w: parseInt(w),
+            pct: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
+          }))
+          .sort((a, b) => b.w - a.w);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load progress statistics from Firestore:", error);
+  }
 
   let currentMode = "listening";
   let timeScale = "weekly"; // "weekly" | "daily"

@@ -678,6 +678,22 @@
 
     updateScore();
     updateQuestionStats(q);
+    
+    // ✅ Log to Firestore
+    if (window.dbService && window.dbService.logQuestionResponse) {
+      const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
+      window.dbService.logQuestionResponse({
+        questionId: q.question_ID || q.id || "unknown",
+        questionType: "reading",
+        testId: q.test_id || null,
+        questionNumber: q.question_number || q.overall_question_number?.toString() || "",
+        weight: q.weight_points || 0,
+        selectedOption: selectedLetter,
+        isCorrect: isCorrect,
+      }).catch(err => {
+        console.warn("Failed to log reading response to Firestore:", err);
+      });
+    }
   }
 
   /* =====================
