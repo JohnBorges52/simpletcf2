@@ -1,12 +1,8 @@
 /* ============================================================================
-   TCF Reading Practice — Full App Script (Listening-style UI)
-   ✅ Copy button overlay: button text becomes "Copied ✅" (green) for 2s
-   ✅ PDF renders into #pdfInner so overlay button is never wiped
-   ✅ Practice: requires selecting a weight first (empty state)
-   ✅ Never responded filter + Deserves Attention
-   NOTE: This file focuses on Practice flow + Copy button + PDF rendering.
-         If you have a bigger Real Test implementation already, keep it and
-         only merge the COPY + PDF-INNER parts.
+   reading.js — FULL (Listening-style UI) — FIXED PDF sizing
+   ✅ Forces Chrome PDF viewer to "page-width" inside iframe
+   ✅ Keeps overlay button intact by rendering PDF into #pdfInner only
+   ✅ Stable A4 viewport via CSS (aspect-ratio), no JS height hacks
 ============================================================================ */
 
 (() => {
@@ -52,7 +48,7 @@
     currentWeight: null, // null = none selected, "all" or number when selected
     deservesMode: false,
 
-    // Real Test flags (kept for compatibility; not implemented fully here)
+    // Real Test flags
     realTestMode: false,
     realTestFinished: false,
 
@@ -162,7 +158,6 @@
   function getHeaderNumber(q) {
     if (!q) return null;
 
-    // Practice: show question_number from json if present; else overall_question_number
     if (q.question_number != null) {
       if (typeof q.question_number === "string") {
         const m = q.question_number.match(/(\d+)/);
@@ -194,9 +189,7 @@
 
   function getCopyTextForQuestion(q) {
     if (!q) return "";
-    // Prefer passage text from JSON
     const passage = (q.text ?? "").toString().trim();
-    // Fallback to question prompt
     const fallback = (
       q.question ??
       q.Question ??
@@ -219,7 +212,6 @@
       return true;
     }
 
-    // Fallback
     const ta = document.createElement("textarea");
     ta.value = clean;
     ta.setAttribute("readonly", "");
@@ -313,7 +305,6 @@
   }
 
   function recomputeFiltered() {
-    // First load: require weight selection
     if (!state.realTestMode && state.currentWeight == null) {
       state.filtered = [];
       return;
@@ -321,7 +312,6 @@
 
     let items = state.allData.slice();
 
-    // Practice weight filtering
     if (!state.realTestMode) {
       if (state.currentWeight !== "all") {
         items = items.filter(
@@ -330,7 +320,6 @@
       }
     }
 
-    // Deserves > Unanswered
     if (state.deservesMode) items = items.filter(deservesFromTracking);
     else if (state.onlyUnanswered) items = items.filter(isUnansweredLifetime);
 
@@ -344,7 +333,6 @@
     safeText(els.qNumber(), "");
     safeText(els.qText(), "");
 
-    // Clear PDF content but keep overlay button
     els.pdfInner() && (els.pdfInner().innerHTML = "");
 
     els.options() && (els.options().innerHTML = "");
@@ -358,75 +346,59 @@
   }
 
   /* =====================
-     5) Data
+     5) Data loading
   ===================== */
+  async function fetchJsonFirstWorking(urls) {
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) {
+          console.warn("JSON candidate returned non-ok status", url, res.status);
+          continue;
+        }
+        const ct = res.headers.get("content-type") || "";
+        if (!/application\/json/i.test(ct)) {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch {
+            console.warn("Not JSON at", url, "body starts:", text.slice(0, 120));
+            continue;
+          }
+        }
+        return await res.json();
+      } catch (err) {
+        console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
+        continue;
+      }
+    }
+    throw new Error("All JSON URL candidates failed.");
+  }
+
   async function loadData() {
+    const candidates = [PATHS.DATA];
+
     try {
-      const res = await fetch(PATHS.DATA, { cache: "no-store" });
-      const raw = await res.json();
+      const raw = await fetchJsonFirstWorking(candidates);
       state.allData = (raw || []).map((q) => ({
         ...q,
         weight_points: Number(q.weight_points),
       }));
     } catch (e) {
       console.error("loadData failed", e);
-      state.allData = [];
       setNotice("Failed to load reading JSON. Check console.", "err");
+      state.allData = [];
     }
   }
-    async function fetchJsonFirstWorking(urls) {
-      for (const url of urls) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) {
-            console.warn("JSON candidate returned non-ok status", url, res.status, res.url);
-            continue;
-          }
-          const ct = res.headers.get("content-type") || "";
-          if (!/application\/json/i.test(ct)) {
-            const text = await res.text();
-            try {
-              const parsed = JSON.parse(text);
-              console.log("Loaded JSON (content-type mismatch) from:", url, res.url);
-              return parsed;
-            } catch (err) {
-              console.warn("Not JSON at", url, "response.url=", res.url, "body starts:", text.slice(0, 400));
-              continue;
-            }
-          }
-          const data = await res.json();
-          return data;
-        } catch (err) {
-          console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
-          continue;
-        }
-      }
-      throw new Error("All JSON URL candidates failed.");
-    }
-
-    async function loadData() {
-      const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
-      const candidates = ["/data/all_data_reading.json"];
-
-      try {
-        const raw = await fetchJsonFirstWorking(candidates);
-        state.allData = (raw || []).map((q) => ({ ...q }));
-      } catch (e) {
-        console.error("loadData failed", e);
-        setNotice("Failed to load reading JSON. Check console.", "err");
-        state.allData = [];
-      }
-    }
 
   async function ensureDataLoaded() {
     if (!state.allData.length) await loadData();
   }
 
   /* =====================
-     6) PDF rendering
+     6) PDF rendering (IFRAME)
   ===================== */
   async function renderPdf(q) {
-    // ✅ render inside #pdfInner so overlay button stays intact
     const wrap = els.pdfInner() || els.pictureContainer();
     if (!wrap) return;
 
@@ -448,7 +420,7 @@
       return;
     }
 
-    // Get Firebase Storage download URL with token (bypasses CORS for iframe)
+    // If you have a helper that converts storage paths to signed download URLs
     if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
       try {
         const storageUrl = await window.getFirebaseStorageUrl(url);
@@ -466,16 +438,18 @@
 
     if (myToken !== pdfRenderToken) return;
 
-    // Use iframe to display PDF (no CORS issues)
+    // ✅ Use iframe to display PDF (no CORS issues)
     wrap.innerHTML = "";
-    const wrapWidth = wrap.clientWidth || 900;
-    const pdfHeight = Math.round(wrapWidth * 1.414); // A4-ish aspect ratio
-    wrap.style.background = "#fff";
-    wrap.style.overflow = "hidden";
-    wrap.style.height = `${pdfHeight}px`;
+
     const iframe = document.createElement("iframe");
-    const pdfViewerParams = "#toolbar=0&navpanes=0&scrollbar=0&view=FitH";
-    iframe.src = url.includes("#") ? `${url}&toolbar=0&navpanes=0&scrollbar=0&view=FitH` : `${url}${pdfViewerParams}`;
+
+    // ✅ KEY FIX: force built-in PDF viewer zoom to page width
+    const params = "#zoom=page-width&toolbar=0&navpanes=0&scrollbar=0";
+
+    iframe.src = url.includes("#")
+      ? `${url}&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0`
+      : `${url}${params}`;
+
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "0";
@@ -491,58 +465,6 @@
 
     if (myToken !== pdfRenderToken) return;
     wrap.appendChild(iframe);
-    return;
-
-    // OLD PDF.js approach (disabled due to CORS issues)
-    /*
-    // OLD PDF.js approach (disabled due to CORS issues)
-    /*
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-
-    try {
-      const task = pdfjsLib.getDocument(url);
-      const pdf = await task.promise;
-      if (myToken !== pdfRenderToken) return;
-
-      const page = await pdf.getPage(1);
-      if (myToken !== pdfRenderToken) return;
-
-      const containerWidth = wrap.clientWidth || 900;
-      const baseViewport = page.getViewport({ scale: 1 });
-      const scale = containerWidth / baseViewport.width;
-      const viewport = page.getViewport({ scale });
-
-      const dpr = window.devicePixelRatio || 1;
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      canvas.style.width = `${viewport.width}px`;
-      canvas.style.height = `${viewport.height}px`;
-      canvas.width = Math.floor(viewport.width * dpr);
-      canvas.height = Math.floor(viewport.height * dpr);
-
-      const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null;
-
-      const renderTask = page.render({
-        canvasContext: ctx,
-        viewport,
-        transform,
-      });
-      await renderTask.promise;
-
-      if (myToken !== pdfRenderToken) return;
-
-      wrap.innerHTML = "";
-      wrap.appendChild(canvas);
-    } catch (e) {
-      console.error("PDF render failed:", e);
-      if (myToken !== pdfRenderToken) return;
-      wrap.innerHTML = "";
-      wrap.textContent = "Failed to render PDF.";
-    }
-    */
   }
 
   /* =====================
@@ -580,7 +502,6 @@
       if (alreadyAnswered) {
         if (q.userAnswerIndex === i) div.classList.add(CLS.optionSelected);
 
-        // Practice: show correct/wrong styling after answered
         if (!state.realTestMode) {
           if (i === correctIndex) div.classList.add(CLS.optionCorrect);
           if (i === q.userAnswerIndex && i !== correctIndex)
@@ -671,7 +592,6 @@
      9) Confirm Answer
   ===================== */
   function confirmAnswer(q) {
-    // prevent double count
     if (q.userAnswerIndex !== undefined && q.userAnswerIndex !== null) {
       els.confirmBtn()?.classList.add(CLS.hidden);
       return;
@@ -697,7 +617,6 @@
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
-    // rerender to lock + show correct/wrong
     renderOptions(q, true, correctIndex);
 
     updateScore();
@@ -732,7 +651,6 @@
     else if (weightOrAll == null) state.currentWeight = null;
     else state.currentWeight = Number(weightOrAll);
 
-    // Selected pill highlight
     document
       .querySelectorAll(`.${CLS.weightBtn}`)
       .forEach((btn) => btn.classList.remove(CLS.selectedWeight));
@@ -768,7 +686,6 @@
   function toggleDeserves() {
     state.deservesMode = !state.deservesMode;
 
-    // Turning on deserves turns off never responded
     if (state.deservesMode) {
       state.onlyUnanswered = false;
       const chk = els.onlyChk();
@@ -793,6 +710,7 @@
     renderQuestion();
     updateDeservesButton();
   }
+
   // ============================
   // Expand / Collapse reading text
   // ============================
@@ -811,9 +729,6 @@
     });
   })();
 
-  // ============================
-  // Force reading text collapsed
-  // ============================
   function collapseReadingText() {
     const text = document.getElementById("questionText");
     const btn = document.getElementById("toggleReadingBtn");
@@ -826,10 +741,10 @@
 
     btn.textContent = "⬇️ Expand reading";
   }
+
   /* =====================
      Real Test — minimal working implementation
   ===================== */
-
   function setUiLocked(locked) {
     const controls = els.controls();
     const toolbar = els.toolbar();
@@ -851,10 +766,8 @@
 
     if (!overlay || !startBtn || !txt) return;
 
-    // show overlay
     overlay.classList.remove("quiz--hidden");
 
-    // RESET states (important so it can replay)
     overlay.classList.remove("quiz--rt-ready");
     startBtn.classList.remove("quiz--ready");
     startBtn.disabled = true;
@@ -863,9 +776,7 @@
     txt.classList.add("quiz--loading-flash");
     txt.textContent = "Preparing Test...";
 
-    // after delay: switch to READY state (this is what your CSS expects)
     setTimeout(() => {
-      // stop flashing, animate text swap
       txt.classList.add("quiz--fade-out");
 
       setTimeout(() => {
@@ -874,15 +785,13 @@
         txt.classList.remove("quiz--loading-flash");
         txt.textContent = "Ready ✅";
 
-        // ✅ these two lines are the key for your CSS
-        overlay.classList.add("quiz--rt-ready");  // makes spinner/check look ready
-        startBtn.classList.add("quiz--ready");    // makes button visible/clickable
+        overlay.classList.add("quiz--rt-ready");
+        startBtn.classList.add("quiz--ready");
 
         startBtn.disabled = false;
       }, 220);
     }, 900);
   }
-
 
   function closeRealTestOverlay() {
     const overlay = document.getElementById("realTestLoading");
@@ -891,7 +800,6 @@
 
     overlay?.classList.add(CLS.hidden);
 
-    // reset so it doesn't get stuck next open
     overlay?.classList.remove("quiz--rt-ready");
     startBtn?.classList.remove("quiz--ready");
     if (startBtn) startBtn.disabled = true;
@@ -903,10 +811,7 @@
     }
   }
 
-
   function buildRealTestSet() {
-    // Use your entire dataset — typical TCF is 39 questions.
-    // If you want strict weight distribution later, we can implement it.
     const pool = state.allData.slice();
     shuffle(pool);
 
@@ -928,7 +833,6 @@
       dot.textContent = String(i + 1);
       dot.title = `Question ${i + 1}`;
 
-      // mark answered
       const answered =
         q.userAnswerIndex !== undefined && q.userAnswerIndex !== null;
       if (answered) dot.style.opacity = "0.75";
@@ -948,27 +852,22 @@
   function startRealTest() {
     closeRealTestOverlay();
 
-    // reset flags
     state.realTestMode = true;
     state.realTestFinished = false;
     state.deservesMode = false;
     state.onlyUnanswered = false;
-    state.currentWeight = "all"; // not used in real test, but avoids empty state
+    state.currentWeight = "all";
 
-    // lock practice filters
     setUiLocked(true);
 
-    // show real test container
     document.getElementById("realTestContainer")?.classList.remove(CLS.hidden);
     document.getElementById("realTestResults")?.classList.add(CLS.hidden);
 
-    // build test set and reset counters
     state.filtered = buildRealTestSet();
     state.index = 0;
     state.score = 0;
     state.answered = 0;
 
-    // show quiz
     els.quiz()?.classList.remove(CLS.hidden);
     hideEmptyState();
 
@@ -980,13 +879,10 @@
     state.realTestFinished = true;
     state.realTestMode = false;
 
-    // unlock practice filters again
     setUiLocked(false);
 
-    // hide real test container
     document.getElementById("realTestContainer")?.classList.add(CLS.hidden);
 
-    // return to “select weight” state (or keep last chosen weight if you prefer)
     state.currentWeight = null;
     state.filtered = [];
     state.index = 0;
@@ -1002,7 +898,6 @@
     await loadData();
     ensureQuestionStatsDOM();
 
-    // Copy binding: button changes to "Copied ✅" green for 2 seconds
     els.copyBtn()?.addEventListener("click", async () => {
       try {
         const q = state.currentQuestion;
@@ -1016,13 +911,10 @@
       }
     });
 
-    // Deserves Attention
     els.deservesBtn()?.addEventListener("click", toggleDeserves);
 
-    // Real Test button
     els.realTestBtn()?.addEventListener("click", openRealTestOverlay);
 
-    // Overlay close (X + backdrop)
     document
       .getElementById("rtClose")
       ?.addEventListener("click", closeRealTestOverlay);
@@ -1030,21 +922,17 @@
       .getElementById("rtBackdrop")
       ?.addEventListener("click", closeRealTestOverlay);
 
-    // Start real test from overlay
     document
       .getElementById("startRealTestBtn")
       ?.addEventListener("click", startRealTest);
 
-    // Finish test
     document
       .getElementById("finishRealTestBtn")
       ?.addEventListener("click", finishRealTest);
 
-    // Never responded
     els.onlyChk()?.addEventListener("click", (e) => {
       state.onlyUnanswered = !!e.target.checked;
 
-      // If never responded is ON, force deserves OFF
       if (state.onlyUnanswered) state.deservesMode = false;
 
       updateDeservesButton();
@@ -1062,7 +950,6 @@
       renderQuestion();
     });
 
-    // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
       const options = Array.from(document.querySelectorAll(`.${CLS.option}`));
       const confirmBtn = els.confirmBtn();
@@ -1090,7 +977,6 @@
       if (e.key === KEYS.LEFT) prevQuestion();
     });
 
-    // Initial state: require weight selection
     state.currentWeight = null;
     state.onlyUnanswered = false;
     state.deservesMode = false;
@@ -1100,7 +986,6 @@
     updateDeservesButton();
   }
 
-  // Expose for inline HTML onclick + nav buttons
   window.filterQuestions = filterQuestions;
   window.nextQuestion = nextQuestion;
   window.prevQuestion = prevQuestion;
