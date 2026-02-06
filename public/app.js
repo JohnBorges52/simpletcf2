@@ -5,6 +5,15 @@
    - Weight button shows unanswered count for selected weight when "Never responded" is checked
 ============================================================================ */
 
+import {
+  getTracking as getTrackingFS,
+  setTracking as setTrackingFS,
+  getEvents as getEventsFS,
+  setEvents as setEventsFS,
+  getTCFListening as getTCFListeningFS,
+  setTCFListening as setTCFListeningFS,
+} from "./firestore-storage.js";
+
 (() => {
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
@@ -100,51 +109,37 @@
     return arr;
   }
 
-  // Legacy stores (still written so your old UI stays sane)
-  function getTracking() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.TRACKING) || "{}");
-    } catch {
-      return {};
-    }
+  // Legacy stores (migrated to Firestore)
+  async function getTracking() {
+    return await getTrackingFS();
   }
-  function setTracking(o) {
-    localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(o || {}));
+  async function setTracking(o) {
+    await setTrackingFS(o);
   }
-  function getEvents() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.EVENTS) || "[]");
-    } catch {
-      return [];
-    }
+  async function getEvents() {
+    return await getEventsFS();
   }
-  function setEvents(a) {
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(a || []));
+  async function setEvents(a) {
+    await setEventsFS(a);
   }
 
   // New unified "TCF Listening"
   function tlDefault() {
     return { answers: {}, tests: { count: 0, items: [] } };
   }
-  function tlGet() {
-    try {
-      const raw = localStorage.getItem(TL_KEY);
-      if (!raw) return tlDefault();
-      const obj = JSON.parse(raw);
-      if (!obj.answers) obj.answers = {};
-      if (!obj.tests) obj.tests = { count: 0, items: [] };
-      if (typeof obj.tests.count !== "number")
-        obj.tests.count = Number(obj.tests.count || 0);
-      if (!Array.isArray(obj.tests.items)) obj.tests.items = [];
-      return obj;
-    } catch {
-      return tlDefault();
+  async function tlGet() {
+    const data = await getTCFListeningFS();
+    // Ensure structure is valid
+    if (!data.answers) data.answers = {};
+    if (!data.tests) data.tests = { count: 0, items: [] };
+    if (typeof data.tests.count !== "number") {
+      data.tests.count = Number(data.tests.count || 0);
     }
+    if (!Array.isArray(data.tests.items)) data.tests.items = [];
+    return data;
   }
-  function tlSet(obj) {
-    try {
-      localStorage.setItem(TL_KEY, JSON.stringify(obj || tlDefault()));
-    } catch {}
+  async function tlSet(obj) {
+    await setTCFListeningFS(obj || tlDefault());
   }
   function tlQuestionKey(q) {
     return (
@@ -155,22 +150,23 @@
         .padStart(4, "0")}`
     );
   }
-  function tlReadAnswer(q) {
+  async function tlReadAnswer(q) {
     const key = tlQuestionKey(q);
-    return tlGet().answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
+    const store = await tlGet();
+    return store.answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
   }
-  function tlBumpAnswer(q, isCorrect) {
-    const store = tlGet();
+  async function tlBumpAnswer(q, isCorrect) {
+    const store = await tlGet();
     const key = tlQuestionKey(q);
     const rec = store.answers[key] || { correct: 0, wrong: 0, lastAnswered: 0 };
     if (isCorrect) rec.correct++;
     else rec.wrong++;
     rec.lastAnswered = Date.now();
     store.answers[key] = rec;
-    tlSet(store);
+    await tlSet(store);
   }
-  function tlRecordTest({ weightedScore, pct, clb, band, totalCorrect }) {
-    const store = tlGet();
+  async function tlRecordTest({ weightedScore, pct, clb, band, totalCorrect }) {
+    const store = await tlGet();
     const next = (store.tests.count || 0) + 1;
     const entry = {
       number: next,
@@ -183,7 +179,7 @@
     };
     store.tests.count = next;
     store.tests.items.push(entry);
-    tlSet(store);
+    await tlSet(store);
   }
 
   // Helpers
@@ -194,21 +190,22 @@
   }
 
   // "Never responded": use TL (and legacy as a fallback if you want to treat either as answered)
-  function isUnanswered(q) {
-    const tl = tlReadAnswer(q);
+  async function isUnanswered(q) {
+    const tl = await tlReadAnswer(q);
     const newAnswered = (tl.correct || 0) + (tl.wrong || 0) > 0;
     if (newAnswered) return false;
     // also check legacy to avoid showing as unanswered when old data exists
-    const st = getTracking()[makeLegacyKey(q)];
+    const tracking = await getTracking();
+    const st = tracking[makeLegacyKey(q)];
     const oldAnswered = !!(st && (st.correct || 0) + (st.wrong || 0) > 0);
     return !oldAnswered;
   }
 
   // Deserves Attention — from TL store
   // rule: total>0 and |correct - wrong| < 2
-  function deservesFromTL(q) {
-    const rec = tlReadAnswer(q);
-    theTotal = (rec.correct || 0) + (rec.wrong || 0);
+  async function deservesFromTL(q) {
+    const rec = await tlReadAnswer(q);
+    const theTotal = (rec.correct || 0) + (rec.wrong || 0);
     if (theTotal === 0) return false;
     return Math.abs((rec.correct || 0) - (rec.wrong || 0)) < 2;
   }
@@ -276,11 +273,15 @@
   /* 6) Filters / buttons */
 
   // NEW: count unanswered (TL/legacy-aware) for a given weight
-  function countUnansweredForWeight(weight) {
+  async function countUnansweredForWeight(weight) {
     const w = Number(weight);
-    return state.allData.filter(
-      (q) => Number(q.weight_points) === w && isUnanswered(q),
-    ).length;
+    const results = await Promise.all(
+      state.allData.map(async (q) => {
+        if (Number(q.weight_points) !== w) return false;
+        return await isUnanswered(q);
+      })
+    );
+    return results.filter(Boolean).length;
   }
 
   function ensureWeightButtonsOriginalLabels() {
@@ -304,13 +305,14 @@
 
   // UPDATED: when "Never responded" is ON and a weight is selected,
   // append the unanswered count to that *selected* weight button.
-  function refreshWeightButtonsLabels() {
+  async function refreshWeightButtonsLabels() {
     ensureWeightButtonsOriginalLabels();
 
     const selectedWeight = state.currentWeight;
     const onlyUnanswered = !!state.onlyUnanswered;
 
-    document.querySelectorAll(".weight-btn").forEach((btn) => {
+    const buttons = document.querySelectorAll(".weight-btn");
+    for (const btn of buttons) {
       const isAll = btn.dataset.all === "1";
       const w = btn.dataset.weight ? Number(btn.dataset.weight) : null;
       let label = (btn.dataset.originalLabel || btn.textContent || "").trim();
@@ -322,15 +324,15 @@
         selectedWeight != null &&
         w === selectedWeight
       ) {
-        const qty = countUnansweredForWeight(w);
+        const qty = await countUnansweredForWeight(w);
         label = `${label} (${qty})`;
       }
 
       btn.textContent = label;
-    });
+    }
   }
 
-  function recomputeFiltered() {
+  async function recomputeFiltered() {
     let items = state.allData.slice();
 
     // Weight filter (if chosen)
@@ -342,24 +344,32 @@
 
     // Deserves Attention overrides "only unanswered"
     if (state.deservesMode) {
-      items = items.filter(deservesFromTL);
+      const results = await Promise.all(items.map(async (q) => {
+        const deserves = await deservesFromTL(q);
+        return deserves ? q : null;
+      }));
+      items = results.filter(Boolean);
     } else if (state.onlyUnanswered) {
-      items = items.filter(isUnanswered);
+      const results = await Promise.all(items.map(async (q) => {
+        const unanswered = await isUnanswered(q);
+        return unanswered ? q : null;
+      }));
+      items = results.filter(Boolean);
     }
 
     state.filtered = items;
   }
 
-  function rebuildFiltered() {
-    recomputeFiltered();
+  async function rebuildFiltered() {
+    await recomputeFiltered();
     shuffle(state.filtered);
     state.index = 0;
     state.score = 0;
     state.answered = 0;
     els.quiz()?.classList.remove("hidden");
     renderQuestion();
-    updateDeservesButton();
-    refreshWeightButtonsLabels(); // keep labels in sync with state
+    await updateDeservesButton();
+    await refreshWeightButtonsLabels(); // keep labels in sync with state
   }
 
   async function ensureDataLoaded() {
@@ -375,7 +385,7 @@
         )
       )
         return;
-      exitRealTest();
+      await exitRealTest();
     }
     await ensureDataLoaded();
     state.currentWeight =
@@ -390,27 +400,31 @@
             (btn) => Number(btn.dataset.weight) === state.currentWeight,
           );
     selectedBtn?.classList.add("selected-weight");
-    rebuildFiltered();
+    await rebuildFiltered();
   }
 
   // Deserves Attention button
-  function countDeservesAttentionForCurrentScope() {
+  async function countDeservesAttentionForCurrentScope() {
     let pool = state.allData;
     if (state.currentWeight != null) {
       pool = pool.filter(
         (q) => Number(q.weight_points) === Number(state.currentWeight),
       );
     }
-    return pool.filter(deservesFromTL).length;
+    const results = await Promise.all(pool.map(async (q) => {
+      return await deservesFromTL(q);
+    }));
+    return results.filter(Boolean).length;
   }
-  function updateDeservesButton() {
+  async function updateDeservesButton() {
     const btn = els.deservesBtn();
     if (!btn) return;
-    btn.textContent = `📚 Deserves Attention (${countDeservesAttentionForCurrentScope()})`;
+    const count = await countDeservesAttentionForCurrentScope();
+    btn.textContent = `📚 Deserves Attention (${count})`;
     btn.classList.toggle("toggled", state.deservesMode);
     btn.setAttribute("aria-pressed", state.deservesMode ? "true" : "false");
   }
-  function toggleDeserves() {
+  async function toggleDeserves() {
     // If on results page, confirm leave
     if (state.realTestMode && state.realTestFinished) {
       if (
@@ -419,7 +433,7 @@
         )
       )
         return;
-      exitRealTest();
+      await exitRealTest();
     }
     state.deservesMode = !state.deservesMode;
     // When Deserves is ON during normal practice, ignore "only unanswered"
@@ -428,7 +442,7 @@
       const chk = els.onlyChk();
       if (chk) chk.checked = false;
     }
-    rebuildFiltered();
+    await rebuildFiltered();
   }
 
   /* 7) Rendering */
@@ -552,7 +566,7 @@
     );
   }
 
-  function trackAnswerLocally(
+  async function trackAnswerLocally(
     testId,
     questionNumber,
     isCorrect,
@@ -561,13 +575,13 @@
   ) {
     // Legacy
     const key = `${testId}-question${questionNumber}`;
-    const tracking = getTracking();
+    const tracking = await getTracking();
     if (!tracking[key]) tracking[key] = { correct: 0, wrong: 0 };
     isCorrect ? tracking[key].correct++ : tracking[key].wrong++;
     tracking[key].lastAnswered = Date.now();
-    setTracking(tracking);
+    await setTracking(tracking);
 
-    const events = getEvents();
+    const events = await getEvents();
     events.push({
       ts: Date.now(),
       test_id: testId,
@@ -576,16 +590,16 @@
       correct: !!isCorrect,
     });
     if (events.length > 20000) events.splice(0, events.length - 20000);
-    setEvents(events);
+    await setEvents(events);
 
     // Unified store (TL)
-    tlBumpAnswer(qObj, !!isCorrect);
+    await tlBumpAnswer(qObj, !!isCorrect);
 
     // Update DA button count live
-    updateDeservesButton();
+    await updateDeservesButton();
   }
 
-  function confirmAnswer(q) {
+  async function confirmAnswer(q) {
     if (state.selectedOptionIndex === null) return;
 
     const options = document.querySelectorAll(".option");
@@ -607,7 +621,7 @@
     if (isCorrect) state.score++;
     state.answered++;
 
-    trackAnswerLocally(
+    await trackAnswerLocally(
       q.test_id || "unknownTest",
       q.question_number,
       isCorrect,
@@ -628,7 +642,7 @@
     updateScore();
 
     // NEW: keep weight button label count refreshed as answers change
-    refreshWeightButtonsLabels();
+    await refreshWeightButtonsLabels();
   }
 
   function nextQuestion() {
@@ -792,7 +806,7 @@
     if (state.realTestMode && state.realTestFinished && !opts.skipConfirm) {
       if (!confirm("Start a new Real Test and leave the current results?"))
         return;
-      exitRealTest();
+      await exitRealTest();
     }
 
     RT.results()?.classList.add("hidden");
@@ -807,7 +821,7 @@
     state.realTestFinished = false;
     state.realTestPool = [];
     state.deservesMode = false; // turn off DA
-    updateDeservesButton();
+    await updateDeservesButton();
 
     disableFiltersDuringRealTest(true);
 
@@ -900,12 +914,12 @@
 
     showOverlay();
     safeText(RT.loadingText(), "Scoring test…");
-    setTimeout(() => {
+    setTimeout(async () => {
       hideOverlay();
       state.realTestFinished = true;
 
       disableFiltersDuringRealTest(false);
-      renderResults();
+      await renderResults();
       refreshNavDots();
     }, 2000);
   }
@@ -952,7 +966,7 @@
     return "C2";
   }
 
-  function renderResults() {
+  async function renderResults() {
     RT.container()?.classList.add("hidden");
     RT.results()?.classList.remove("hidden");
 
@@ -1069,7 +1083,7 @@
     });
 
     // Persist test summary to TL
-    tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
+    await tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
   }
 
   function renderResultsDots() {
@@ -1094,7 +1108,7 @@
     });
   }
 
-  function exitRealTest() {
+  async function exitRealTest() {
     state.realTestMode = false;
     state.realTestFinished = false;
     RT.container()?.classList.add("hidden");
@@ -1107,12 +1121,12 @@
     disableFiltersDuringRealTest(false);
     els.quiz()?.classList.remove("hidden");
     // restore DA button state/count from TL
-    updateDeservesButton();
-    refreshWeightButtonsLabels();
+    await updateDeservesButton();
+    await refreshWeightButtonsLabels();
   }
 
   function attachResultsLeaveGuards(enable) {
-    const handler = (e) => {
+    const handler = async (e) => {
       const id = (e.target && e.target.id) || "";
       if (
         id === "realTestBtn" ||
@@ -1126,7 +1140,7 @@
           e.stopPropagation();
           return false;
         } else {
-          exitRealTest();
+          await exitRealTest();
         }
       }
     };
@@ -1164,7 +1178,7 @@
     ensureRealTestDOM(); // ensure Real Test UI exists
     await loadData();
     ensureWeightButtonsOriginalLabels();
-    refreshWeightButtonsLabels();
+    await refreshWeightButtonsLabels();
 
     // Countdown (optional)
     try {
@@ -1199,7 +1213,7 @@
     });
 
     // Click handlers
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
       const t = e.target;
 
       // Real Test triggers
@@ -1207,7 +1221,7 @@
         startRealTestFlow();
         // When starting a test, also disable other filters per your rule
         state.deservesMode = false;
-        updateDeservesButton();
+        await updateDeservesButton();
       }
       if (t && t.id === "startRealTestBtn") beginRealTest();
       if (t && t.id === "finishRealTestBtn") finishRealTest();
@@ -1215,7 +1229,7 @@
         if (state.realTestMode && state.realTestFinished) {
           if (!confirm("Start a new Real Test and leave the current results?"))
             return;
-          exitRealTest();
+          await exitRealTest();
         }
         startRealTestFlow({ skipConfirm: true });
       }
@@ -1243,7 +1257,7 @@
     // Only-unanswered checkbox behavior:
     // - Disabled during active Real Test (your rule)
     // - Otherwise, rebuild using TL "unanswered"
-    els.onlyChk()?.addEventListener("click", (e) => {
+    els.onlyChk()?.addEventListener("click", async (e) => {
       if (state.realTestMode && !state.realTestFinished) {
         e.preventDefault();
         return;
@@ -1252,13 +1266,13 @@
       if (state.onlyUnanswered) {
         // Turning on "Never responded" turns off Deserves mode
         state.deservesMode = false;
-        updateDeservesButton();
+        await updateDeservesButton();
       }
-      rebuildFiltered();
+      await rebuildFiltered();
     });
 
     // Initial DA label
-    updateDeservesButton();
+    await updateDeservesButton();
   }
   init();
 
