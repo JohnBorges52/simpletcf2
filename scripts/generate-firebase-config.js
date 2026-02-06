@@ -1,8 +1,20 @@
 const fs = require("fs");
 const path = require("path");
 
-// ✅ Load environment variables from .env.local
-require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
+// Optionally load environment variables from .env.local when present.
+// Don't fail if `dotenv` is not installed (CI environments already provide env vars).
+try {
+  const envPath = path.join(__dirname, "..", ".env.local");
+  if (fs.existsSync(envPath)) {
+    try {
+      require("dotenv").config({ path: envPath });
+    } catch (e) {
+      console.warn("Optional dependency 'dotenv' not available — skipping .env.local load.");
+    }
+  }
+} catch (e) {
+  // If fs or path checks fail for any reason, continue — environment variables may already be set.
+}
 
 const vars = {
   apiKey: process.env.FIREBASE_API_KEY || "",
