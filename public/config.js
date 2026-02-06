@@ -38,27 +38,18 @@ import {
   getBoolean,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
 
-
-// -------------------------------
-// Your Firebase Config
-// -------------------------------
-
-// Support loading config injected at deploy time or during local generation.
-// The generator script writes `public/firebase-config.js` which sets
-// `window.firebaseConfig` and `window.__FIREBASE_CONFIG__`.
-
 // ===============================
-// Firebase Config - Simple approach
+// Firebase Config - Hardcoded
 // ===============================
-
-// Get config from firebase-config.js (loaded before this module)
-const firebaseConfig = window.firebaseConfig || window.__FIREBASE_CONFIG__ || {};
-
-if (!firebaseConfig.projectId) {
-  console.error(
-    "❌ Firebase config not found. Make sure firebase-config.js is loaded before config.js"
-  );
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyAAQrh2cqH7mgjMOQ5SkoGR3V6nKdYRPm8",
+  authDomain: "simpletcf.firebaseapp.com",
+  projectId: "simpletcf",
+  storageBucket: "simpletcf.firebasestorage.app",
+  messagingSenderId: "233851428734",
+  appId: "1:233851428734:web:a1bd5148731c8845825d2f",
+  measurementId: "G-K63ZE5JTL9"
+};
 
 
 function getUrlParams() {
