@@ -38,6 +38,21 @@ import {
   getNumber,
   getBoolean,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ===============================
 // Firebase Config - Hardcoded
@@ -73,6 +88,10 @@ window.__remoteConfig = null;
 // Storage readiness
 let resolveStorageReady;
 window.__storageReady = new Promise((res) => (resolveStorageReady = res));
+
+// Firestore readiness
+let resolveFirestoreReady;
+window.__firestoreReady = new Promise((res) => (resolveFirestoreReady = res));
 
 // ===============================
 // Shared helpers
@@ -318,6 +337,26 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     resolveStorageReady(storage);
     console.log("✅ Storage ready");
 
+    // Firestore
+    const db = getFirestore(app);
+    window.__firestore = db;
+    window.firestoreExports = { 
+      collection, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      addDoc, 
+      query, 
+      where, 
+      orderBy, 
+      limit, 
+      serverTimestamp,
+      Timestamp 
+    };
+    resolveFirestoreReady(db);
+    console.log("✅ Firestore ready");
+
     // Remote Config (optional, doesn't break if offline)
     try {
       const remoteConfig = getRemoteConfig(app);
@@ -345,6 +384,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     console.error("❌ Firebase init failed:", err);
     resolveAuthReady(null);
     resolveStorageReady(null);
+    resolveFirestoreReady(null);
   }
 })();
 
@@ -401,7 +441,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
   const auth = await window.__authReady;
   if (!auth) return;
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     // ✅ updates "Sign In" -> "Profile" wherever the nav exists
     updateAuthNavItem(user);
 
@@ -410,6 +450,19 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userName", user.displayName || "User");
       localStorage.setItem("userEmail", user.email || "");
+      
+      // ✅ Save user to Firestore if db-service is available
+      if (window.dbService && window.dbService.saveUser) {
+        try {
+          await window.dbService.saveUser(user.uid, {
+            email: user.email,
+            displayName: user.displayName || "User",
+            createdAt: user.metadata.creationTime ? new Date(user.metadata.creationTime) : null,
+          });
+        } catch (error) {
+          console.error("Failed to save user to Firestore:", error);
+        }
+      }
     } else {
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("userName");
