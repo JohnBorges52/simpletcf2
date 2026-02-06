@@ -945,7 +945,7 @@ async function loadAndDisplayAnswerHistory() {
 
   try {
     // Check if user is authenticated
-    if (!isUserAuthenticated()) {
+    if (!(await isUserAuthenticated())) {
       loadingEl.style.display = "none";
       emptyEl.style.display = "block";
       emptyEl.textContent = "Please log in to view your answer history from the database.";

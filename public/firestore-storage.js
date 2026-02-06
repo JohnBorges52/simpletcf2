@@ -18,12 +18,14 @@ const STORAGE_KEYS = Object.freeze({
 
 /**
  * Get the current authenticated user ID
- * @returns {string|null} User ID or null if not authenticated
+ * @returns {Promise<string|null>} User ID or null if not authenticated
  */
-export function getCurrentUserId() {
+export async function getCurrentUserId() {
   try {
-    if (!window.__auth) return null;
-    const user = window.__auth.currentUser;
+    // Wait for auth to be ready before checking current user
+    const auth = await window.__authReady;
+    if (!auth) return null;
+    const user = auth.currentUser;
     return user?.uid || null;
   } catch {
     return null;
@@ -32,10 +34,11 @@ export function getCurrentUserId() {
 
 /**
  * Check if user is authenticated
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-export function isUserAuthenticated() {
-  return getCurrentUserId() !== null;
+export async function isUserAuthenticated() {
+  const userId = await getCurrentUserId();
+  return userId !== null;
 }
 
 // ============================================================================
@@ -47,7 +50,7 @@ export function isUserAuthenticated() {
  * @returns {Promise<Object>} Tracking data object
  */
 export async function getTracking() {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Fallback to localStorage if not authenticated
   if (!userId) {
@@ -83,7 +86,7 @@ export async function getTracking() {
  * @param {Object} tracking - Tracking data object
  */
 export async function setTracking(tracking) {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Always save to localStorage as a backup
   setTrackingToLocalStorage(tracking);
@@ -121,7 +124,7 @@ export async function setTracking(tracking) {
  * @returns {Promise<Array>} Events array
  */
 export async function getEvents() {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Fallback to localStorage if not authenticated
   if (!userId) {
@@ -157,7 +160,7 @@ export async function getEvents() {
  * @param {Array} events - Events array
  */
 export async function setEvents(events) {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Always save to localStorage as a backup
   setEventsToLocalStorage(events);
@@ -195,7 +198,7 @@ export async function setEvents(events) {
  * @returns {Promise<Object>} Listening data object
  */
 export async function getTCFListening() {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Fallback to localStorage if not authenticated
   if (!userId) {
@@ -231,7 +234,7 @@ export async function getTCFListening() {
  * @param {Object} data - Listening data object
  */
 export async function setTCFListening(data) {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   // Always save to localStorage as a backup
   setTCFListeningToLocalStorage(data);
@@ -415,7 +418,7 @@ async function migrateTCFListeningIfNeeded(userId) {
  * @returns {Promise<boolean>} Success status
  */
 export async function migrateAllDataToFirestore() {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   
   if (!userId) {
     console.warn("Cannot migrate: user not authenticated");
