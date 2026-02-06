@@ -31,6 +31,15 @@ import {
 // Your Firebase Config
 // -------------------------------
 
+// Support loading config injected at deploy time or during local generation.
+// The generator script writes `public/firebase-config.js` which sets
+// `window.firebaseConfig` and `window.__FIREBASE_CONFIG__`.
+const firebaseConfig =
+  (typeof window !== "undefined" && window.__FIREBASE_CONFIG__) ||
+  (typeof window !== "undefined" && window.firebaseConfig) ||
+  (typeof globalThis !== "undefined" && globalThis.firebaseConfig) ||
+  {};
+
 
 function getUrlParams() {
   try {

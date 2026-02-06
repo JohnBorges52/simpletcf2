@@ -4,4 +4,7 @@
     "axios": "^1.12.2",
     "firebase": "^12.4.0"
   }
+  ,"scripts":{
+    "generate-config":"node ./scripts/generate-firebase-config.js"
+  }
 }
