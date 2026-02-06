@@ -899,8 +899,7 @@
     
     // ✅ Log to Firestore
     if (window.dbService && window.dbService.logQuestionResponse) {
-      const selectedLetter = q.alternatives?.[state.selectedOptionIndex]?.letter || 
-                            q.alternatives?.[q.userAnswerIndex]?.letter || "";
+      const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
       window.dbService.logQuestionResponse({
         questionId: q.question_ID || q.id || "unknown",
         questionType: "listening",

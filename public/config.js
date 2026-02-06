@@ -441,6 +441,8 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
   const auth = await window.__authReady;
   if (!auth) return;
 
+  let savingUser = false; // Guard to prevent concurrent saves
+
   onAuthStateChanged(auth, async (user) => {
     // ✅ updates "Sign In" -> "Profile" wherever the nav exists
     updateAuthNavItem(user);
@@ -452,7 +454,9 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
       localStorage.setItem("userEmail", user.email || "");
       
       // ✅ Save user to Firestore if db-service is available
-      if (window.dbService && window.dbService.saveUser) {
+      // Guard against concurrent saves (e.g., on token refresh)
+      if (window.dbService && window.dbService.saveUser && !savingUser) {
+        savingUser = true;
         try {
           await window.dbService.saveUser(user.uid, {
             email: user.email,
@@ -461,6 +465,8 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
           });
         } catch (error) {
           console.error("Failed to save user to Firestore:", error);
+        } finally {
+          savingUser = false;
         }
       }
     } else {
