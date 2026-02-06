@@ -38,6 +38,17 @@ import {
   getNumber,
   getBoolean,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ===============================
 // Firebase Config - Hardcoded
@@ -317,6 +328,21 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     window.firebaseStorageExports = { ref, getDownloadURL, getBytes };
     resolveStorageReady(storage);
     console.log("✅ Storage ready");
+
+    // Firestore
+    const db = getFirestore(app);
+    window.__firestore = db;
+    window.firestoreExports = { 
+      doc, 
+      setDoc, 
+      getDoc, 
+      updateDoc, 
+      collection, 
+      getDocs, 
+      query,
+      serverTimestamp
+    };
+    console.log("✅ Firestore ready");
 
     // Remote Config (optional, doesn't break if offline)
     try {
