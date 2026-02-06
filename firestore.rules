@@ -26,6 +26,14 @@ service cloud.firestore {
       
       // Users cannot delete their own document (prevent accidental deletion)
       allow delete: if false;
+      
+      // User data subcollection (tracking, listening, events, etc.)
+      match /data/{document} {
+        // Users can read/write their own data documents
+        allow read, create, update: if isOwner(userId);
+        // Prevent deletion to avoid accidental data loss
+        allow delete: if false;
+      }
     }
     
     // Question Responses collection
