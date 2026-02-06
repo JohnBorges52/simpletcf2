@@ -7,7 +7,7 @@
 
 (() => {
   /* 1) Constants */
-  const PATHS = Object.freeze({ DATA: "public/audios/all_quiz_data.json" });
+  const PATHS = Object.freeze({ DATA: "/audios/all_quiz_data.json" });
 
   // Legacy (kept so other parts of your app keep working)
   const STORAGE_KEYS = Object.freeze({
@@ -232,9 +232,9 @@
         : "/" + q.audio_local_path.replace(/^(\.\/)+/, "");
     if (q.audio_url) {
       const base = q.audio_url.split("/").pop() || "";
-      if (base) return `/public/audios/${base}`;
+      if (base) return `/audios/${base}`;
     }
-    if (q.filename) return `/public/audios/${q.filename}`;
+    if (q.filename) return `/audios/${q.filename}`;
     return null;
   }
 
