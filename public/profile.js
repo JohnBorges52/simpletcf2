@@ -220,8 +220,8 @@ async function seedRealTests() {
         window.dbService.getTestResults(auth.currentUser.uid, { testType: "reading" }),
       ]);
       
-      // Convert to display format
-      datasets.listening = listeningResults.results.map(r => ({
+      // Helper function to convert test results to display format
+      const formatTestResults = (results) => results.map(r => ({
         id: r.testId || r.id,
         date: r.completedAt ? new Date(r.completedAt).toLocaleDateString("en-US", {
           month: "short",
@@ -232,16 +232,9 @@ async function seedRealTests() {
         clb: r.clbScore || "—",
       }));
       
-      datasets.reading = readingResults.results.map(r => ({
-        id: r.testId || r.id,
-        date: r.completedAt ? new Date(r.completedAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric"
-        }) : "—",
-        correct: `${r.correctAnswers || 0}/${r.totalQuestions || 0}`,
-        clb: r.clbScore || "—",
-      }));
+      // Convert to display format
+      datasets.listening = formatTestResults(listeningResults.results);
+      datasets.reading = formatTestResults(readingResults.results);
     }
   } catch (error) {
     console.error("Failed to load real test results from Firestore:", error);

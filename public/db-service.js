@@ -268,23 +268,20 @@ async function getDailyStats(userId, options = {}) {
   startDate.setHours(0, 0, 0, 0);
   
   const responsesRef = collection(db, "questionResponses");
-  let q = query(
-    responsesRef,
+  
+  // Build query with optional questionType filter
+  const queryConstraints = [
     where("userId", "==", userId),
     where("answeredAt", ">=", Timestamp.fromDate(startDate)),
-    orderBy("answeredAt", "asc")
-  );
+  ];
   
-  // Filter by question type if specified
   if (options.questionType) {
-    q = query(
-      responsesRef,
-      where("userId", "==", userId),
-      where("questionType", "==", options.questionType),
-      where("answeredAt", ">=", Timestamp.fromDate(startDate)),
-      orderBy("answeredAt", "asc")
-    );
+    queryConstraints.push(where("questionType", "==", options.questionType));
   }
+  
+  queryConstraints.push(orderBy("answeredAt", "asc"));
+  
+  const q = query(responsesRef, ...queryConstraints);
   
   try {
     const querySnapshot = await getDocs(q);
@@ -349,23 +346,20 @@ async function getWeeklyStats(userId, options = {}) {
   startDate.setHours(0, 0, 0, 0);
   
   const responsesRef = collection(db, "questionResponses");
-  let q = query(
-    responsesRef,
+  
+  // Build query with optional questionType filter
+  const queryConstraints = [
     where("userId", "==", userId),
     where("answeredAt", ">=", Timestamp.fromDate(startDate)),
-    orderBy("answeredAt", "asc")
-  );
+  ];
   
-  // Filter by question type if specified
   if (options.questionType) {
-    q = query(
-      responsesRef,
-      where("userId", "==", userId),
-      where("questionType", "==", options.questionType),
-      where("answeredAt", ">=", Timestamp.fromDate(startDate)),
-      orderBy("answeredAt", "asc")
-    );
+    queryConstraints.push(where("questionType", "==", options.questionType));
   }
+  
+  queryConstraints.push(orderBy("answeredAt", "asc"));
+  
+  const q = query(responsesRef, ...queryConstraints);
   
   try {
     const querySnapshot = await getDocs(q);
