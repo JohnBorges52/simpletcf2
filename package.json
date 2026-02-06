@@ -2,7 +2,6 @@
   "dependencies": {
     "assemblyai": "^4.17.0",
     "axios": "^1.12.2",
-    "dotenv": "^17.2.3",
     "firebase": "^12.4.0"
   }
 }
