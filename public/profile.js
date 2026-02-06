@@ -184,8 +184,8 @@ async function seedKpis() {
 
   $("#kpiAnswered") && ($("#kpiAnswered").textContent = answered);
   $("#kpiAccuracy") && ($("#kpiAccuracy").textContent = accuracy);
-  $("#kpiRealTests") && ($("#kpiRealTests").textContent = correct);
-  $("#kpiStreak") && ($("#kpiStreak").textContent = wrong);
+  $("#kpiCorrect") && ($("#kpiCorrect").textContent = correct);
+  $("#kpiWrong") && ($("#kpiWrong").textContent = wrong);
 }
 
 /* ===========================
