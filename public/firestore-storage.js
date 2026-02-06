@@ -58,13 +58,14 @@ export async function getTracking() {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized, falling back to localStorage");
       return getTrackingFromLocalStorage();
     }
     
     const { doc, getDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const trackingRef = doc(db, "users", userId, "data", "tracking");
     const snapshot = await getDoc(trackingRef);
@@ -97,13 +98,14 @@ export async function setTracking(tracking) {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized");
       return;
     }
     
     const { doc, setDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const trackingRef = doc(db, "users", userId, "data", "tracking");
     await setDoc(trackingRef, {
@@ -132,13 +134,14 @@ export async function getEvents() {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized, falling back to localStorage");
       return getEventsFromLocalStorage();
     }
     
     const { doc, getDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const eventsRef = doc(db, "users", userId, "data", "events");
     const snapshot = await getDoc(eventsRef);
@@ -171,13 +174,14 @@ export async function setEvents(events) {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized");
       return;
     }
     
     const { doc, setDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const eventsRef = doc(db, "users", userId, "data", "events");
     await setDoc(eventsRef, {
@@ -206,13 +210,14 @@ export async function getTCFListening() {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized, falling back to localStorage");
       return getTCFListeningFromLocalStorage();
     }
     
     const { doc, getDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const listeningRef = doc(db, "users", userId, "data", "listening");
     const snapshot = await getDoc(listeningRef);
@@ -245,13 +250,14 @@ export async function setTCFListening(data) {
   }
   
   try {
-    if (!window.__firestore || !window.firestoreExports) {
+    // Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
       console.warn("Firestore not initialized");
       return;
     }
     
     const { doc, setDoc } = window.firestoreExports;
-    const db = window.__firestore;
     
     const listeningRef = doc(db, "users", userId, "data", "listening");
     await setDoc(listeningRef, {
