@@ -602,6 +602,7 @@ import {
 
     const isCorrect = state.selectedOptionIndex === correctIndex;
 
+    // ✅ Show UI feedback immediately (non-blocking)
     if (!state.realTestMode) {
       if (isCorrect)
         options[state.selectedOptionIndex].classList.add("correct");
@@ -615,13 +616,16 @@ import {
     if (isCorrect) state.score++;
     state.answered++;
 
-    await trackAnswerLocally(
+    // ✅ Run database writes in background without blocking UI
+    trackAnswerLocally(
       q.test_id || "unknownTest",
       q.question_number,
       isCorrect,
       q.weight_points,
       q,
-    );
+    ).catch(err => {
+      console.error("Failed to save answer to database:", err);
+    });
 
     options.forEach((opt) => {
       opt.onclick = null;

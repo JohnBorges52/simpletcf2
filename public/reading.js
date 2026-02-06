@@ -681,8 +681,7 @@ import {
     if (isCorrect) state.score++;
     state.answered++;
 
-    await bumpLifetime(q, isCorrect);
-
+    // ✅ Show UI feedback immediately (non-blocking)
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
@@ -691,7 +690,12 @@ import {
     updateScore();
     updateQuestionStats(q);
     
-    // ✅ Log to Firestore
+    // ✅ Run database writes in background without blocking UI
+    bumpLifetime(q, isCorrect).catch(err => {
+      console.error("Failed to save answer to database:", err);
+    });
+    
+    // ✅ Log to Firestore (non-blocking)
     if (window.dbService && window.dbService.logQuestionResponse) {
       const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
       window.dbService.logQuestionResponse({
