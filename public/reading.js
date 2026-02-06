@@ -469,7 +469,8 @@
     // Use iframe to display PDF (no CORS issues)
     wrap.innerHTML = "";
     const iframe = document.createElement("iframe");
-    iframe.src = url;
+    const pdfViewerParams = "#toolbar=0&navpanes=0&scrollbar=0&view=FitH";
+    iframe.src = url.includes("#") ? `${url}&toolbar=0&navpanes=0&scrollbar=0&view=FitH` : `${url}${pdfViewerParams}`;
     iframe.style.width = "100%";
     iframe.style.height = "780px";
     iframe.style.border = "0";
