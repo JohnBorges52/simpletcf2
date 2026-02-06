@@ -6,7 +6,7 @@ This guide explains how to deploy the updated Firestore security rules to Google
 
 PR #6 added security rules for user data subcollections to fix permission errors. The updated `firestore.rules` file now includes:
 
-```javascript
+```firestore
 match /users/{userId} {
   // ... existing rules ...
   
