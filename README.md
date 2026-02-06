@@ -21,3 +21,7 @@ npm run generate-config
 
 This writes `public/firebase-config.js` which the client code reads automatically.
 
+Removing accidentally committed secrets:
+- If secrets were committed previously, remove them from your git history (use `git filter-repo` or the BFG repo cleaner), rotate the exposed credentials, and invalidate any tokens.
+- For CI (Cloud Build/GitHub Actions) prefer project/secret managers or repository secrets instead of hardcoding values in repo files.
+
