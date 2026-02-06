@@ -70,27 +70,44 @@ function getFirebaseConfigSafely() {
   return {};
 }
 
-const firebaseConfig = getFirebaseConfigSafely();
+// Delay initial check to allow firebase-config.js to execute
+let firebaseConfig = {};
+let hasFirebaseConfig = false;
 
-const hasFirebaseConfig =
-  firebaseConfig && typeof firebaseConfig === "object"
-    ? Object.keys(firebaseConfig).length > 0
-    : false;
-
-if (!hasFirebaseConfig) {
-  console.error(
-    "🔥 CRITICAL: Firebase config not found! The website will not work.\n" +
-    "  - Ensure public/firebase-config.js exists and contains your Firebase credentials\n" +
-    "  - Run: npm run generate-config\n" +
-    "  - Required fields: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId",
-  );
-} else {
-  console.log("✅ Firebase config loaded:", {
-    projectId: firebaseConfig.projectId,
-    storageBucket: firebaseConfig.storageBucket,
-    apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
-  });
-}
+// First attempt
+setTimeout(() => {
+  firebaseConfig = getFirebaseConfigSafely();
+  hasFirebaseConfig = firebaseConfig && Object.keys(firebaseConfig).length > 0;
+  
+  if (!hasFirebaseConfig) {
+    // Retry after a short delay (firebase-config.js might still be loading)
+    setTimeout(() => {
+      firebaseConfig = getFirebaseConfigSafely();
+      hasFirebaseConfig = firebaseConfig && Object.keys(firebaseConfig).length > 0;
+      
+      if (!hasFirebaseConfig) {
+        console.error(
+          "🔥 CRITICAL: Firebase config not found! The website will not work.\n" +
+          "  - Ensure public/firebase-config.js exists and contains your Firebase credentials\n" +
+          "  - Run: npm run generate-config\n" +
+          "  - Required fields: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId",
+        );
+      } else {
+        console.log("✅ Firebase config loaded (after retry):", {
+          projectId: firebaseConfig.projectId,
+          storageBucket: firebaseConfig.storageBucket,
+          apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
+        });
+      }
+    }, 100);
+  } else {
+    console.log("✅ Firebase config loaded:", {
+      projectId: firebaseConfig.projectId,
+      storageBucket: firebaseConfig.storageBucket,
+      apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
+    });
+  }
+}, 0);
 
 
 function getUrlParams() {
@@ -338,22 +355,28 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
 // ===============================
 // Firebase init
 // ===============================
+// Create a promise that resolves when config is available
+const configReadyPromise = new Promise((resolve) => {
+  const checkConfig = () => {
+    const config = getFirebaseConfigSafely();
+    if (config && config.projectId) {
+      resolve(config);
+    } else {
+      // Keep checking every 50ms until config is available
+      setTimeout(checkConfig, 50);
+    }
+  };
+  checkConfig();
+});
+
 (async () => {
   try {
-    // Wait for config to be available (in case of race condition with firebase-config.js)
-    let currentConfig = getFirebaseConfigSafely();
-    let retries = 0;
-    const maxRetries = 50; // 5 seconds max wait (50 * 100ms)
-    
-    while ((!currentConfig || !currentConfig.projectId) && retries < maxRetries) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      currentConfig = getFirebaseConfigSafely();
-      retries++;
-    }
+    // Wait for Firebase config to be available before initializing
+    const currentConfig = await configReadyPromise;
     
     if (!currentConfig || !currentConfig.projectId) {
       throw new Error(
-        "Firebase config is missing or invalid after waiting 5 seconds. " +
+        "Firebase config is missing or invalid. " +
         "Make sure firebase-config.js is loaded and contains projectId. " +
         "Check if public/firebase-config.js exists and has your Firebase credentials."
       );
