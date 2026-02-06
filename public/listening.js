@@ -398,16 +398,8 @@
     
     const base = (typeof window !== "undefined" && window.location && window.location.pathname) || "/";
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
-    const candidates = [
-      PATHS.DATA,
-      origin + PATHS.DATA,
-      origin + "/data/all_quiz_data.json",
-      "/data/all_quiz_data.json",
-      "./data/all_quiz_data.json",
-      "data/all_quiz_data.json",
-      "all_quiz_data.json",
-      origin + base.replace(/\/[^/]*$/, "/") + "data/all_quiz_data.json",
-    ];
+    const candidates = ["/data/all_quiz_data.json"];
+
     try {
       const raw = await fetchJsonFirstWorking(candidates);
       state.allData = (raw || []).map((q) => ({
