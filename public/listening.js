@@ -672,10 +672,10 @@
       // ✅ Fetch Firebase Storage URL if the path is relative (async in background)
       if (!(/^https?:\/\//i.test(src))) {
         if (window.getFirebaseStorageUrl) {
-          // ✅ Wait for Firebase to be ready before fetching storage URLs
+          // ✅ Wait for Firebase Storage to be ready before fetching URLs
           (async () => {
-            await window.__authReady;
             try {
+              await window.__storageReady;
               const storageUrl = await window.getFirebaseStorageUrl(src);
               if (storageUrl && audioEl.src !== storageUrl) {
                 audioEl.src = storageUrl;
@@ -690,6 +690,7 @@
           })();
         } else {
           // Storage helper not available yet
+          console.warn("Firebase Storage helper not loaded, using local path");
           audioEl.src = src;
           audioEl.load();
         }
@@ -1404,7 +1405,7 @@
 
     // ✅ Process audio elements to fetch Firebase Storage URLs
     (async () => {
-      await window.__authReady; // ✅ Wait for Firebase to be ready
+      await window.__storageReady; // ✅ Wait for Firebase Storage to be ready
       const audioElements = RT.review()?.querySelectorAll("audio source");
       if (audioElements) {
         audioElements.forEach(async (source) => {

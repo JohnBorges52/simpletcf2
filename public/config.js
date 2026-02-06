@@ -92,6 +92,10 @@ let resolveRemoteConfigReady;
 window.__remoteConfigReady = new Promise((res) => (resolveRemoteConfigReady = res));
 window.__remoteConfig = null;
 
+// Storage readiness
+let resolveStorageReady;
+window.__storageReady = new Promise((res) => (resolveStorageReady = res));
+
 // ===============================
 // Shared helpers
 // ===============================
@@ -328,6 +332,8 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     // ✅ Initialize Storage
     const storage = getStorage(app);
     window.__storage = storage;
+    resolveStorageReady(storage);
+    console.log("✅ Firebase Storage initialized");
 
     // ✅ Initialize Remote Config (for dynamic configuration without pushing credentials)
     try {
@@ -354,6 +360,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
   } catch (err) {
     console.error("🔥 Firebase init error:", err);
     resolveAuthReady(null);
+    resolveStorageReady(null);
   }
 })();
 
