@@ -205,8 +205,8 @@ import {
   // rule: total>0 and |correct - wrong| < 2
   async function deservesFromTL(q) {
     const rec = await tlReadAnswer(q);
-    const theTotal = (rec.correct || 0) + (rec.wrong || 0);
-    if (theTotal === 0) return false;
+    const total = (rec.correct || 0) + (rec.wrong || 0);
+    if (total === 0) return false;
     return Math.abs((rec.correct || 0) - (rec.wrong || 0)) < 2;
   }
 
@@ -344,17 +344,11 @@ import {
 
     // Deserves Attention overrides "only unanswered"
     if (state.deservesMode) {
-      const results = await Promise.all(items.map(async (q) => {
-        const deserves = await deservesFromTL(q);
-        return deserves ? q : null;
-      }));
-      items = results.filter(Boolean);
+      const results = await Promise.all(items.map(deservesFromTL));
+      items = items.filter((_, i) => results[i]);
     } else if (state.onlyUnanswered) {
-      const results = await Promise.all(items.map(async (q) => {
-        const unanswered = await isUnanswered(q);
-        return unanswered ? q : null;
-      }));
-      items = results.filter(Boolean);
+      const results = await Promise.all(items.map(isUnanswered));
+      items = items.filter((_, i) => results[i]);
     }
 
     state.filtered = items;
