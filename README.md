@@ -49,8 +49,9 @@ Removing accidentally committed secrets:
 
 ### Documentation:
 
+- 📋 **Checklist:** [FIRESTORE_CHECKLIST.md](FIRESTORE_CHECKLIST.md) - Step-by-step setup checklist
 - 📖 **Quick Start:** [FIRESTORE_QUICKSTART.md](FIRESTORE_QUICKSTART.md) - "Do I need to create a database?"
-- 📚 **Setup Guide:** [FIRESTORE_SETUP.md](FIRESTORE_SETUP.md) - Step-by-step instructions
+- 📚 **Setup Guide:** [FIRESTORE_SETUP.md](FIRESTORE_SETUP.md) - Detailed setup instructions
 - 🗄️ **Database Schema:** [FIRESTORE_DATABASE.md](FIRESTORE_DATABASE.md) - Complete API reference
 - ✅ **Implementation:** [FIRESTORE_IMPLEMENTATION.md](FIRESTORE_IMPLEMENTATION.md) - What was built
 
