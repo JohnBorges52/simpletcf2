@@ -395,6 +395,37 @@
     if (!state.allData.length) await loadData();
   }
 
+async function getPdfAspectRatio(url) {
+    const lib = window.pdfjsLib;
+    if (!lib?.getDocument) return null;
+
+    try {
+      const task = lib.getDocument({
+        url,
+        disableStream: true,
+        disableAutoFetch: true,
+        disableWorker: true,
+      });
+      const pdf = await task.promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1 });
+      const width = Number(viewport?.width || 0);
+      const height = Number(viewport?.height || 0);
+
+      try {
+        await pdf.destroy();
+      } catch {}
+
+      if (!width || !height) return null;
+      return width / height;
+    } catch (err) {
+      console.warn("Could not detect PDF ratio, using fallback", err);
+      return null;
+    }
+  }
+
+
+   
   /* =====================
      6) PDF rendering (IFRAME)
   ===================== */
@@ -441,7 +472,8 @@
     // ✅ Use iframe to display PDF (no CORS issues)
     wrap.innerHTML = "";
     wrap.style.width = "100%";
-    wrap.style.aspectRatio = "1 / 1.414";
+    const pdfAspect = await getPdfAspectRatio(url);
+    wrap.style.aspectRatio = pdfAspect ? String(pdfAspect) : "1 / 1.414";
     wrap.style.height = "auto";
     wrap.style.overflow = "hidden";
     wrap.style.background = "#fff";
