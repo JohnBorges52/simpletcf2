@@ -30,6 +30,13 @@ import {
   ref,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import {
+  getRemoteConfig,
+  fetchAndActivate,
+  getString,
+  getNumber,
+  getBoolean,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
 
 
 // -------------------------------
@@ -79,6 +86,11 @@ function getUrlParams() {
 // Expose a promise so other code can await auth readiness
 let resolveAuthReady;
 window.__authReady = new Promise((res) => (resolveAuthReady = res));
+
+// Remote Config readiness
+let resolveRemoteConfigReady;
+window.__remoteConfigReady = new Promise((res) => (resolveRemoteConfigReady = res));
+window.__remoteConfig = null;
 
 // ===============================
 // Shared helpers
@@ -316,6 +328,20 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     // ✅ Initialize Storage
     const storage = getStorage(app);
     window.__storage = storage;
+
+    // ✅ Initialize Remote Config (for dynamic configuration without pushing credentials)
+    try {
+      const remoteConfig = getRemoteConfig(app);
+      remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour
+      remoteConfig.settings.cacheExpirationMillis = 3600000; // 1 hour
+      await fetchAndActivate(remoteConfig);
+      window.__remoteConfig = remoteConfig;
+      resolveRemoteConfigReady(remoteConfig);
+      console.log("✅ Remote Config loaded");
+    } catch (err) {
+      console.warn("⚠️ Remote Config not available (offline?):", err.message);
+      resolveRemoteConfigReady(null);
+    }
 
     try {
       if (await isSupported()) {
@@ -949,6 +975,49 @@ document.addEventListener("DOMContentLoaded", () => {
     eyeOffId: "login-eye-off",
   });
 });
+
+// =====================================================
+// ✅ Remote Config Helpers (fetch dynamic configuration)
+// =====================================================
+// These functions retrieve configuration from Firebase Remote Config
+// No credentials needed here — all values are stored securely in Firebase Console
+
+window.getRemoteConfigString = (key, defaultValue = "") => {
+  const remoteConfig = window.__remoteConfig;
+  if (!remoteConfig) return defaultValue;
+  try {
+    const value = getString(remoteConfig, key);
+    return value || defaultValue;
+  } catch (err) {
+    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
+    return defaultValue;
+  }
+};
+
+window.getRemoteConfigNumber = (key, defaultValue = 0) => {
+  const remoteConfig = window.__remoteConfig;
+  if (!remoteConfig) return defaultValue;
+  try {
+    return getNumber(remoteConfig, key) || defaultValue;
+  } catch (err) {
+    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
+    return defaultValue;
+  }
+};
+
+window.getRemoteConfigBoolean = (key, defaultValue = false) => {
+  const remoteConfig = window.__remoteConfig;
+  if (!remoteConfig) return defaultValue;
+  try {
+    return getBoolean(remoteConfig, key) || defaultValue;
+  } catch (err) {
+    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
+    return defaultValue;
+  }
+};
+
+// Example: Get custom audio storage path from Remote Config
+// const audioPath = window.getRemoteConfigString('AUDIO_STORAGE_PATH', 'audio');
 
 // =====================================================
 // ✅ Firebase Storage URL Helper (for audio/images)
