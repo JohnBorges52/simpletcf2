@@ -1635,13 +1635,13 @@
     renderQuestion();
     updateKpiVisibility();
     setResultsMode(false);
-
-    // expose
-    window.filterQuestions = filterQuestions;
-    window.nextQuestion = nextQuestion;
-    window.prevQuestion = prevQuestion;
-    window.loadTranscript = () => loadTranscript();
   }
+
+  // Expose functions to global scope BEFORE calling init()
+  window.filterQuestions = filterQuestions;
+  window.nextQuestion = nextQuestion;
+  window.prevQuestion = prevQuestion;
+  window.loadTranscript = () => loadTranscript();
 
   init();
 })();
