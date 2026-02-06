@@ -949,7 +949,17 @@ window.getFirebaseStorageUrl = async (path) => {
     
     const storage = window.__storage;
     if (!storage) {
-      console.warn("Storage not initialized yet");
+      console.warn("❌ Firebase Storage not initialized. Check if firebase-config.js is loaded with storageBucket.");
+      return null;
+    }
+
+    // ✅ Check if Firebase config has storageBucket
+    if (!firebaseConfig?.storageBucket) {
+      console.error(
+        "❌ Firebase config is missing 'storageBucket' property. \n" +
+        "   - Ensure firebase-config.js is created with your Firebase credentials\n" +
+        "   - It should include: storageBucket: 'your-project-name.appspot.com'"
+      );
       return null;
     }
 
@@ -961,9 +971,11 @@ window.getFirebaseStorageUrl = async (path) => {
     
     // Get the download URL
     const downloadUrl = await getDownloadURL(fileRef);
+    console.log(`✅ Got Firebase Storage URL for: ${path}`);
     return downloadUrl;
   } catch (err) {
-    console.error(`Failed to get Firebase Storage URL for ${path}:`, err);
+    console.error(`❌ Failed to get Firebase Storage URL for ${path}:`, err);
+    // Return null so audio element won't try to load an invalid URL
     return null;
   }
 };
