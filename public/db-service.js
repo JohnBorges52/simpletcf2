@@ -428,15 +428,22 @@ async function getStudyStreak(userId, options = {}) {
   const { collection, query, where, orderBy, getDocs } = window.firestoreExports;
   
   const responsesRef = collection(db, "questionResponses");
-  let q = query(
-    responsesRef,
-    where("userId", "==", userId),
-    orderBy("answeredAt", "desc")
-  );
+  let q;
   
   // Filter by question type if specified
   if (options.questionType) {
-    q = query(q, where("questionType", "==", options.questionType));
+    q = query(
+      responsesRef,
+      where("userId", "==", userId),
+      where("questionType", "==", options.questionType),
+      orderBy("answeredAt", "desc")
+    );
+  } else {
+    q = query(
+      responsesRef,
+      where("userId", "==", userId),
+      orderBy("answeredAt", "desc")
+    );
   }
   
   try {
@@ -591,9 +598,13 @@ async function getTestResults(userId, options = {}) {
     };
     
     if (results.length > 0) {
-      const scores = results.map(r => r.correctAnswers || 0);
-      stats.bestScore = Math.max(...scores);
-      stats.averageScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      // Calculate percentage scores for fair comparison
+      const percentageScores = results.map(r => {
+        const total = r.totalQuestions || 1; // avoid division by zero
+        return Math.round((r.correctAnswers || 0) / total * 100);
+      });
+      stats.bestScore = Math.max(...percentageScores);
+      stats.averageScore = Math.round(percentageScores.reduce((a, b) => a + b, 0) / percentageScores.length);
       stats.lastTest = results[0].completedAt;
     }
     

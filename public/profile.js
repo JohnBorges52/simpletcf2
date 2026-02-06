@@ -274,6 +274,10 @@ async function seedRealTests() {
     `;
   }
 
+  function emptyStateHTML() {
+    return '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">No test results yet. Complete a real test to see your results here!</td></tr>';
+  }
+
   async function render() {
     const all = datasets[mode];
     const slice = all.slice(0, visibleCount);
@@ -281,7 +285,7 @@ async function seedRealTests() {
     // Table
     tbody.innerHTML = slice.length > 0 
       ? slice.map(rowHTML).join("") 
-      : '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">No test results yet. Complete a real test to see your results here!</td></tr>';
+      : emptyStateHTML();
 
     // Load test statistics from Firestore
     try {
@@ -289,10 +293,10 @@ async function seedRealTests() {
       if (auth && auth.currentUser && window.dbService) {
         const stats = await window.dbService.getTestResults(auth.currentUser.uid, { testType: mode });
         
-        // KPIs
+        // KPIs (display as percentages)
         if (kTotal) kTotal.textContent = stats.totalTests;
-        if (kBest) kBest.textContent = stats.bestScore > 0 ? stats.bestScore : "—";
-        if (kAvg) kAvg.textContent = stats.averageScore > 0 ? stats.averageScore : "—";
+        if (kBest) kBest.textContent = stats.bestScore > 0 ? `${stats.bestScore}%` : "—";
+        if (kAvg) kAvg.textContent = stats.averageScore > 0 ? `${stats.averageScore}%` : "—";
         if (kLast) kLast.textContent = stats.lastTest 
           ? new Date(stats.lastTest).toLocaleDateString("en-US", {
               month: "short",
