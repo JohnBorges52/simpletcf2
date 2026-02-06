@@ -192,37 +192,7 @@ async function seedKpis() {
    REAL TESTS (placeholders)
    =========================== */
 
-function seedRealTests() {
-  // Placeholders (newest first)
-  const datasets = {
-    listening: [
-      { id: "L-RT-020", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-019", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-018", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-017", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-016", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-015", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-014", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-013", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-012", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-011", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-010", date: "—", correct: "—", clb: "—" },
-      { id: "L-RT-009", date: "—", correct: "—", clb: "—" },
-    ],
-    reading: [
-      { id: "R-RT-020", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-019", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-018", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-017", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-016", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-015", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-014", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-013", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-012", date: "—", correct: "—", clb: "—" },
-      { id: "R-RT-011", date: "—", correct: "—", clb: "—" },
-    ],
-  };
-
+async function seedRealTests() {
   const tbody = $("#realTestTableAll tbody");
   const loadMoreBtn = $("#loadMoreRealTestsBtn");
   const countPill = $("#rtCountPill");
@@ -236,6 +206,46 @@ function seedRealTests() {
 
   let mode = "listening";
   let visibleCount = 5;
+  let datasets = {
+    listening: [],
+    reading: [],
+  };
+
+  // Load real test data from Firestore
+  try {
+    const auth = await window.__authReady;
+    if (auth && auth.currentUser && window.dbService) {
+      const [listeningResults, readingResults] = await Promise.all([
+        window.dbService.getTestResults(auth.currentUser.uid, { testType: "listening" }),
+        window.dbService.getTestResults(auth.currentUser.uid, { testType: "reading" }),
+      ]);
+      
+      // Convert to display format
+      datasets.listening = listeningResults.results.map(r => ({
+        id: r.testId || r.id,
+        date: r.completedAt ? new Date(r.completedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        }) : "—",
+        correct: `${r.correctAnswers || 0}/${r.totalQuestions || 0}`,
+        clb: r.clbScore || "—",
+      }));
+      
+      datasets.reading = readingResults.results.map(r => ({
+        id: r.testId || r.id,
+        date: r.completedAt ? new Date(r.completedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        }) : "—",
+        correct: `${r.correctAnswers || 0}/${r.totalQuestions || 0}`,
+        clb: r.clbScore || "—",
+      }));
+    }
+  } catch (error) {
+    console.error("Failed to load real test results from Firestore:", error);
+  }
 
   function setMode(nextMode) {
     mode = nextMode;
@@ -264,34 +274,57 @@ function seedRealTests() {
     `;
   }
 
-  function render() {
+  async function render() {
     const all = datasets[mode];
     const slice = all.slice(0, visibleCount);
 
     // Table
-    tbody.innerHTML = slice.map(rowHTML).join("");
+    tbody.innerHTML = slice.length > 0 
+      ? slice.map(rowHTML).join("") 
+      : '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">No test results yet. Complete a real test to see your results here!</td></tr>';
 
-    // Buttons
-    $all("[data-review]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-review");
-        alert(`TODO: open review for ${id}`);
-      });
-    });
-
-    // KPIs (placeholders)
-    if (kTotal) kTotal.textContent = all.length;
-    if (kBest) kBest.textContent = "—";
-    if (kAvg) kAvg.textContent = "—";
-    if (kLast) kLast.textContent = slice[0]?.date || "—";
+    // Load test statistics from Firestore
+    try {
+      const auth = await window.__authReady;
+      if (auth && auth.currentUser && window.dbService) {
+        const stats = await window.dbService.getTestResults(auth.currentUser.uid, { testType: mode });
+        
+        // KPIs
+        if (kTotal) kTotal.textContent = stats.totalTests;
+        if (kBest) kBest.textContent = stats.bestScore > 0 ? stats.bestScore : "—";
+        if (kAvg) kAvg.textContent = stats.averageScore > 0 ? stats.averageScore : "—";
+        if (kLast) kLast.textContent = stats.lastTest 
+          ? new Date(stats.lastTest).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric"
+            })
+          : "—";
+      } else {
+        // Default values
+        if (kTotal) kTotal.textContent = all.length;
+        if (kBest) kBest.textContent = "—";
+        if (kAvg) kAvg.textContent = "—";
+        if (kLast) kLast.textContent = slice[0]?.date || "—";
+      }
+    } catch (error) {
+      console.error("Error loading test statistics:", error);
+      // Default values
+      if (kTotal) kTotal.textContent = all.length;
+      if (kBest) kBest.textContent = "—";
+      if (kAvg) kAvg.textContent = "—";
+      if (kLast) kLast.textContent = slice[0]?.date || "—";
+    }
 
     // Count pill
     if (countPill)
-      countPill.textContent = `Showing ${slice.length} of ${all.length}`;
+      countPill.textContent = all.length > 0 
+        ? `Showing ${slice.length} of ${all.length}` 
+        : "No tests";
 
     // Load more button state
     if (loadMoreBtn) {
-      const done = visibleCount >= all.length;
+      const done = visibleCount >= all.length || all.length === 0;
       loadMoreBtn.disabled = done;
       loadMoreBtn.textContent = done ? "No more tests" : "Load more (+5)";
       loadMoreBtn.classList.add("review-btn", done);
@@ -310,7 +343,7 @@ function seedRealTests() {
   });
 
   // Initial render
-  setMode("listening");
+  await setMode("listening");
 }
 
 /* ===========================
@@ -470,15 +503,18 @@ async function seedProgressPlaceholders() {
     const auth = await window.__authReady;
     if (auth && auth.currentUser && window.dbService) {
       // Load listening statistics
-      const listeningStats = await window.dbService.getUserStatistics(
-        auth.currentUser.uid,
-        { questionType: "listening" }
-      );
+      const [listeningStats, listeningDaily, listeningWeekly, listeningStreak] = await Promise.all([
+        window.dbService.getUserStatistics(auth.currentUser.uid, { questionType: "listening" }),
+        window.dbService.getDailyStats(auth.currentUser.uid, { questionType: "listening", days: 30 }),
+        window.dbService.getWeeklyStats(auth.currentUser.uid, { questionType: "listening", weeks: 12 }),
+        window.dbService.getStudyStreak(auth.currentUser.uid, { questionType: "listening" }),
+      ]);
       
       if (listeningStats) {
         data.listening.kpis.answered = listeningStats.totalResponses;
         data.listening.kpis.correct = listeningStats.correctResponses;
         data.listening.kpis.accuracy = parseFloat(listeningStats.accuracy) || 0;
+        data.listening.kpis.streak = listeningStreak || 0;
         
         // Build weights data
         data.listening.weights = Object.entries(listeningStats.byWeight || {})
@@ -489,16 +525,23 @@ async function seedProgressPlaceholders() {
           .sort((a, b) => b.w - a.w);
       }
       
+      // Set daily and weekly data
+      data.listening.daily = listeningDaily.map(d => d.accuracy);
+      data.listening.weekly = listeningWeekly.map(w => w.accuracy);
+      
       // Load reading statistics
-      const readingStats = await window.dbService.getUserStatistics(
-        auth.currentUser.uid,
-        { questionType: "reading" }
-      );
+      const [readingStats, readingDaily, readingWeekly, readingStreak] = await Promise.all([
+        window.dbService.getUserStatistics(auth.currentUser.uid, { questionType: "reading" }),
+        window.dbService.getDailyStats(auth.currentUser.uid, { questionType: "reading", days: 30 }),
+        window.dbService.getWeeklyStats(auth.currentUser.uid, { questionType: "reading", weeks: 12 }),
+        window.dbService.getStudyStreak(auth.currentUser.uid, { questionType: "reading" }),
+      ]);
       
       if (readingStats) {
         data.reading.kpis.answered = readingStats.totalResponses;
         data.reading.kpis.correct = readingStats.correctResponses;
         data.reading.kpis.accuracy = parseFloat(readingStats.accuracy) || 0;
+        data.reading.kpis.streak = readingStreak || 0;
         
         // Build weights data
         data.reading.weights = Object.entries(readingStats.byWeight || {})
@@ -508,6 +551,10 @@ async function seedProgressPlaceholders() {
           }))
           .sort((a, b) => b.w - a.w);
       }
+      
+      // Set daily and weekly data
+      data.reading.daily = readingDaily.map(d => d.accuracy);
+      data.reading.weekly = readingWeekly.map(w => w.accuracy);
     }
   } catch (error) {
     console.error("Failed to load progress statistics from Firestore:", error);
