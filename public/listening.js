@@ -669,37 +669,31 @@
     audioEl.innerHTML = "";
     let src = resolveAudioSrc(q);
     if (src) {
-      // ✅ Fetch Firebase Storage URL if the path is relative (async in background)
-      if (!(/^https?:\/\//i.test(src))) {
-        if (window.getFirebaseStorageUrl) {
-          // ✅ Wait for Firebase Storage to be ready before fetching URLs
-          (async () => {
-            try {
-              await window.__storageReady;
-              const storageUrl = await window.getFirebaseStorageUrl(src);
-              if (storageUrl && audioEl.src !== storageUrl) {
-                audioEl.src = storageUrl;
-                audioEl.load();
-              }
-            } catch (err) {
-              console.warn("Failed to get Firebase Storage URL for audio:", err);
-              // Fallback to original path
-              audioEl.src = src;
+      // Try to get Firebase Storage URL if it's a relative path
+      if (!(/^https?:\/\//i.test(src)) && window.getFirebaseStorageUrl) {
+        (async () => {
+          try {
+            const storageUrl = await window.getFirebaseStorageUrl(src);
+            if (storageUrl) {
+              audioEl.src = storageUrl;
               audioEl.load();
             }
-          })();
-        } else {
-          // Storage helper not available yet
-          console.warn("Firebase Storage helper not loaded, using local path");
-          audioEl.src = src;
-          audioEl.load();
-        }
+          } catch (err) {
+            console.warn("Storage URL failed, using local:", src);
+            audioEl.src = src;
+            audioEl.load();
+          }
+        })();
       } else {
-        const s = document.createElement("source");
-        s.src = src;
-        s.type = src.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
-        audioEl.appendChild(s);
-        audioEl.src = src;
+        // Absolute URL or no storage helper
+        if (/^https?:\/\//i.test(src)) {
+          const s = document.createElement("source");
+          s.src = src;
+          s.type = src.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+          audioEl.appendChild(s);
+        } else {
+          audioEl.src = src;
+        }
         audioEl.load();
       }
     }
@@ -1403,27 +1397,24 @@
       ${reviewHtml}
     `;
 
-    // ✅ Process audio elements to fetch Firebase Storage URLs
-    (async () => {
-      await window.__storageReady; // ✅ Wait for Firebase Storage to be ready
-      const audioElements = RT.review()?.querySelectorAll("audio source");
-      if (audioElements) {
-        audioElements.forEach(async (source) => {
-          const src = source.getAttribute("src");
-          if (src && !(/^https?:\/\//i.test(src)) && window.getFirebaseStorageUrl) {
-            try {
-              const storageUrl = await window.getFirebaseStorageUrl(src);
-              if (storageUrl) {
-                source.setAttribute("src", storageUrl);
-                source.parentElement?.load?.();
-              }
-            } catch (err) {
-              console.warn("Failed to fetch Firebase Storage URL for review audio:", err);
+    // Process audio elements to fetch Firebase Storage URLs (if available)
+    const audioElements = RT.review()?.querySelectorAll("audio source");
+    if (audioElements && window.getFirebaseStorageUrl) {
+      audioElements.forEach(async (source) => {
+        const src = source.getAttribute("src");
+        if (src && !(/^https?:\/\//i.test(src))) {
+          try {
+            const storageUrl = await window.getFirebaseStorageUrl(src);
+            if (storageUrl) {
+              source.setAttribute("src", storageUrl);
+              source.parentElement?.load?.();
             }
+          } catch (err) {
+            console.warn("Storage URL failed for review:", src);
           }
-        });
-      }
-    })();
+        }
+      });
+    }
 
     tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
     updateKpiVisibility();

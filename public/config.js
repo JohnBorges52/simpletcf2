@@ -47,67 +47,18 @@ import {
 // The generator script writes `public/firebase-config.js` which sets
 // `window.firebaseConfig` and `window.__FIREBASE_CONFIG__`.
 
-// Helper to safely get config with retries
-function getFirebaseConfigSafely() {
-  try {
-    if (typeof window !== "undefined") {
-      if (window.__FIREBASE_CONFIG__ && Object.keys(window.__FIREBASE_CONFIG__).length > 0) {
-        return window.__FIREBASE_CONFIG__;
-      }
-      if (window.firebaseConfig && Object.keys(window.firebaseConfig).length > 0) {
-        return window.firebaseConfig;
-      }
-    }
-    if (typeof globalThis !== "undefined") {
-      const g = globalThis;
-      if (g && g["firebaseConfig"] && Object.keys(g["firebaseConfig"]).length > 0) {
-        return g["firebaseConfig"];
-      }
-    }
-  } catch (e) {
-    /* ignore */
-  }
-  return {};
+// ===============================
+// Firebase Config - Simple approach
+// ===============================
+
+// Get config from firebase-config.js (loaded before this module)
+const firebaseConfig = window.firebaseConfig || window.__FIREBASE_CONFIG__ || {};
+
+if (!firebaseConfig.projectId) {
+  console.error(
+    "❌ Firebase config not found. Make sure firebase-config.js is loaded before config.js"
+  );
 }
-
-// Delay initial check to allow firebase-config.js to execute
-let firebaseConfig = {};
-let hasFirebaseConfig = false;
-
-// First attempt
-setTimeout(() => {
-  firebaseConfig = getFirebaseConfigSafely();
-  hasFirebaseConfig = firebaseConfig && Object.keys(firebaseConfig).length > 0;
-  
-  if (!hasFirebaseConfig) {
-    // Retry after a short delay (firebase-config.js might still be loading)
-    setTimeout(() => {
-      firebaseConfig = getFirebaseConfigSafely();
-      hasFirebaseConfig = firebaseConfig && Object.keys(firebaseConfig).length > 0;
-      
-      if (!hasFirebaseConfig) {
-        console.error(
-          "🔥 CRITICAL: Firebase config not found! The website will not work.\n" +
-          "  - Ensure public/firebase-config.js exists and contains your Firebase credentials\n" +
-          "  - Run: npm run generate-config\n" +
-          "  - Required fields: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId",
-        );
-      } else {
-        console.log("✅ Firebase config loaded (after retry):", {
-          projectId: firebaseConfig.projectId,
-          storageBucket: firebaseConfig.storageBucket,
-          apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
-        });
-      }
-    }, 100);
-  } else {
-    console.log("✅ Firebase config loaded:", {
-      projectId: firebaseConfig.projectId,
-      storageBucket: firebaseConfig.storageBucket,
-      apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
-    });
-  }
-}, 0);
 
 
 function getUrlParams() {
@@ -353,49 +304,28 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
 }
 
 // ===============================
-// Firebase init
+// Firebase Initialization (Simple)
 // ===============================
-// Create a promise that resolves when config is available
-const configReadyPromise = new Promise((resolve) => {
-  const checkConfig = () => {
-    const config = getFirebaseConfigSafely();
-    if (config && config.projectId) {
-      resolve(config);
-    } else {
-      // Keep checking every 50ms until config is available
-      setTimeout(checkConfig, 50);
-    }
-  };
-  checkConfig();
-});
-
 (async () => {
   try {
-    // Wait for Firebase config to be available before initializing
-    const currentConfig = await configReadyPromise;
-    
-    if (!currentConfig || !currentConfig.projectId) {
-      throw new Error(
-        "Firebase config is missing or invalid. " +
-        "Make sure firebase-config.js is loaded and contains projectId. " +
-        "Check if public/firebase-config.js exists and has your Firebase credentials."
-      );
-    }
+    // Initialize Firebase with config from firebase-config.js
+    const app = initializeApp(firebaseConfig);
+    console.log("✅ Firebase initialized");
 
-    const app = initializeApp(currentConfig);
+    // Auth
     const auth = getAuth(app);
     await setPersistence(auth, browserLocalPersistence);
     window.__auth = auth;
     resolveAuthReady(auth);
-    console.log("✅ Firebase initialized + persistence set");
+    console.log("✅ Auth ready");
 
-    // ✅ Initialize Storage
+    // Storage
     const storage = getStorage(app);
     window.__storage = storage;
     resolveStorageReady(storage);
-    console.log("✅ Firebase Storage initialized");
+    console.log("✅ Storage ready");
 
-    // ✅ Initialize Remote Config (for dynamic configuration without pushing credentials)
+    // Remote Config (optional, doesn't break if offline)
     try {
       const remoteConfig = getRemoteConfig(app);
       remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour
@@ -403,22 +333,23 @@ const configReadyPromise = new Promise((resolve) => {
       await fetchAndActivate(remoteConfig);
       window.__remoteConfig = remoteConfig;
       resolveRemoteConfigReady(remoteConfig);
-      console.log("✅ Remote Config loaded");
+      console.log("✅ Remote Config ready");
     } catch (err) {
-      console.warn("⚠️ Remote Config not available (offline?):", err.message);
+      console.warn("⚠️ Remote Config unavailable:", err.message);
       resolveRemoteConfigReady(null);
     }
 
+    // Analytics (optional)
     try {
       if (await isSupported()) {
         getAnalytics(app);
         console.log("📈 Analytics enabled");
       }
     } catch {
-      /* ignore analytics availability issues */
+      /* ignore */
     }
   } catch (err) {
-    console.error("🔥 Firebase init error:", err);
+    console.error("❌ Firebase init failed:", err);
     resolveAuthReady(null);
     resolveStorageReady(null);
   }
@@ -1044,41 +975,31 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =====================================================
-// ✅ Remote Config Helpers (fetch dynamic configuration)
+// Remote Config Helpers (Optional - for dynamic config)
 // =====================================================
-// These functions retrieve configuration from Firebase Remote Config
-// No credentials needed here — all values are stored securely in Firebase Console
-
 window.getRemoteConfigString = (key, defaultValue = "") => {
-  const remoteConfig = window.__remoteConfig;
-  if (!remoteConfig) return defaultValue;
+  if (!window.__remoteConfig) return defaultValue;
   try {
-    const value = getString(remoteConfig, key);
-    return value || defaultValue;
+    return getString(window.__remoteConfig, key) || defaultValue;
   } catch (err) {
-    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
     return defaultValue;
   }
 };
 
 window.getRemoteConfigNumber = (key, defaultValue = 0) => {
-  const remoteConfig = window.__remoteConfig;
-  if (!remoteConfig) return defaultValue;
+  if (!window.__remoteConfig) return defaultValue;
   try {
-    return getNumber(remoteConfig, key) || defaultValue;
+    return getNumber(window.__remoteConfig, key) || defaultValue;
   } catch (err) {
-    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
     return defaultValue;
   }
 };
 
 window.getRemoteConfigBoolean = (key, defaultValue = false) => {
-  const remoteConfig = window.__remoteConfig;
-  if (!remoteConfig) return defaultValue;
+  if (!window.__remoteConfig) return defaultValue;
   try {
-    return getBoolean(remoteConfig, key) || defaultValue;
+    return getBoolean(window.__remoteConfig, key) || defaultValue;
   } catch (err) {
-    console.warn(`⚠️ Remote Config key "${key}" not found:`, err.message);
     return defaultValue;
   }
 };
@@ -1087,44 +1008,24 @@ window.getRemoteConfigBoolean = (key, defaultValue = false) => {
 // const audioPath = window.getRemoteConfigString('AUDIO_STORAGE_PATH', 'audio');
 
 // =====================================================
-// ✅ Firebase Storage URL Helper (for audio/images)
+// Firebase Storage URL Helper (simple version)
 // =====================================================
 window.getFirebaseStorageUrl = async (path) => {
   if (!path) return null;
+  
+  // If already absolute URL, return as-is
+  if (/^https?:\/\//i.test(path)) return path;
+  
   try {
-    // If it's already an absolute URL, return as-is
-    if (/^https?:\/\//i.test(path)) return path;
-    
     const storage = window.__storage;
-    if (!storage) {
-      console.warn("❌ Firebase Storage not initialized. Check if firebase-config.js is loaded with storageBucket.");
-      return null;
-    }
-
-    // ✅ Check if Firebase config has storageBucket
-    if (!firebaseConfig?.storageBucket) {
-      console.error(
-        "❌ Firebase config is missing 'storageBucket' property. \n" +
-        "   - Ensure firebase-config.js is created with your Firebase credentials\n" +
-         "   - Run: npm run generate-config\n" +
-        "   - It should include: storageBucket: 'your-project-name.appspot.com'"
-      );
-      return null;
-    }
-
-    // Clean up the path (remove leading slashes)
+    if (!storage) return null;
+    
+    // Clean path and get download URL
     const cleanPath = path.replace(/^\/+/, "");
-    
-    // Create a reference to the file in Firebase Storage
     const fileRef = ref(storage, cleanPath);
-    
-    // Get the download URL
-    const downloadUrl = await getDownloadURL(fileRef);
-    console.log(`✅ Got Firebase Storage URL for: ${path}`);
-    return downloadUrl;
+    return await getDownloadURL(fileRef);
   } catch (err) {
-    console.error(`❌ Failed to get Firebase Storage URL for ${path}:`, err);
-    // Return null so audio element won't try to load an invalid URL
+    console.warn(`Storage URL failed for ${path}`);
     return null;
   }
 };
