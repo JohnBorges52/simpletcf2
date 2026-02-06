@@ -1,4 +1,10 @@
-// profile.js (vanilla)
+// profile.js (ES6 module)
+
+import {
+  getTracking,
+  getTCFListening,
+  isUserAuthenticated,
+} from "./firestore-storage.js";
 
 function $(sel) {
   return document.querySelector(sel);
@@ -799,6 +805,8 @@ function switchTab(tabId) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.__renderProgressChart?.();
+        // Load answer history from Firestore
+        loadAndDisplayAnswerHistory().catch(console.error);
       });
     });
   }
@@ -820,6 +828,154 @@ function logout() {
     localStorage.removeItem("userEmail");
   } catch {}
   window.location.href = "/login.html";
+}
+
+/* ===========================
+   ANSWER HISTORY (from Firestore)
+   =========================== */
+
+async function loadAndDisplayAnswerHistory() {
+  const loadingEl = $("#answerHistoryLoading");
+  const emptyEl = $("#answerHistoryEmpty");
+  const tableWrapEl = $("#answerHistoryTableWrap");
+  const bodyEl = $("#answerHistoryBody");
+
+  if (!loadingEl || !emptyEl || !tableWrapEl || !bodyEl) return;
+
+  // Show loading state
+  loadingEl.style.display = "block";
+  emptyEl.style.display = "none";
+  tableWrapEl.style.display = "none";
+
+  try {
+    // Check if user is authenticated
+    if (!isUserAuthenticated()) {
+      loadingEl.style.display = "none";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "Please log in to view your answer history from the database.";
+      return;
+    }
+
+    // Fetch data from Firestore
+    const [tracking, tcfListening] = await Promise.all([
+      getTracking(),
+      getTCFListening(),
+    ]);
+
+    // Combine and process answer data
+    const answers = [];
+
+    // Process tracking data (reading)
+    if (tracking && typeof tracking === "object") {
+      Object.entries(tracking).forEach(([key, value]) => {
+        if (value && typeof value === "object") {
+          const correct = Number(value.correct || 0);
+          const wrong = Number(value.wrong || 0);
+          const total = correct + wrong;
+          
+          if (total > 0) {
+            answers.push({
+              questionKey: key,
+              section: "Reading",
+              correct,
+              wrong,
+              total,
+              accuracy: ((correct / total) * 100).toFixed(1),
+              lastAnswered: value.lastAnswered || 0,
+            });
+          }
+        }
+      });
+    }
+
+    // Process TCF Listening data
+    if (tcfListening && tcfListening.answers && typeof tcfListening.answers === "object") {
+      Object.entries(tcfListening.answers).forEach(([key, value]) => {
+        if (value && typeof value === "object") {
+          const correct = Number(value.correct || 0);
+          const wrong = Number(value.wrong || 0);
+          const total = correct + wrong;
+          
+          if (total > 0) {
+            answers.push({
+              questionKey: key,
+              section: "Listening",
+              correct,
+              wrong,
+              total,
+              accuracy: ((correct / total) * 100).toFixed(1),
+              lastAnswered: value.lastAnswered || 0,
+            });
+          }
+        }
+      });
+    }
+
+    // Hide loading
+    loadingEl.style.display = "none";
+
+    // Check if we have any answers
+    if (answers.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
+
+    // Sort by most recent first
+    answers.sort((a, b) => b.lastAnswered - a.lastAnswered);
+
+    // Display answers in table (limit to 50 for performance)
+    const displayAnswers = answers.slice(0, 50);
+    
+    bodyEl.innerHTML = "";
+    displayAnswers.forEach((answer) => {
+      const row = document.createElement("tr");
+      
+      // Format date
+      const date = answer.lastAnswered 
+        ? new Date(answer.lastAnswered).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : "—";
+
+      // Determine if latest was correct or wrong
+      const latestResult = answer.correct > answer.wrong ? "Correct" : "Wrong";
+      const resultClass = answer.correct > answer.wrong ? "correct" : "incorrect";
+
+      // Accuracy styling
+      const accuracy = parseFloat(answer.accuracy);
+      let accuracyClass = "accuracy-high";
+      if (accuracy < 70) accuracyClass = "accuracy-medium";
+      if (accuracy < 50) accuracyClass = "accuracy-low";
+
+      row.innerHTML = `
+        <td>${date}</td>
+        <td><strong>${answer.section}</strong>: ${answer.questionKey}</td>
+        <td><span class="result-badge ${resultClass}">${latestResult}</span></td>
+        <td>${answer.correct}</td>
+        <td>${answer.wrong}</td>
+        <td class="accuracy-cell ${accuracyClass}">${answer.accuracy}%</td>
+      `;
+
+      bodyEl.appendChild(row);
+    });
+
+    // Show table
+    tableWrapEl.style.display = "block";
+
+    // Show "show more" button if there are more answers
+    const showMoreWrap = $("#answerHistoryShowMore");
+    if (showMoreWrap && answers.length > 50) {
+      showMoreWrap.style.display = "flex";
+    }
+
+  } catch (error) {
+    console.error("Error loading answer history:", error);
+    loadingEl.style.display = "none";
+    emptyEl.style.display = "block";
+    emptyEl.textContent = "Error loading answer history. Please try again later.";
+  }
 }
 
 function wireActions() {

@@ -297,6 +297,54 @@
                 </div>
               </div>
             </div>
+
+            <!-- Answer History Section -->
+            <div class="section-card" style="margin-top: 20px;">
+              <div class="section-head">
+                <h2>📝 Recent Answer History</h2>
+                <span class="pill" id="answerHistoryPill">From Database</span>
+              </div>
+              
+              <div class="progress-note muted" style="margin-bottom: 16px;">
+                Your quiz answers stored in Firestore database. Updates in real-time.
+              </div>
+
+              <!-- Loading State -->
+              <div id="answerHistoryLoading" class="progress-note" style="text-align: center; padding: 20px;">
+                <span>Loading answer history...</span>
+              </div>
+
+              <!-- Empty State -->
+              <div id="answerHistoryEmpty" class="progress-note muted" style="text-align: center; padding: 20px; display: none;">
+                No answers recorded yet. Start practicing to see your history here!
+              </div>
+
+              <!-- Answer History Table -->
+              <div id="answerHistoryTableWrap" style="display: none; overflow-x: auto;">
+                <table class="answer-history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Question</th>
+                      <th>Result</th>
+                      <th>Correct</th>
+                      <th>Wrong</th>
+                      <th>Accuracy</th>
+                    </tr>
+                  </thead>
+                  <tbody id="answerHistoryBody">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Show More Button -->
+              <div class="profile-actions" style="justify-content: center; margin-top: 16px; display: none;" id="answerHistoryShowMore">
+                <button class="profile-btn" id="btnShowMoreAnswers" type="button">
+                  Show More Answers
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- REAL TESTS -->
@@ -551,8 +599,8 @@
     </main>
 
     <!-- Firebase initialization (config hardcoded) -->
-    <script type=\"module\" src="config.js"></script>
+    <script type="module" src="config.js"></script>
     <!-- Then app scripts -->
-    <script src="profile.js" defer></script>
+    <script type="module" src="profile.js"></script>
   </body>
 </html>
