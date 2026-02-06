@@ -970,6 +970,7 @@ window.getFirebaseStorageUrl = async (path) => {
       console.error(
         "❌ Firebase config is missing 'storageBucket' property. \n" +
         "   - Ensure firebase-config.js is created with your Firebase credentials\n" +
+         "   - Run: npm run generate-config\n" +
         "   - It should include: storageBucket: 'your-project-name.appspot.com'"
       );
       return null;
