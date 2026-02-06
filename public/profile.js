@@ -162,8 +162,8 @@ async function seedKpis() {
   // Default values
   let answered = 0;
   let accuracy = "—";
-  let realTests = 0;
-  let streak = "—";
+  let correct = 0;
+  let wrong = 0;
   
   // Try to load statistics from Firestore
   try {
@@ -174,9 +174,8 @@ async function seedKpis() {
       if (stats) {
         answered = stats.totalResponses || 0;
         accuracy = stats.accuracy ? `${stats.accuracy}%` : "—";
-        
-        // For now, realTests and streak remain placeholders
-        // These could be calculated based on response patterns in the future
+        correct = stats.correctResponses || 0;
+        wrong = stats.incorrectResponses || 0;
       }
     }
   } catch (error) {
@@ -185,8 +184,8 @@ async function seedKpis() {
 
   $("#kpiAnswered") && ($("#kpiAnswered").textContent = answered);
   $("#kpiAccuracy") && ($("#kpiAccuracy").textContent = accuracy);
-  $("#kpiRealTests") && ($("#kpiRealTests").textContent = realTests);
-  $("#kpiStreak") && ($("#kpiStreak").textContent = streak);
+  $("#kpiCorrect") && ($("#kpiCorrect").textContent = correct);
+  $("#kpiWrong") && ($("#kpiWrong").textContent = wrong);
 }
 
 /* ===========================
