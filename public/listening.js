@@ -543,7 +543,7 @@ import {
         (q) => Number(q.weight_points) === Number(state.currentWeight),
       );
     }
-    const results = await Promise.all(pool.map(q => deservesFromTL(q)));
+    const results = await Promise.all(pool.map((q) => deservesFromTL(q)));
     return results.filter(Boolean).length;
   }
 
@@ -593,10 +593,10 @@ import {
     }
 
     if (state.deservesMode) {
-      const results = await Promise.all(items.map(q => deservesFromTL(q)));
+      const results = await Promise.all(items.map((q) => deservesFromTL(q)));
       items = items.filter((_, i) => results[i]);
     } else if (state.onlyUnanswered) {
-      const tlResults = await Promise.all(items.map(q => tlReadAnswer(q)));
+      const tlResults = await Promise.all(items.map((q) => tlReadAnswer(q)));
       items = items.filter((_, i) => {
         const tl = tlResults[i];
         return (tl.correct || 0) + (tl.wrong || 0) === 0;
