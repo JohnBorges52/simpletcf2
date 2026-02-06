@@ -350,11 +350,11 @@
         <p><strong>JavaScript is required</strong> to run this practice app.</p>
       </noscript>
 
-      <!-- Load Firebase config first (immediately, no defer) -->
+      <!-- Firebase config FIRST (regular script, loads immediately) -->
       <script src="firebase-config.js"></script>
-      <!-- Load Firebase initialization (module, loads before regular defer scripts) -->
+      <!-- Then Firebase initialization as module -->
       <script type="module" src="config.js"></script>
-      <!-- Load app scripts after Firebase is ready -->
+      <!-- Then app scripts -->
       <script src="script.js" defer></script>
       <script src="listening.js" defer></script>
     </div>

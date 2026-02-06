@@ -195,11 +195,11 @@
       </div>
     </div>
 
-    <!-- Firebase config (load first) -->
+    <!-- Firebase config FIRST (regular script, loads immediately) -->
     <script src="firebase-config.js"></script>
+    <!-- Then Firebase initialization as module -->
     <script type="module" src="config.js"></script>
-    
-    <!-- App scripts -->
+    <!-- Then app scripts -->
     <script type="module" src="script.js"></script>
   </body>
 </html>

@@ -364,6 +364,11 @@
       </div>
     </main>
 
+    <!-- Firebase config FIRST (regular script, loads immediately) -->
+    <script src="firebase-config.js"></script>
+    <!-- Then Firebase initialization as module -->
+    <script type="module" src="config.js"></script>
+    <!-- Then app scripts -->
     <script src="plan.js"></script>
   </body>
 </html>

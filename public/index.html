@@ -481,11 +481,11 @@
       </div>
     </footer>
 
-    <!-- Firebase config (load first) -->
+    <!-- Firebase config FIRST (regular script, loads immediately) -->
     <script src="firebase-config.js"></script>
+    <!-- Then Firebase initialization as module -->
     <script type="module" src="config.js"></script>
-    
-    <!-- App scripts -->
+    <!-- Then other modules -->
     <script type="module" src="script.js"></script>
     <script type="module" src="checkout.js"></script>
 

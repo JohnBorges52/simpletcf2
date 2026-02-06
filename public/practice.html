@@ -204,11 +204,11 @@
       <p><strong>JavaScript is required</strong> to run this practice app.</p>
     </noscript>
 
-    <!-- Firebase config (load first) -->
+    <!-- Firebase config FIRST (regular script, loads immediately) -->
     <script src="firebase-config.js"></script>
+    <!-- Then Firebase initialization as module -->
     <script type="module" src="config.js"></script>
-    
-    <!-- App scripts -->
+    <!-- Then other modules and scripts -->
     <script type="module" src="script.js"></script>
     <script src="app.js" defer></script>
   </body>

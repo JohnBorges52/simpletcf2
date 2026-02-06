@@ -405,7 +405,11 @@
       ></div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Firebase config FIRST (regular script, loads immediately) -->
+    <script src="firebase-config.js"></script>
+    <!-- Then Firebase initialization as module -->
+    <script type="module" src="config.js"></script>
+    <!-- Then app scripts -->
     <script type="module" src="script.js"></script>
     <script type="module" src="checkout.js"></script>
   </body>

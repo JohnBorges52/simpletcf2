@@ -46,21 +46,31 @@ import {
 // Support loading config injected at deploy time or during local generation.
 // The generator script writes `public/firebase-config.js` which sets
 // `window.firebaseConfig` and `window.__FIREBASE_CONFIG__`.
-const firebaseConfig = (() => {
+
+// Helper to safely get config with retries
+function getFirebaseConfigSafely() {
   try {
     if (typeof window !== "undefined") {
-      if (window.__FIREBASE_CONFIG__) return window.__FIREBASE_CONFIG__;
-      if (window.firebaseConfig) return window.firebaseConfig;
+      if (window.__FIREBASE_CONFIG__ && Object.keys(window.__FIREBASE_CONFIG__).length > 0) {
+        return window.__FIREBASE_CONFIG__;
+      }
+      if (window.firebaseConfig && Object.keys(window.firebaseConfig).length > 0) {
+        return window.firebaseConfig;
+      }
     }
     if (typeof globalThis !== "undefined") {
       const g = globalThis;
-      if (g && g["firebaseConfig"]) return g["firebaseConfig"];
+      if (g && g["firebaseConfig"] && Object.keys(g["firebaseConfig"]).length > 0) {
+        return g["firebaseConfig"];
+      }
     }
   } catch (e) {
     /* ignore */
   }
   return {};
-})();
+}
+
+const firebaseConfig = getFirebaseConfigSafely();
 
 const hasFirebaseConfig =
   firebaseConfig && typeof firebaseConfig === "object"
@@ -68,10 +78,18 @@ const hasFirebaseConfig =
     : false;
 
 if (!hasFirebaseConfig) {
-  console.warn(
-    "⚠️ Firebase config not found. Ensure public/firebase-config.js is generated " +
-      "via `npm run generate-config` and includes storageBucket.",
+  console.error(
+    "🔥 CRITICAL: Firebase config not found! The website will not work.\n" +
+    "  - Ensure public/firebase-config.js exists and contains your Firebase credentials\n" +
+    "  - Run: npm run generate-config\n" +
+    "  - Required fields: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId",
   );
+} else {
+  console.log("✅ Firebase config loaded:", {
+    projectId: firebaseConfig.projectId,
+    storageBucket: firebaseConfig.storageBucket,
+    apiKey: firebaseConfig.apiKey ? "***" : "MISSING",
+  });
 }
 
 
@@ -322,7 +340,26 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
 // ===============================
 (async () => {
   try {
-    const app = initializeApp(firebaseConfig);
+    // Wait for config to be available (in case of race condition with firebase-config.js)
+    let currentConfig = getFirebaseConfigSafely();
+    let retries = 0;
+    const maxRetries = 50; // 5 seconds max wait (50 * 100ms)
+    
+    while ((!currentConfig || !currentConfig.projectId) && retries < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      currentConfig = getFirebaseConfigSafely();
+      retries++;
+    }
+    
+    if (!currentConfig || !currentConfig.projectId) {
+      throw new Error(
+        "Firebase config is missing or invalid after waiting 5 seconds. " +
+        "Make sure firebase-config.js is loaded and contains projectId. " +
+        "Check if public/firebase-config.js exists and has your Firebase credentials."
+      );
+    }
+
+    const app = initializeApp(currentConfig);
     const auth = getAuth(app);
     await setPersistence(auth, browserLocalPersistence);
     window.__auth = auth;
