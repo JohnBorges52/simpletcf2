@@ -448,8 +448,15 @@
       return;
     }
 
-    // Store original path for Firebase Storage download
-    const originalPath = url;
+    // Get Firebase Storage download URL with token (bypasses CORS for iframe)
+    if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
+      try {
+        const storageUrl = await window.getFirebaseStorageUrl(url);
+        if (storageUrl) url = storageUrl;
+      } catch (err) {
+        console.warn("Storage URL failed for PDF:", err);
+      }
+    }
 
     const loading = document.createElement("div");
     loading.style.cssText =
@@ -459,61 +466,34 @@
 
     if (myToken !== pdfRenderToken) return;
 
-    // If pdf.js isn't present, fallback to iframe
-    if (!window.pdfjsLib) {
-      wrap.innerHTML = "";
-      const iframe = document.createElement("iframe");
-      iframe.src = url;
-      iframe.style.width = "100%";
-      iframe.style.height = "780px";
-      iframe.style.border = "0";
-      iframe.loading = "lazy";
+    // Use iframe to display PDF (no CORS issues)
+    wrap.innerHTML = "";
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.width = "100%";
+    iframe.style.height = "780px";
+    iframe.style.border = "0";
+    iframe.loading = "lazy";
 
-      activePdfRenderController.signal.addEventListener("abort", () => {
-        try {
-          iframe.src = "about:blank";
-        } catch {}
-      });
+    activePdfRenderController.signal.addEventListener("abort", () => {
+      try {
+        iframe.src = "about:blank";
+      } catch {}
+    });
 
-      if (myToken !== pdfRenderToken) return;
-      wrap.appendChild(iframe);
-      return;
-    }
+    if (myToken !== pdfRenderToken) return;
+    wrap.appendChild(iframe);
+    return;
 
+    // OLD PDF.js approach (disabled due to CORS issues)
+    /*
+    // OLD PDF.js approach (disabled due to CORS issues)
+    /*
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
     try {
-      // Use Firebase Storage SDK to download PDF bytes (avoids CORS issues)
-      let pdfData = originalPath;
-      
-      if (!(/^https?:\/\//i.test(originalPath)) && window.__storage) {
-        try {
-          // Wait for storage to be ready
-          await window.__storageReady;
-          
-          // Remove leading slash if present
-          const storagePath = originalPath.startsWith('/') ? originalPath.slice(1) : originalPath;
-          
-          // Get reference and download bytes
-          const { ref, getBytes } = window.firebaseStorageExports;
-          const storageRef = ref(window.__storage, storagePath);
-          const bytes = await getBytes(storageRef);
-          pdfData = bytes;
-          
-          console.log("✅ Downloaded PDF from Storage:", storagePath);
-        } catch (storageErr) {
-          console.warn("Storage download failed, trying URL:", storageErr);
-          // Fallback to URL if available
-          if (window.getFirebaseStorageUrl) {
-            try {
-              pdfData = await window.getFirebaseStorageUrl(originalPath);
-            } catch {}
-          }
-        }
-      }
-
-      const task = pdfjsLib.getDocument(pdfData);
+      const task = pdfjsLib.getDocument(url);
       const pdf = await task.promise;
       if (myToken !== pdfRenderToken) return;
 
@@ -554,6 +534,7 @@
       wrap.innerHTML = "";
       wrap.textContent = "Failed to render PDF.";
     }
+    */
   }
 
   /* =====================
