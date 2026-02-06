@@ -237,9 +237,9 @@
         : "/" + q.audio_local_path.replace(/^(\.\/)+/, "");
     if (q.audio_url) {
       const base = q.audio_url.split("/").pop() || "";
-      if (base) return `/audios/${base}`;
+      if (base) return `/data/audios/${base}`;
     }
-    if (q.filename) return `/audios/${q.filename}`;
+    if (q.filename) return `/data/audios/${q.filename}`;
     return null;
   }
 
