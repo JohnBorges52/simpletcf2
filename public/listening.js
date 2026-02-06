@@ -369,19 +369,18 @@
       try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) {
-          console.warn("JSON candidate returned non-ok status", url, res.status);
+          console.warn("JSON candidate returned non-ok status", url, res.status, res.url);
           continue;
         }
         const ct = res.headers.get("content-type") || "";
         if (!/application\/json/i.test(ct)) {
-          // try to parse anyway but capture body for better diagnostics
           const text = await res.text();
           try {
             const parsed = JSON.parse(text);
-            console.log("Loaded JSON (content-type mismatch) from:", url);
+            console.log("Loaded JSON (content-type mismatch) from:", url, res.url);
             return parsed;
           } catch (err) {
-            console.warn("Not JSON at", url, "body starts:", text.slice(0, 200));
+            console.warn("Not JSON at", url, "response.url=", res.url, "body starts:", text.slice(0, 400));
             continue;
           }
         }
@@ -396,14 +395,17 @@
   }
 
   async function loadData() {
+    const base = (typeof window !== "undefined" && window.location && window.location.pathname) || "/";
+    const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
     const candidates = [
       PATHS.DATA,
+      origin + PATHS.DATA,
+      origin + "/data/all_quiz_data.json",
       "/data/all_quiz_data.json",
-      "/data/audios/all_quiz_data.json",
-      "/data/audios/all_quiz_data.json",
+      "./data/all_quiz_data.json",
       "data/all_quiz_data.json",
-      "data/audios/all_quiz_data.json",
-      "/all_quiz_data.json",
+      "all_quiz_data.json",
+      origin + base.replace(/\/[^/]*$/, "/") + "data/all_quiz_data.json",
     ];
     try {
       const raw = await fetchJsonFirstWorking(candidates);

@@ -374,6 +374,55 @@
       setNotice("Failed to load reading JSON. Check console.", "err");
     }
   }
+    async function fetchJsonFirstWorking(urls) {
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            console.warn("JSON candidate returned non-ok status", url, res.status, res.url);
+            continue;
+          }
+          const ct = res.headers.get("content-type") || "";
+          if (!/application\/json/i.test(ct)) {
+            const text = await res.text();
+            try {
+              const parsed = JSON.parse(text);
+              console.log("Loaded JSON (content-type mismatch) from:", url, res.url);
+              return parsed;
+            } catch (err) {
+              console.warn("Not JSON at", url, "response.url=", res.url, "body starts:", text.slice(0, 400));
+              continue;
+            }
+          }
+          const data = await res.json();
+          return data;
+        } catch (err) {
+          console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
+          continue;
+        }
+      }
+      throw new Error("All JSON URL candidates failed.");
+    }
+
+    async function loadData() {
+      const origin = (typeof window !== "undefined" && window.location && window.location.origin) || "";
+      const candidates = [
+        PATHS.DATA,
+        origin + PATHS.DATA,
+        "/data/all_data_reading.json",
+        "./data/all_data_reading.json",
+        "data/all_data_reading.json",
+        "all_data_reading.json",
+      ];
+      try {
+        const raw = await fetchJsonFirstWorking(candidates);
+        state.allData = (raw || []).map((q) => ({ ...q }));
+      } catch (e) {
+        console.error("loadData failed", e);
+        setNotice("Failed to load reading JSON. Check console.", "err");
+        state.allData = [];
+      }
+    }
 
   async function ensureDataLoaded() {
     if (!state.allData.length) await loadData();
