@@ -406,11 +406,15 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     updateAuthNavItem(user);
 
     // Keep localStorage consistent
-    if (user && user.emailVerified) {
+    // ✅ Only clear localStorage if there's NO user at all
+    // If user exists (even if not verified), keep them logged in
+    // The login/register pages handle verification separately
+    if (user) {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userName", user.displayName || "User");
       localStorage.setItem("userEmail", user.email || "");
     } else {
+      // Only remove when user is null (truly logged out)
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("userName");
       localStorage.removeItem("userEmail");
