@@ -217,7 +217,12 @@ import {
 
   function isPictureTrue(q) {
     const v = q?.is_picture;
-    return v === true || v === "true" || v === 1 || v === "1";
+    // Check explicit is_picture flag OR if a picture path exists
+    if (v === true || v === "true" || v === 1 || v === "1") return true;
+    
+    // Also return true if there's a valid picture path defined
+    const p = q?.picture || q?.image || q?.picture_url;
+    return p && p !== "";
   }
   function resolveImageSrc(q) {
     const p = q?.picture || q?.image || q?.picture_url;
