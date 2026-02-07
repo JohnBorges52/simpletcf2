@@ -120,6 +120,15 @@ import {
     return `${q.test_id || "unknownTest"}-question${q.question_number}`;
   }
 
+  function getStableQuestionId(q) {
+    // Generate stable ID like tlQuestionKey in listening.js
+    return (
+      q?.question_ID ||
+      q?.number_ID ||
+      `${q?.test_id || "unknownTest"}-q${String(q?.question_number || 0).padStart(4, "0")}`
+    );
+  }
+
   async function readLifetime(q) {
     const t = await getTracking();
     const rec = t[keyFor(q)] || { correct: 0, wrong: 0 };
@@ -699,7 +708,7 @@ import {
     if (window.dbService && window.dbService.logQuestionResponse) {
       const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
       window.dbService.logQuestionResponse({
-        questionId: q.question_ID || q.id || "unknown",
+        questionId: getStableQuestionId(q),
         questionType: "reading",
         testId: q.test_id || null,
         questionNumber: q.question_number || q.overall_question_number?.toString() || "",

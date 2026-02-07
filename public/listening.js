@@ -910,7 +910,7 @@ import {
     if (window.dbService && window.dbService.logQuestionResponse) {
       const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
       window.dbService.logQuestionResponse({
-        questionId: q.question_ID || q.id || "unknown",
+        questionId: tlQuestionKey(q),
         questionType: "listening",
         testId: q.test_id || null,
         questionNumber: q.question_number || q.overall_question_number?.toString() || "",
