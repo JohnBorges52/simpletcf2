@@ -272,8 +272,8 @@ import {
 
     const user = await waitForAuthUser();
 
-    // If not logged in -> go to login
-    if (!user) {
+    // If not logged in or email not verified -> go to login
+    if (!user || !user.emailVerified) {
       window.location.href = "/login.html";
       return;
     }
