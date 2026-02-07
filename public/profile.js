@@ -1,8 +1,10 @@
 /* global window, document */
-import {
-  onAuthStateChanged,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+// ===============================
+// Profile Page - Clean Firebase Auth
+// No localStorage usage
+// ===============================
+
+import { signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 (function () {
   // ----------------------------
@@ -17,7 +19,6 @@ import {
   }
 
   function fmtDate(ts) {
-    // ts can be Firestore Timestamp, Date, or null
     try {
       const d =
         ts?.toDate?.() ||
@@ -37,30 +38,36 @@ import {
     }
   }
 
+  /**
+   * Wait for authentication to be ready and return current user
+   * @returns {Promise<Object|null>} Current user or null
+   */
   async function waitForAuthUser() {
-    const auth = await window.__authReady;
-    if (!auth) return null;
+    // Use the auth service from window.AuthService
+    if (!window.AuthService) {
+      console.error("AuthService not loaded");
+      return null;
+    }
 
-    // If already restored, return immediately
-    if (auth.currentUser) return auth.currentUser;
-
-    // Otherwise wait for first state
-    return await new Promise((resolve) => {
-      const unsub = onAuthStateChanged(auth, (user) => {
-        unsub();
-        resolve(user || null);
-      });
-    });
+    return await window.AuthService.waitForAuth();
   }
 
+  /**
+   * Set avatar and user info in header
+   */
   function setAvatarAndName(displayName, email) {
     const name = displayName || "User";
     const mail = email || "—";
-    $("profileName").textContent = name;
-    $("profileEmail").textContent = mail;
+    
+    const nameEl = $("profileName");
+    const emailEl = $("profileEmail");
+    const avatarEl = $("avatarInitial");
+
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = mail;
 
     const initial = (name?.trim?.()[0] || mail?.trim?.()[0] || "U").toUpperCase();
-    $("avatarInitial").textContent = initial;
+    if (avatarEl) avatarEl.textContent = initial;
 
     // Account tab inputs
     const nameInput = $("acctNameInput");
@@ -69,6 +76,9 @@ import {
     if (emailInput) emailInput.value = mail;
   }
 
+  /**
+   * Setup tab navigation
+   */
   function setupTabs() {
     const btns = Array.from(document.querySelectorAll(".profile-sidebtn[data-tab]"));
     const tabs = {
@@ -95,170 +105,142 @@ import {
       b.addEventListener("click", () => show(b.dataset.tab))
     );
 
-    // default
+    // default tab
     show("overview");
   }
 
-  // ----------------------------
-  // Answer History (Realtime)
-  // ----------------------------
-  let unsubscribeHistory = null;
-
-  async function startAnswerHistoryListener(userId) {
-    // UI elements
-    const loadingEl = $("answerHistoryLoading");
-    const emptyEl = $("answerHistoryEmpty");
-    const tableWrap = $("answerHistoryTableWrap");
-    const tbody = $("answerHistoryBody");
-
-    if (!loadingEl || !emptyEl || !tableWrap || !tbody) return;
-
-    loadingEl.style.display = "block";
-    emptyEl.style.display = "none";
-    tableWrap.style.display = "none";
-    tbody.innerHTML = "";
-
-    const db = await window.__firestoreReady;
-    const {
-      collection,
-      query,
-      where,
-      orderBy,
-      limit: limitFn,
-      onSnapshot,
-    } = window.firestoreExports;
-
-    const q = query(
-      collection(db, "questionResponses"),
-      where("userId", "==", userId),
-      orderBy("answeredAt", "desc"),
-      limitFn(50)
-    );
-
-    // stop previous
-    if (unsubscribeHistory) unsubscribeHistory();
-
-    unsubscribeHistory = onSnapshot(
-      q,
-      (snap) => {
-        const rows = [];
-        snap.forEach((doc) => rows.push({ id: doc.id, ...doc.data() }));
-
-        loadingEl.style.display = "none";
-
-        if (!rows.length) {
-          emptyEl.style.display = "block";
-          tableWrap.style.display = "none";
-          tbody.innerHTML = "";
-          return;
-        }
-
-        emptyEl.style.display = "none";
-        tableWrap.style.display = "block";
-
-        tbody.innerHTML = rows
-          .map((r) => {
-            const result = r.isCorrect ? "✅ Correct" : "❌ Wrong";
-            const qLabel = `${(r.questionType || "—").toUpperCase()} • Q${r.questionNumber || "—"} • W${r.weight || 0}`;
-            return `
-              <tr>
-                <td>${fmtDate(r.answeredAt)}</td>
-                <td>${qLabel}</td>
-                <td>${result}</td>
-                <td>${r.isCorrect ? "1" : "0"}</td>
-                <td>${r.isCorrect ? "0" : "1"}</td>
-                <td>${r.isCorrect ? "100%" : "0%"}</td>
-              </tr>
-            `;
-          })
-          .join("");
-      },
-      (err) => {
-        console.error("Answer history listener error:", err);
-        loadingEl.style.display = "none";
-        emptyEl.style.display = "block";
-        emptyEl.textContent =
-          "Could not load answer history. Check Firestore rules / indexes.";
-      }
-    );
-  }
-
-  // ----------------------------
-  // Load stats + render KPIs
-  // ----------------------------
+  /**
+   * Load user statistics from Firestore
+   */
   async function loadOverviewAndProgress(userId) {
-    const stats = await window.dbService.getUserStatistics(userId, { limit: 500 });
+    if (!window.dbService) {
+      console.warn("dbService not available");
+      return;
+    }
 
-    const total = stats.totalResponses || 0;
-    const correct = stats.correctResponses || 0;
-    const wrong = stats.incorrectResponses || 0;
-    const accuracy = total ? Math.round((correct / total) * 100) : 0;
+    try {
+      const stats = await window.dbService.getUserStats(userId);
+      const total = stats.totalAnswers || 0;
+      const correct = stats.correctAnswers || 0;
+      const wrong = total - correct;
+      const accuracy = total > 0 ? (correct / total) * 100 : 0;
 
-    // Overview KPIs
-    $("kpiAnswered").textContent = String(total);
-    $("kpiAccuracy").textContent = fmtPct(accuracy);
-    $("kpiCorrect").textContent = String(correct);
-    $("kpiWrong").textContent = String(wrong);
+      // Overview KPIs
+      const accuracyEl = $("kpiAccuracy");
+      const totalEl = $("kpiTotal");
+      const correctEl = $("kpiCorrect");
+      const wrongEl = $("kpiWrong");
 
-    // Progress KPIs (default Listening view)
-    $("pAccuracy").textContent = fmtPct(accuracy);
-    $("pAnswered").textContent = String(total);
-    $("pCorrect").textContent = String(correct);
+      if (accuracyEl) accuracyEl.textContent = fmtPct(accuracy);
+      if (totalEl) totalEl.textContent = String(total);
+      if (correctEl) correctEl.textContent = String(correct);
+      if (wrongEl) wrongEl.textContent = String(wrong);
 
-    // streak (overall)
-    const streak = await window.dbService.getStudyStreak(userId);
-    $("pStreak").textContent = streak ? `${streak} days` : "0";
+      // Progress KPIs
+      const pAccuracy = $("pAccuracy");
+      const pAnswered = $("pAnswered");
+      const pCorrect = $("pCorrect");
 
-    // Weight bars
-    const weightBars = $("weightBars");
-    if (weightBars) {
-      const weights = Object.entries(stats.byWeight || {})
-        .map(([w, obj]) => {
-          const totalW = obj.total || 0;
-          const correctW = obj.correct || 0;
-          const pct = totalW ? Math.round((correctW / totalW) * 100) : 0;
-          return { weight: Number(w), total: totalW, pct };
-        })
-        .sort((a, b) => a.weight - b.weight);
+      if (pAccuracy) pAccuracy.textContent = fmtPct(accuracy);
+      if (pAnswered) pAnswered.textContent = String(total);
+      if (pCorrect) pCorrect.textContent = String(correct);
 
-      weightBars.innerHTML = weights
-        .map(
-          (w) => `
-          <div class="weight-bar">
-            <div class="weight-bar__label">Weight ${w.weight} (${w.total})</div>
-            <div class="weight-bar__track">
-              <div class="weight-bar__fill" style="width:${w.pct}%"></div>
+      // Study streak
+      const streak = await window.dbService.getStudyStreak(userId);
+      const streakEl = $("pStreak");
+      if (streakEl) streakEl.textContent = streak ? `${streak} days` : "0";
+
+      // Weight bars
+      const weightBars = $("weightBars");
+      if (weightBars && stats.byWeight) {
+        const weights = Object.entries(stats.byWeight)
+          .map(([w, obj]) => {
+            const totalW = obj.total || 0;
+            const correctW = obj.correct || 0;
+            const pct = totalW ? Math.round((correctW / totalW) * 100) : 0;
+            return { weight: Number(w), total: totalW, pct };
+          })
+          .sort((a, b) => a.weight - b.weight);
+
+        weightBars.innerHTML = weights
+          .map(
+            (w) => `
+            <div class="weight-bar">
+              <div class="weight-bar__label">Weight ${w.weight} (${w.total})</div>
+              <div class="weight-bar__track">
+                <div class="weight-bar__fill" style="width:${w.pct}%"></div>
+              </div>
+              <div class="weight-bar__pct">${w.pct}%</div>
             </div>
-            <div class="weight-bar__pct">${w.pct}%</div>
-          </div>
-        `
-        )
-        .join("");
+          `
+          )
+          .join("");
+      }
+    } catch (error) {
+      console.error("Failed to load user stats:", error);
     }
   }
 
-  // ----------------------------
-  // Logout
-  // ----------------------------
-  async function bindLogout() {
-    const btn = $("logoutBtn");
-    if (!btn) return;
+  /**
+   * Start real-time listener for answer history
+   */
+  async function startAnswerHistoryListener(userId) {
+    if (!window.dbService || !window.dbService.listenToAnswerHistory) {
+      console.warn("Answer history listener not available");
+      return;
+    }
 
-    btn.addEventListener("click", async () => {
-      try {
-        const auth = await window.__authReady;
-        if (auth) await signOut(auth);
-      } catch (e) {
-        console.warn("signOut failed:", e);
+    const tableBody = $("answerHistoryTableBody");
+    if (!tableBody) return;
+
+    window.dbService.listenToAnswerHistory(userId, (answers) => {
+      if (!answers || answers.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center text-gray-500 py-4">No practice history yet</td>
+          </tr>
+        `;
+        return;
       }
 
-      // Optional: keep if you still use these elsewhere
-      try {
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-      } catch {}
+      tableBody.innerHTML = answers
+        .map((ans) => {
+          const isCorrect = ans.isCorrect;
+          const badge = isCorrect
+            ? '<span class="pill pill-green">✓ Correct</span>'
+            : '<span class="pill pill-red">✗ Wrong</span>';
+          
+          return `
+            <tr>
+              <td>${fmtDate(ans.timestamp)}</td>
+              <td><span class="capitalize">${ans.category || "—"}</span></td>
+              <td>Weight ${ans.weight || "—"}</td>
+              <td>${badge}</td>
+              <td>${ans.timeTaken ? `${ans.timeTaken}s` : "—"}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    });
+  }
 
+  /**
+   * Bind logout button
+   */
+  async function bindLogout() {
+    const logoutBtn = $("logoutBtn");
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        if (window.AuthService) {
+          await window.AuthService.signOutUser();
+        }
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+
+      // Redirect to login
       window.location.href = "/login.html";
     });
   }
@@ -272,21 +254,25 @@ import {
 
     const user = await waitForAuthUser();
 
-    // If not logged in -> go to login
-    // Note: email verification is handled by login/register pages
+    // Require authentication
     if (!user) {
       window.location.href = "/login.html";
       return;
     }
 
-    // User doc (optional)
+    console.log("✅ User authenticated:", user.email);
+
+    // Load user document from Firestore (if available)
     let userDoc = null;
     try {
-      userDoc = await window.dbService.getUser(user.uid);
-    } catch (e) {
-      console.warn("getUser failed:", e);
+      if (window.dbService && window.dbService.getUser) {
+        userDoc = await window.dbService.getUser(user.uid);
+      }
+    } catch (error) {
+      console.warn("Failed to load user document:", error);
     }
 
+    // Set user info in UI
     setAvatarAndName(
       userDoc?.displayName || user.displayName || "User",
       userDoc?.email || user.email || "—"
@@ -300,7 +286,7 @@ import {
       pill.classList.toggle("pill-green", plan !== "free");
     }
 
-    // Load stats + realtime answer history
+    // Load stats and start listeners
     await loadOverviewAndProgress(user.uid);
     await startAnswerHistoryListener(user.uid);
   });

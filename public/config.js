@@ -1,61 +1,27 @@
 // ===============================
-// Firebase Initialization + Auth
+// Firebase Initialization
+// Clean authentication using auth-service.js
+// No localStorage usage
 // ===============================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signInWithRedirect,
-  onAuthStateChanged,
-  sendEmailVerification,
-  signOut,
-  applyActionCode,
-  checkActionCode,
-  verifyPasswordResetCode,
+import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getRemoteConfig, fetchAndActivate } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  applyActionCode, 
+  checkActionCode, 
+  verifyPasswordResetCode, 
   confirmPasswordReset,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getAnalytics,
-  isSupported,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-import {
-  getStorage,
-  ref,
-  getDownloadURL,
-  getBytes,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
-import {
-  getRemoteConfig,
-  fetchAndActivate,
-  getString,
-  getNumber,
-  getBoolean,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-  Timestamp,
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// Import our clean auth service
+import * as AuthService from "./auth-service.js";
 
 // ===============================
-// Firebase Config - Hardcoded
+// Firebase Config
 // ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyAAQrh2cqH7mgjMOQ5SkoGR3V6nKdYRPm8",
@@ -67,96 +33,78 @@ const firebaseConfig = {
   measurementId: "G-K63ZE5JTL9"
 };
 
+// ===============================
+// Initialize Firebase Services
+// ===============================
+const app = initializeApp(firebaseConfig);
+let analytics = null;
+let storage = null;
+let remoteConfig = null;
+let firestore = null;
 
-function getUrlParams() {
-  try {
-    return new URLSearchParams(location.search);
-  } catch {
-    return new Map();
+// Initialize Analytics (if supported)
+(async () => {
+  const supported = await isSupported();
+  if (supported) {
+    analytics = getAnalytics(app);
+    console.log("✅ Analytics initialized");
   }
-}
+})();
 
-// Expose a promise so other code can await auth readiness
-let resolveAuthReady;
-window.__authReady = new Promise((res) => (resolveAuthReady = res));
+// Initialize Storage
+storage = getStorage(app);
+console.log("✅ Storage initialized");
 
-// Remote Config readiness
-let resolveRemoteConfigReady;
-window.__remoteConfigReady = new Promise((res) => (resolveRemoteConfigReady = res));
-window.__remoteConfig = null;
+// Initialize Firestore
+firestore = getFirestore(app);
+console.log("✅ Fire store initialized");
 
-// Storage readiness
-let resolveStorageReady;
-window.__storageReady = new Promise((res) => (resolveStorageReady = res));
+// Initialize Remote Config
+remoteConfig = getRemoteConfig(app);
+remoteConfig.settings = {
+  minimumFetchIntervalMillis: 3600000, // 1 hour
+  fetchTimeoutMillis: 60000, // 1 minute
+};
 
-// Firestore readiness
-let resolveFirestoreReady;
-window.__firestoreReady = new Promise((res) => (resolveFirestoreReady = res));
+fetchAndActivate(remoteConfig)
+  .then(() => console.log("✅ Remote Config activated"))
+  .catch((err) => console.warn("Remote Config fetch failed:", err));
 
-// ===============================
-// Shared helpers
-// ===============================
-function humanFirebaseError(err) {
-  const code = err?.code || "";
-  const map = {
-    "auth/email-already-in-use": "This email is already in use.",
-    "auth/invalid-email": "The email address is invalid.",
-    "auth/operation-not-allowed": "Email/password sign-up is disabled.",
-    "auth/weak-password": "Password is too weak.",
-    "auth/popup-closed-by-user": "Sign-in was canceled.",
-    "auth/popup-blocked": "Popup was blocked by the browser. Please allow popups for this site.",
-    "auth/unauthorized-domain":
-      "This domain isn’t authorized in Firebase Auth settings.",
-    "auth/invalid-credential": "Email or password is incorrect.",
-    "auth/wrong-password": "Wrong password.",
-    "auth/user-not-found": "No account found with this email.",
-    "auth/too-many-requests": "Too many attempts. Try again later.",
-    "auth/cancelled-popup-request": "Sign-in was canceled. Please try again.",
-    "auth/account-exists-with-different-credential": "An account already exists with this email using a different sign-in method.",
-    "auth/network-request-failed": "Network error. Please check your connection and try again.",
-    "auth/user-disabled": "This account has been disabled.",
-    "auth/invalid-api-key": "Invalid API key. Please contact support.",
-  };
-  return map[code] || err?.message || "Something went wrong.";
-}
-
-function shakeLoginForm() {
-  const card =
-    document.querySelector("#loginForm .bg-white") ||
-    document.querySelector("#register-form .bg-white") ||
-    document.getElementById("loginForm") ||
-    document.getElementById("register-form");
-
-  if (!card) return;
-  card.classList.remove("shake");
-  void card.offsetWidth;
-  card.classList.add("shake");
-}
+// Initialize Auth
+AuthService.initAuth(app).then(() => {
+  console.log("✅ Authentication initialized");
+  
+  // Update nav on auth state changes
+  AuthService.onAuthChange((user) => {
+    AuthService.updateAuthNav(user);
+  });
+});
 
 // ===============================
-// ✅ Nav auth UI (Sign In <-> Profile)
+// Global Exports
 // ===============================
-function updateAuthNavItem(user) {
-  // expects HTML:
-  // <li id="auth-item"><a id="auth-link" href="/login.html">Sign In</a></li>
-  const authItem = document.getElementById("auth-item");
-  const authLink = document.getElementById("auth-link");
-  if (!authItem || !authLink) return; // nav not present on this page
+window.firebaseApp = app;
+window.firebaseAuth = AuthService.getAuthInstance;
+window.firebaseStorage = storage;
+window.firebaseFirestore = firestore;
+window.firebaseRemoteConfig = remoteConfig;
+window.firebaseAnalytics = analytics;
 
-  // only verified users count as "logged in" for app access (your rule)
-  if (user && user.emailVerified) {
-    authLink.textContent = "Profile";
-    authLink.href = "/profile.html"; // change if needed
-  } else {
-    authLink.textContent = "Sign In";
-    authLink.href = "/login.html";
-  }
+// Export auth service methods globally for easy access
+window.AuthService = AuthService;
+
+// ===============================
+// UI Helper Functions
+// ===============================
+
+function shakeElement(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
 }
 
-// Note: Auth nav is now updated only by Firebase onAuthStateChanged
-// No localStorage needed for auth state
-
-// Field error helpers
 function showFieldError(inputEl, errId, msg) {
   if (!inputEl) return;
   inputEl.classList.remove("is-success");
@@ -168,6 +116,7 @@ function showFieldError(inputEl, errId, msg) {
     el.classList.remove("hidden");
   }
 }
+
 function clearFieldError(inputEl, errId) {
   if (!inputEl) return;
   inputEl.classList.remove("is-error");
@@ -179,271 +128,26 @@ function clearFieldError(inputEl, errId) {
     el.classList.add("hidden");
   }
 }
-function clearAllRegisterErrors() {
-  [
-    ["register-name", "err-name"],
-    ["register-email", "err-email"],
-    ["register-password", "err-password"],
-    ["register-password-confirm", "err-password-confirm"],
-  ].forEach(([inputId, errId]) => {
-    const inputEl = document.getElementById(inputId);
-    if (!inputEl) return;
-    inputEl.classList.remove("is-error", "is-success");
-    inputEl.setAttribute("aria-invalid", "false");
-    const errEl = document.getElementById(errId);
-    if (errEl) {
-      errEl.textContent = "";
-      errEl.classList.add("hidden");
-    }
-  });
-}
-function targetFieldForFirebaseCode(code) {
-  switch (code) {
-    case "auth/invalid-email":
-    case "auth/user-not-found":
-    case "auth/email-already-in-use":
-      return { inputId: "register-email", errId: "err-email" };
-    case "auth/weak-password":
-    case "auth/wrong-password":
-    case "auth/invalid-credential":
-      return { inputId: "register-password", errId: "err-password" };
-    default:
-      return { inputId: "register-email", errId: "err-email" };
-  }
-}
 
-// ===== Overlays =====
-function showWelcomeAndRedirect(name, email) {
-  const registerFormSection = document.getElementById("register-form");
-  const loginFormEl = document.getElementById("loginContainer");
-  const loginContent = loginFormEl
-    ? loginFormEl.closest(".login-content") || loginFormEl
-    : null;
-
-  const welcomeSection = document.getElementById("welcome-screen");
-  const verifyTitle = document.getElementById("verify-title");
-  const welcomeName = document.getElementById("welcome-name");
-  const welcomeEmail = document.getElementById("welcome-email");
-  const avatarInitial = document.getElementById("avatar-initial");
-
-  if (!welcomeSection) {
-    window.location.href = "/index.html";
-    return;
-  }
-
-  if (registerFormSection) registerFormSection.classList.add("blur-bg");
-  if (loginContent) loginContent.classList.add("blur-bg");
-  welcomeSection.classList.remove("hidden");
-
-  if (verifyTitle) verifyTitle.textContent = "Welcome!";
-  if (welcomeName) welcomeName.textContent = `Welcome back, ${name || "User"}!`;
-  if (welcomeEmail) welcomeEmail.textContent = email || "";
-  if (avatarInitial) avatarInitial.textContent = (name || "U")[0].toUpperCase();
-
-  setTimeout(() => {
-    window.location.href = "/index.html";
-  }, 1000);
-}
-
-function showVerifyOverlay({ email, name }) {
-  const registerFormSection = document.getElementById("register-form");
-  const loginFormEl = document.getElementById("loginForm");
-  const loginContent = loginFormEl
-    ? loginFormEl.closest(".login-content") || loginFormEl
-    : null;
-  if (registerFormSection) registerFormSection.classList.add("blur-bg");
-  if (loginContent) loginContent.classList.add("blur-bg");
-
-  const welcome = document.getElementById("welcome-screen");
-  if (!welcome) return;
-  welcome.classList.remove("hidden");
-
-  const verifyTitle = document.getElementById("verify-title");
-  const welcomeEmail = document.getElementById("welcome-email");
-  const welcomeName = document.getElementById("welcome-name");
-  const avatarInitial = document.getElementById("avatar-initial");
-
-  if (verifyTitle) verifyTitle.textContent = "Please verify your email 📩";
-  if (welcomeEmail)
-    welcomeEmail.textContent = `We sent a verification link to ${email}.`;
-  if (welcomeName) welcomeName.textContent = "Then log in to continue.";
-  if (avatarInitial) avatarInitial.textContent = "✉️";
-}
-
-// ---------- Password visibility toggles ----------
 function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
-  const btn = document.getElementById(buttonId);
+  const toggleBtn = document.getElementById(buttonId);
   const input = document.getElementById(inputId);
   const eyeOn = document.getElementById(eyeOnId);
   const eyeOff = document.getElementById(eyeOffId);
-  if (!btn || !input) return;
 
-  btn.setAttribute("aria-pressed", "false");
+  if (!toggleBtn || !input || !eyeOn || !eyeOff) return;
 
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const showing = input.type === "text";
-    input.type = showing ? "password" : "text";
-    if (eyeOn && eyeOff) {
-      eyeOn.classList.toggle("hidden", !showing);
-      eyeOff.classList.toggle("hidden", showing);
-    }
-    btn.setAttribute("aria-pressed", String(!showing));
-    btn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+  toggleBtn.addEventListener("click", () => {
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    eyeOn.classList.toggle("hidden", !isPassword);
+    eyeOff.classList.toggle("hidden", isPassword);
+    toggleBtn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
   });
 }
 
 // ===============================
-// Firebase Initialization (Simple)
-// ===============================
-(async () => {
-  try {
-    // Initialize Firebase with config from firebase-config.js
-    const app = initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized");
-
-    // Auth
-    const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
-    window.__auth = auth;
-    resolveAuthReady(auth);
-    console.log("✅ Auth ready");
-
-    // Storage
-    const storage = getStorage(app);
-    window.__storage = storage;
-    window.firebaseStorageExports = { ref, getDownloadURL, getBytes };
-    resolveStorageReady(storage);
-    console.log("✅ Storage ready");
-
-    // Firestore
-    const db = getFirestore(app);
-    window.__firestore = db;
-    window.firestoreExports = { 
-      collection, 
-      doc, 
-      setDoc, 
-      getDoc, 
-      getDocs, 
-      addDoc, 
-      query, 
-      where, 
-      orderBy, 
-      limit, 
-      serverTimestamp,
-      Timestamp 
-    };
-    resolveFirestoreReady(db);
-    console.log("✅ Firestore ready");
-
-    // Remote Config (optional, doesn't break if offline)
-    try {
-      const remoteConfig = getRemoteConfig(app);
-      remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour
-      remoteConfig.settings.cacheExpirationMillis = 3600000; // 1 hour
-      await fetchAndActivate(remoteConfig);
-      window.__remoteConfig = remoteConfig;
-      resolveRemoteConfigReady(remoteConfig);
-      console.log("✅ Remote Config ready");
-    } catch (err) {
-      console.warn("⚠️ Remote Config unavailable:", err.message);
-      resolveRemoteConfigReady(null);
-    }
-
-    // Analytics (optional)
-    try {
-      if (await isSupported()) {
-        getAnalytics(app);
-        console.log("📈 Analytics enabled");
-      }
-    } catch {
-      /* ignore */
-    }
-  } catch (err) {
-    console.error("❌ Firebase init failed:", err);
-    resolveAuthReady(null);
-    resolveStorageReady(null);
-    resolveFirestoreReady(null);
-  }
-})();
-
-// ===============================
-// Handle email verification link (?mode=verifyEmail)
-// ===============================
-(async () => {
-  const auth = await window.__authReady;
-  if (!auth) return;
-
-  const params = getUrlParams();
-  const mode = params.get("mode");
-  const oobCode = params.get("oobCode");
-
-  if (mode === "verifyEmail" && oobCode) {
-    try {
-      const info = await checkActionCode(auth, oobCode);
-      const email = info?.data?.email || "";
-
-      await applyActionCode(auth, oobCode);
-
-      if (email) localStorage.setItem("justVerifiedEmail", email);
-
-      if (auth.currentUser) {
-        try {
-          await auth.currentUser.reload();
-          if (auth.currentUser.emailVerified) {
-            const name = auth.currentUser.displayName || "User";
-            const mail = auth.currentUser.email || email || "";
-            showWelcomeAndRedirect(name, mail);
-            return;
-          }
-        } catch (e) {
-          console.warn("Reload after verification failed:", e);
-        }
-      }
-
-      window.location.replace("/login.html?verified=1");
-    } catch (err) {
-      console.warn("verifyEmail handling failed:", err);
-      window.location.replace("/login.html?verify_error=1");
-    }
-  }
-})();
-
-// ===============================
-// 🔥 Global auth listener for navbar (works on ANY page)
-// ===============================
-(async () => {
-  const auth = await window.__authReady;
-  if (!auth) return;
-
-  let savingUser = false; // Guard to prevent concurrent saves
-
-  onAuthStateChanged(auth, async (user) => {
-    // ✅ updates "Sign In" -> "Profile" wherever the nav exists
-    updateAuthNavItem(user);
-
-    // Keep localStorage consistent
-    // ✅ Only clear localStorage if there's NO user at all
-    // If user exists (even if not verified), keep them logged in
-    // The login/register pages handle verification separately
-    if (user) {
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-    } else {
-      // Only remove when user is null (truly logged out)
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-    }
-
-    // Optional: update nav again in case DOM loaded later
-    updateAuthNavFromLocalStorage();
-  });
-})();
-
-// ===============================
-// Registration Page Logic (register.html)
+// Registration Page Logic
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const nameInput = document.getElementById("register-name");
@@ -454,11 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const googleBtn = document.getElementById("register-btn-google");
 
   // Only run on register page
-  if (!startBtn && !googleBtn && !nameInput && !emailInput) return;
+  if (!startBtn && !googleBtn) return;
 
-  // Flag to prevent multiple simultaneous Google sign-in popups
-  let isGoogleSignInProgress = false;
+  console.log("📝 Register page detected");
 
+  // Wire password toggles
   wirePasswordToggle({
     buttonId: "register-toggle-password",
     inputId: "register-password",
@@ -472,665 +176,382 @@ document.addEventListener("DOMContentLoaded", () => {
     eyeOffId: "register-eye-off-2",
   });
 
+  // Email/Password Registration
   startBtn?.addEventListener("click", async () => {
-    const auth = await window.__authReady;
-    if (!auth) {
-      showFieldError(
-        emailInput,
-        "err-email",
-        "⚠️ Auth not ready. Check console for Firebase errors.",
-      );
-      return;
-    }
+    const name = nameInput?.value.trim() || "";
+    const email = emailInput?.value.trim() || "";
+    const password = passwordInput?.value || "";
+    const confirm = confirmInput?.value || "";
 
-    clearAllRegisterErrors();
+    // Clear previous errors
+    [nameInput, emailInput, passwordInput, confirmInput].forEach((input) => {
+      if (input) {
+        input.classList.remove("is-error", "is-success");
+        input.setAttribute("aria-invalid", "false");
+      }
+    });
+    ["err-name", "err-email", "err-password", "err-password-confirm"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = "";
+        el.classList.add("hidden");
+      }
+    });
 
-    const name = (nameInput?.value || "").trim();
-    const email = (emailInput?.value || "").trim();
-    const password = (passwordInput?.value || "").trim();
-    const confirm = (confirmInput?.value || "").trim();
-
-    let hasClientError = false;
+    // Validation
+    let hasError = false;
 
     if (!name) {
       showFieldError(nameInput, "err-name", "Name is required.");
-      hasClientError = true;
-    } else if (name.length > 30) {
-      showFieldError(
-        nameInput,
-        "err-name",
-        "Name must be 30 characters or less.",
-      );
-      shakeLoginForm();
-      hasClientError = true;
-    } else {
-      clearFieldError(nameInput, "err-name");
+      hasError = true;
     }
 
     if (!email) {
       showFieldError(emailInput, "err-email", "Email is required.");
-      hasClientError = true;
-    } else if (email.length > 30) {
-      showFieldError(
-        emailInput,
-        "err-email",
-        "Email must be 30 characters or less.",
-      );
-      shakeLoginForm();
-      hasClientError = true;
-    } else {
-      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!ok) {
-        showFieldError(
-          emailInput,
-          "err-email",
-          "Please enter a valid email address.",
-        );
-        hasClientError = true;
-      } else {
-        clearFieldError(emailInput, "err-email");
-      }
+      hasError = true;
     }
 
     if (!password) {
       showFieldError(passwordInput, "err-password", "Password is required.");
-      hasClientError = true;
+      hasError = true;
     } else if (password.length < 6) {
-      showFieldError(
-        passwordInput,
-        "err-password",
-        "Password must be at least 6 characters.",
-      );
-      hasClientError = true;
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      showFieldError(
-        passwordInput,
-        "err-password",
-        "Password must include at least one special character (!@#$...).",
-      );
-      hasClientError = true;
-    } else {
-      clearFieldError(passwordInput, "err-password");
+      showFieldError(passwordInput, "err-password", "Password must be at least 6 characters.");
+      hasError = true;
     }
 
-    if (!confirm) {
-      showFieldError(
-        confirmInput,
-        "err-password-confirm",
-        "Please confirm your password.",
-      );
-      hasClientError = true;
-    } else if (password && confirm && password !== confirm) {
-      showFieldError(
-        confirmInput,
-        "err-password-confirm",
-        "Passwords do not match.",
-      );
-      hasClientError = true;
-    } else if (!hasClientError) {
-      clearFieldError(confirmInput, "err-password-confirm");
+    if (password !== confirm) {
+      showFieldError(confirmInput, "err-password-confirm", "Passwords don't match.");
+      hasError = true;
     }
 
-    if (hasClientError) {
-      shakeLoginForm();
+    if (hasError) {
+      shakeElement("#register-form");
       return;
     }
 
+    // Register
     try {
-      const authNow = await window.__authReady;
-      const cred = await createUserWithEmailAndPassword(
-        authNow,
-        email,
-        password,
-      );
-      if (name) await updateProfile(cred.user, { displayName: name });
+      startBtn.disabled = true;
+      startBtn.textContent = "Creating account...";
 
-      const actionCodeSettings = {
-        url: `${location.origin}/login.html`,
-        handleCodeInApp: false,
-      };
-      try {
-        await sendEmailVerification(cred.user, actionCodeSettings);
-      } catch (e) {
-        console.warn("⚠️ Failed to send verification email:", e);
-      }
+      await AuthService.registerWithEmail(email, password, name);
 
-      await signOut(authNow);
+      // Show verification message
+      showVerificationMessage(email, name);
 
-      showVerifyOverlay({ email, name });
-
-      setTimeout(() => {
-        window.location.href = "/login.html";
-      }, 1000);
-      return;
-    } catch (err) {
-      console.error("Registration error:", err);
-      const msg = humanFirebaseError(err);
-      const { inputId, errId } = targetFieldForFirebaseCode(err?.code);
-      const inputEl = document.getElementById(inputId);
-      showFieldError(inputEl, errId, msg);
-      shakeLoginForm();
+    } catch (error) {
+      console.error("Registration error:", error);
+      const msg = AuthService.formatAuthError(error);
+      showFieldError(emailInput, "err-email", msg);
+      shakeElement("#register-form");
+    } finally {
+      startBtn.disabled = false;
+      startBtn.textContent = "Get Started";
     }
   });
 
-  // Google Sign-In (register page)
+  // Google Sign-in
   googleBtn?.addEventListener("click", async () => {
-    // Prevent multiple simultaneous popup requests
-    if (isGoogleSignInProgress) {
-      return;
-    }
-
-    isGoogleSignInProgress = true;
-
-    const auth = await window.__authReady;
-    if (!auth) {
-      showFieldError(
-        document.getElementById("register-email"),
-        "err-email",
-        "⚠️ Auth not ready. Check console for Firebase errors.",
-      );
-      shakeLoginForm();
-      isGoogleSignInProgress = false;
-      return;
-    }
-
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      googleBtn.disabled = true;
+      googleBtn.textContent = "Signing in...";
+
+      const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
-      if (!user.emailVerified) {
-        try {
-          await sendEmailVerification(user);
-        } catch {}
-        await signOut(auth);
+      // For Google sign-in, users are auto-verified
+      showWelcomeMessage(user.displayName || "User", user.email);
 
-        showVerifyOverlay({
-          email: user.email,
-          name: user.displayName || "User",
-        });
-        return;
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      
+      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
+        // User cancelled, just re-enable button
+      } else {
+        const msg = AuthService.formatAuthError(error);
+        showFieldError(emailInput, "err-email", msg);
+        shakeElement("#register-form");
       }
-
-      updateAuthNavItem(user);
-
-      showWelcomeAndRedirect(user.displayName || "User", user.email || "");
-    } catch (err) {
-      console.error("Google sign-in error:", err);
-      const msg = humanFirebaseError(err);
-      showFieldError(
-        document.getElementById("register-email"),
-        "err-email",
-        msg,
-      );
-      shakeLoginForm();
     } finally {
-      isGoogleSignInProgress = false;
+      googleBtn.disabled = false;
+      googleBtn.textContent = "Continue with Google";
     }
   });
 });
 
 // ===============================
-// Login Page Logic (login.html)
+// Login Page Logic
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-  const formEl = document.getElementById("loginForm");
-  if (!formEl) return;
+  const emailInput = document.getElementById("login-email");
+  const passwordInput = document.getElementById("login-password");
+  const loginBtn = document.getElementById("login-btn");
+  const googleLoginBtn = document.getElementById("login-btn-google");
 
-  const emailInput = document.getElementById("emailInput");
-  const passwordInp = document.getElementById("passwordInput");
-  const loginBtn = document.getElementById("loginSubmit");
-  const googleBtn = document.getElementById("googleBtn");
-  const forgotLink = document.getElementById("forgotLink");
+  // Only run on login page
+  if (!loginBtn && !googleLoginBtn) return;
 
-  // Flag to prevent multiple simultaneous Google sign-in popups
-  let isGoogleSignInProgress = false;
+  console.log("🔐 Login page detected");
 
-  // Prefill after verification + green success line
-  (() => {
-    const params = new URLSearchParams(location.search);
-    const wasVerified = params.get("verified") === "1";
-    const verifyErr = params.get("verify_error") === "1";
-    const stored = localStorage.getItem("justVerifiedEmail");
+  // Wire password toggle
+  wirePasswordToggle({
+    buttonId: "login-toggle-password",
+    inputId: "login-password",
+    eyeOnId: "login-eye-on",
+    eyeOffId: "login-eye-off",
+  });
 
-    if (wasVerified && stored) {
-      if (emailInput) emailInput.value = stored;
-      const emailErr = document.getElementById("err-login-email");
-      if (emailErr) {
-        emailErr.textContent = "✅ Email verified. You can log in now.";
-        emailErr.classList.remove("hidden");
-        emailErr.style.color = "#16a34a"; // green-600
+  // Email/Password Login
+  loginBtn?.addEventListener("click", async () => {
+    const email = emailInput?.value.trim() || "";
+    const password = passwordInput?.value || "";
+
+    // Clear previous errors
+    [emailInput, passwordInput].forEach((input) => {
+      if (input) {
+        input.classList.remove("is-error", "is-success");
+        input.setAttribute("aria-invalid", "false");
       }
-      passwordInp?.focus();
-      localStorage.removeItem("justVerifiedEmail");
-    }
-
-    if (verifyErr) {
-      const emailErr = document.getElementById("err-login-email");
-      if (emailErr) {
-        emailErr.textContent =
-          "⚠️ Verification link invalid or expired. Please request a new one.";
-        emailErr.classList.remove("hidden");
-      }
-    }
-  })();
-
-  const clearLoginErrors = () => {
-    clearFieldError(emailInput, "err-login-email");
-    clearFieldError(passwordInp, "err-login-password");
-    emailInput?.classList.remove("is-success");
-    passwordInp?.classList.remove("is-success");
-  };
-
-  const targetLoginFieldForCode = (code) => {
-    switch (code) {
-      case "auth/invalid-email":
-      case "auth/user-not-found":
-        return { el: emailInput, errId: "err-login-email" };
-      case "auth/wrong-password":
-      case "auth/invalid-credential":
-      case "auth/too-many-requests":
-        return { el: passwordInp, errId: "err-login-password" };
-      default:
-        return { el: emailInput, errId: "err-login-email" };
-    }
-  };
-
-  const setLoading = (el, loading) => {
-    if (!el) return;
-    el.disabled = !!loading;
-    el.style.opacity = loading ? "0.7" : "1";
-    el.style.pointerEvents = loading ? "none" : "auto";
-  };
-
-  // Listener (login scope)
-  (async () => {
-    const auth = await window.__authReady;
-    if (!auth) return;
-
-    const isLoginPage = /\/login\.html$/i.test(location.pathname);
-
-    onAuthStateChanged(auth, (user) => {
-      updateAuthNavItem(user);
-
-      if (!user) {
-        return;
-      }
-      if (isLoginPage) return;
-      if (!user.emailVerified) return;
-
-      const name = user.displayName || "User";
-      const email = user.email || "";
-
-      showWelcomeAndRedirect(name, email);
     });
-  })();
+    ["err-login-email", "err-login-password"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = "";
+        el.classList.add("hidden");
+      }
+    });
 
-  // Email/Password login
-  formEl.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearLoginErrors();
-
-    const auth = await window.__authReady;
-    if (!auth) {
-      showFieldError(
-        emailInput,
-        "err-login-email",
-        "⚠️ Auth not ready. Check console for errors.",
-      );
-      shakeLoginForm();
-      return;
-    }
-
-    const email = (emailInput?.value || "").trim();
-    const pass = (passwordInp?.value || "").trim();
-
+    // Validation
     let hasError = false;
+
     if (!email) {
       showFieldError(emailInput, "err-login-email", "Email is required.");
       hasError = true;
-      shakeLoginForm();
-    } else {
-      clearFieldError(emailInput, "err-login-email");
     }
 
-    if (!pass) {
-      showFieldError(
-        passwordInp,
-        "err-login-password",
-        "Password is required.",
-      );
+    if (!password) {
+      showFieldError(passwordInput, "err-login-password", "Password is required.");
       hasError = true;
-      shakeLoginForm();
-    } else {
-      clearFieldError(passwordInp, "err-login-password");
     }
 
-    if (hasError) return;
+    if (hasError) {
+      shakeElement("#loginForm");
+      return;
+    }
 
+    // Sign in
     try {
-      setLoading(loginBtn, true);
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      const user = cred.user;
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Signing in...";
 
+      const result = await AuthService.signInWithEmail(email, password);
+      const user = result.user;
+
+      // Check if email is verified
       if (!user.emailVerified) {
+        // Send new verification email
         try {
           await sendEmailVerification(user);
         } catch (e) {
           console.warn("Could not send verification email:", e);
         }
-        await signOut(auth);
-
+        
+        // Sign out unverified user
+        await AuthService.signOutUser();
+        
         showFieldError(
           emailInput,
           "err-login-email",
-          `📩 Your email isn’t verified. We just sent a new verification link to ${email}. Please verify, then log in.`,
+          `📩 Your email isn't verified. We just sent a new verification link to ${email}. Please verify, then log in.`
         );
-        shakeLoginForm();
-
-        updateAuthNavItem(null);
-
+        shakeElement("#loginForm");
         return;
       }
 
-      const name = user.displayName || "User";
-      const cleanEmail = user.email || email;
+      // Success
+      showWelcomeMessage(user.displayName || "User", user.email);
 
-      updateAuthNavItem(user);
-
-      showWelcomeAndRedirect(name, cleanEmail);
-    } catch (err) {
-      console.error("Login error:", err);
-      const msg = humanFirebaseError(err);
-      const { el, errId } = targetLoginFieldForCode(err?.code);
-      showFieldError(el, errId, msg);
-      shakeLoginForm();
+    } catch (error) {
+      console.error("Login error:", error);
+      const msg = AuthService.formatAuthError(error);
+      showFieldError(emailInput, "err-login-email", msg);
+      shakeElement("#loginForm");
     } finally {
-      setLoading(loginBtn, false);
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Sign In";
     }
   });
 
-  // Google login
-  googleBtn?.addEventListener("click", async () => {
-    // Prevent multiple simultaneous popup requests
-    if (isGoogleSignInProgress) {
-      return;
-    }
-
-    clearLoginErrors();
-    isGoogleSignInProgress = true;
-
-    const auth = await window.__authReady;
-    if (!auth) {
-      showFieldError(
-        emailInput,
-        "err-login-email",
-        "⚠️ Auth not ready. Check console for errors.",
-      );
-      shakeLoginForm();
-      isGoogleSignInProgress = false;
-      return;
-    }
-
+  // Google Login
+  googleLoginBtn?.addEventListener("click", async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      const inIframe = window.self !== window.top;
-      if (inIframe) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      const result = await signInWithPopup(auth, provider);
+      googleLoginBtn.disabled = true;
+      googleLoginBtn.textContent = "Signing in...";
+
+      const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
-      if (!user.emailVerified) {
-        try {
-          await sendEmailVerification(user);
-        } catch {}
-        await signOut(auth);
+      // Google users are typically pre-verified
+      showWelcomeMessage(user.displayName || "User", user.email);
 
-        showFieldError(
-          emailInput,
-          "err-login-email",
-          `📩 Your email isn’t verified. We sent a verification link to ${user.email}. Please verify, then log in.`,
-        );
-        shakeLoginForm();
-
-        updateAuthNavItem(null);
-
-        return;
+    } catch (error) {
+      console.error("Google login error:", error);
+      
+      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
+        // User cancelled
+      } else {
+        const msg = AuthService.formatAuthError(error);
+        showFieldError(emailInput, "err-login-email", msg);
+        shakeElement("#loginForm");
       }
-
-      updateAuthNavItem(user);
-
-      showWelcomeAndRedirect(user.displayName || "User", user.email || "");
-    } catch (err) {
-      console.error("Google sign-in error:", err);
-      const msg = humanFirebaseError(err);
-      showFieldError(emailInput, "err-login-email", msg);
-      shakeLoginForm();
     } finally {
-      isGoogleSignInProgress = false;
+      googleLoginBtn.disabled = false;
+      googleLoginBtn.textContent = "Sign in with Google";
     }
-  });
-
-  // Forgot password
-  forgotLink?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    clearLoginErrors();
-
-    const auth = await window.__authReady;
-    if (!auth) {
-      showFieldError(
-        emailInput,
-        "err-login-email",
-        "⚠️ Auth not ready. Check console for errors.",
-      );
-      shakeLoginForm();
-      return;
-    }
-
-    const email = (emailInput?.value || "").trim();
-    const errEl = document.getElementById("err-login-email");
-
-    if (!email) {
-      if (errEl) {
-        errEl.textContent = "Please enter your email to reset your password.";
-        errEl.classList.remove("hidden");
-        errEl.style.color = "#dc2626";
-      }
-      shakeLoginForm();
-      return;
-    } else {
-      if (errEl) {
-        errEl.textContent = "";
-        errEl.classList.add("hidden");
-      }
-    }
-
-    try {
-      await sendPasswordResetEmail(auth, email);
-      clearFieldError(emailInput, "err-login-email");
-      const el = document.getElementById("err-login-email");
-      if (el) {
-        el.textContent = "✅ Password reset email sent. Check your inbox.";
-        el.classList.remove("hidden");
-        el.style.color = "";
-      }
-    } catch (err) {
-      console.error("Reset error:", err);
-      const msg = humanFirebaseError(err);
-      showFieldError(emailInput, "err-login-email", msg);
-      shakeLoginForm();
-    }
-  });
-
-  wirePasswordToggle({
-    buttonId: "login-toggle-password",
-    inputId: "passwordInput",
-    eyeOnId: "login-eye-on",
-    eyeOffId: "login-eye-off",
   });
 });
 
-// =====================================================
-// Remote Config Helpers (Optional - for dynamic config)
-// =====================================================
-window.getRemoteConfigString = (key, defaultValue = "") => {
-  if (!window.__remoteConfig) return defaultValue;
-  try {
-    return getString(window.__remoteConfig, key) || defaultValue;
-  } catch (err) {
-    return defaultValue;
-  }
-};
+// ===============================
+// Password Reset Logic
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const resetForm = document.getElementById("resetForm");
+  const resetEmailInput = document.getElementById("reset-email");
+  const resetBtn = document.getElementById("reset-btn");
 
-window.getRemoteConfigNumber = (key, defaultValue = 0) => {
-  if (!window.__remoteConfig) return defaultValue;
-  try {
-    return getNumber(window.__remoteConfig, key) || defaultValue;
-  } catch (err) {
-    return defaultValue;
-  }
-};
+  if (!resetForm) return;
 
-window.getRemoteConfigBoolean = (key, defaultValue = false) => {
-  if (!window.__remoteConfig) return defaultValue;
-  try {
-    return getBoolean(window.__remoteConfig, key) || defaultValue;
-  } catch (err) {
-    return defaultValue;
-  }
-};
+  console.log("🔑 Password reset page detected");
 
-// Example: Get custom audio storage path from Remote Config
-// const audioPath = window.getRemoteConfigString('AUDIO_STORAGE_PATH', 'audio');
+  resetBtn?.addEventListener("click", async () => {
+    const email = resetEmailInput?.value.trim() || "";
 
-// =====================================================
-// Firebase Storage URL Helper (simple version)
-// =====================================================
-window.getFirebaseStorageUrl = async (path) => {
-  if (!path) return null;
-  
-  // If already absolute URL, return as-is
-  if (/^https?:\/\//i.test(path)) return path;
-  
-  try {
-    const storage = window.__storage;
-    if (!storage) return null;
-    
-    // Clean path and get download URL
-    const cleanPath = path.replace(/^\/+/, "");
-    const fileRef = ref(storage, cleanPath);
-    return await getDownloadURL(fileRef);
-  } catch (err) {
-    console.warn(`Storage URL failed for ${path}`);
-    return null;
-  }
-};
+    // Clear previous errors
+    const errEl = document.getElementById("err-reset-email");
+    if (errEl) {
+      errEl.textContent = "";
+      errEl.classList.add("hidden");
+    }
 
-// =====================================================
-// PASSWORD RESET FLOW (for passwordReset.html)
-// =====================================================
-const isResetPage =
-  new URLSearchParams(location.search).get("mode") === "resetPassword" ||
-  /passwordreset\.html$/i.test(location.pathname);
-
-if (isResetPage) {
-  (async () => {
-    const auth = await window.__authReady;
-    const oobCode = new URLSearchParams(location.search).get("oobCode");
-
-    if (!auth) {
-      alert("⚠️ Firebase Auth not initialized. Please reload the page.");
+    if (!email) {
+      if (errEl) {
+        errEl.textContent = "Email is required.";
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#resetForm");
       return;
     }
-    if (!oobCode) {
-      alert(
-        "❌ Invalid or missing reset link. Please use the link from your email.",
-      );
-      return;
-    }
+
     try {
-      await verifyPasswordResetCode(auth, oobCode);
-    } catch (err) {
-      console.error("verifyPasswordResetCode failed:", err);
-      alert(
-        "❌ This reset link is invalid or expired. Please request a new one.",
-      );
-      return;
+      resetBtn.disabled = true;
+      resetBtn.textContent = "Sending...";
+
+      await AuthService.resetPassword(email);
+
+      // Show success message
+      if (errEl) {
+        errEl.className = "text-green-600 text-sm mt-1";
+        errEl.textContent = `✅ Password reset email sent to ${email}. Check your inbox!`;
+        errEl.classList.remove("hidden");
+      }
+
+      setTimeout(() => {
+        window.location.href = "/login.html";
+      }, 2000);
+
+    } catch (error) {
+      console.error("Password reset error:", error);
+      const msg = AuthService.formatAuthError(error);
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#resetForm");
+    } finally {
+      resetBtn.disabled = false;
+      resetBtn.textContent = "Send Reset Link";
     }
+  });
+});
 
-    const resetPassword = document.getElementById("resetPassword");
-    resetPassword?.addEventListener("click", async (e) => {
-      e.preventDefault();
+// ===============================
+// UI Overlays / Messages
+// ===============================
 
-      const setError = (id, msg) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = msg || "";
-        if (msg) {
-          el.classList.remove("hidden");
-          el.style.color = "#dc2626";
-        } else {
-          el.classList.add("hidden");
-          el.style.color = "";
-        }
-      };
-      const shake = (sel = "#register-form") => {
-        const card = document.querySelector(sel);
-        if (!card) return;
-        card.classList.add("animate-[shake_.35s]");
-        setTimeout(() => card.classList.remove("animate-[shake_.35s]"), 400);
-      };
+function showWelcomeMessage(name, email) {
+  const welcomeSection = document.getElementById("welcome-screen");
+  
+  if (welcomeSection) {
+    const loginContainer = document.getElementById("loginContainer");
+    const registerForm = document.getElementById("register-form");
+    
+    if (loginContainer) loginContainer.classList.add("blur-bg");
+    if (registerForm) registerForm.classList.add("blur-bg");
+    
+    welcomeSection.classList.remove("hidden");
+    
+    const title = document.getElementById("verify-title");
+    const nameEl = document.getElementById("welcome-name");
+    const emailEl = document.getElementById("welcome-email");
+    const avatarEl = document.getElementById("avatar-initial");
+    
+    if (title) title.textContent = "Welcome!";
+    if (nameEl) nameEl.textContent = `Welcome back, ${name}!`;
+    if (emailEl) emailEl.textContent = email;
+    if (avatarEl) avatarEl.textContent = (name[0] || "U").toUpperCase();
+  }
 
-      const pwInput = document.getElementById("register-password");
-      const pw2Input = document.getElementById("register-password-confirm");
-      const pw = (pwInput?.value || "").trim();
-      const pw2 = (pw2Input?.value || "").trim();
-
-      setError("err-password", "");
-      setError("err-password-confirm", "");
-
-      if (pw !== pw2) {
-        setError("err-password-confirm", "Passwords do not match.");
-        shake();
-        return;
-      }
-
-      const hasSpecial = /[^A-Za-z0-9]/.test(pw);
-      if (pw.length < 8 || !hasSpecial) {
-        setError(
-          "err-password",
-          "Password must be at least 8 characters and include a special character.",
-        );
-        shake();
-        return;
-      }
-
-      try {
-        await confirmPasswordReset(auth, oobCode, pw);
-        alert("✅ Password changed successfully! Redirecting to login...");
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 1000);
-      } catch (err) {
-        const code = err?.code || "";
-        let msg =
-          err?.message ||
-          "Something went wrong while changing your password. Please try again.";
-
-        if (code.includes("weak-password")) {
-          msg =
-            "This password does not meet your Firebase policy. Please choose a stronger password.";
-        } else if (code.includes("expired-action-code")) {
-          msg = "This reset link has expired. Please request a new one.";
-        } else if (code.includes("invalid-action-code")) {
-          msg = "This reset link is invalid or already used.";
-        }
-
-        setError("err-password", msg);
-        shake();
-      }
-    });
-  })();
+  setTimeout(() => {
+    window.location.href = "/index.html";
+  }, 1500);
 }
+
+function showVerificationMessage(email, name) {
+  const welcomeSection = document.getElementById("welcome-screen");
+  
+  if (welcomeSection) {
+    const registerForm = document.getElementById("register-form");
+    if (registerForm) registerForm.classList.add("blur-bg");
+    
+    welcomeSection.classList.remove("hidden");
+    
+    const title = document.getElementById("verify-title");
+    const nameEl = document.getElementById("welcome-name");
+    const emailEl = document.getElementById("welcome-email");
+    const avatarEl = document.getElementById("avatar-initial");
+    
+    if (title) title.textContent = "Verify Your Email";
+    if (nameEl) nameEl.textContent = `Check your inbox, ${name}!`;
+    if (emailEl) emailEl.textContent = `We sent a verification link to ${email}`;
+    if (avatarEl) avatarEl.textContent = (name[0] || "U").toUpperCase();
+  } else {
+    alert(`✅ Account created! Please check ${email} for a verification link.`);
+    setTimeout(() => {
+      window.location.href = "/login.html";
+    }, 500);
+  }
+}
+
+// Handle email verification from link
+(async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const mode = urlParams.get("mode");
+  const code = urlParams.get("oobCode");
+
+  if (mode === "verifyEmail" && code) {
+    try {
+      const auth = AuthService.getAuthInstance();
+      if (auth) {
+        await applyActionCode(auth, code);
+        await auth.currentUser?.reload();
+        console.log("✅ Email verified successfully");
+      }
+      window.location.replace("/login.html?verified=1");
+    } catch (error) {
+      console.error("Email verification error:", error);
+      window.location.replace("/login.html?verify_error=1");
+    }
+  }
+})();
+
+console.log("✅ Config loaded - Firebase initialized with clean auth service");
