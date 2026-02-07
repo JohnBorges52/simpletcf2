@@ -249,13 +249,19 @@ import { signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth
   // Init
   // ----------------------------
   document.addEventListener("DOMContentLoaded", async () => {
+    console.log("🔍 Profile page loading...");
+    console.log("AuthService available:", !!window.AuthService);
+    
     setupTabs();
     await bindLogout();
 
+    console.log("⏳ Waiting for auth user...");
     const user = await waitForAuthUser();
+    console.log("Auth user result:", user);
 
     // Require authentication
     if (!user) {
+      console.log("❌ No user found, redirecting to login");
       window.location.href = "/login.html";
       return;
     }

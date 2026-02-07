@@ -23,9 +23,10 @@ import {
 // ===============================
 
 let authInstance = null;
-let currentUser = null;
+let currentUser = undefined; // Start as undefined until first auth state callback
 const authStateCallbacks = new Set();
 let authInitPromise = null;
+let hasReceivedInitialState = false;
 
 /**
  * Initialize authentication
@@ -50,6 +51,10 @@ export async function initAuth(app) {
     // Listen to auth state changes
     onAuthStateChanged(authInstance, (user) => {
       currentUser = user;
+      hasReceivedInitialState = true;
+      
+      console.log("🔐 Auth state changed:", user ? `Logged in as ${user.email}` : "Logged out");
+      
       // Notify all subscribers
       authStateCallbacks.forEach(callback => {
         try {
@@ -90,8 +95,8 @@ export function getCurrentUser() {
 export function onAuthChange(callback) {
   authStateCallbacks.add(callback);
   
-  // Immediately call with current state
-  if (currentUser !== undefined) {
+  // Immediately call with current state if we've received it
+  if (hasReceivedInitialState) {
     callback(currentUser);
   }
   
@@ -103,12 +108,17 @@ export function onAuthChange(callback) {
  * @returns {Promise<Object|null>} Current user or null
  */
 export function waitForAuth() {
-  if (currentUser !== undefined) {
+  // Only return immediately if we've received the initial auth state
+  if (hasReceivedInitialState) {
+    console.log("🔐 Auth already initialized, current user:", currentUser?.email || "none");
     return Promise.resolve(currentUser);
   }
   
+  console.log("⏳ Waiting for initial auth state...");
+  // Wait for the first auth state callback
   return new Promise((resolve) => {
     const unsubscribe = onAuthChange((user) => {
+      console.log("🔐 Auth state received:", user?.email || "none");
       unsubscribe();
       resolve(user);
     });
