@@ -616,6 +616,54 @@ async function getTestResults(userId, options = {}) {
   }
 }
 
+/**
+ * Listen to real-time updates for answer history
+ * @param {string} userId - Firebase Auth user ID
+ * @param {Function} callback - Called with array of answers when data changes
+ * @param {number} limitCount - Number of responses to retrieve
+ * @returns {Function} Unsubscribe function
+ */
+function listenToAnswerHistory(userId, callback, limitCount = 50) {
+  getFirestore().then(db => {
+    const { collection, query, where, orderBy, limit: limitFn, onSnapshot } = window.firestoreExports;
+    
+    const responsesRef = collection(db, "questionResponses");
+    const q = query(
+      responsesRef,
+      where("userId", "==", userId),
+      orderBy("answeredAt", "desc"),
+      limitFn(limitCount)
+    );
+    
+    const unsubscribe = onSnapshot(q, 
+      (querySnapshot) => {
+        const answers = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          answers.push({
+            id: doc.id,
+            category: data.questionType || "—",
+            weight: data.weight || "—",
+            isCorrect: data.isCorrect || false,
+            timestamp: data.answeredAt,
+            timeTaken: data.timeSpent || null
+          });
+        });
+        callback(answers);
+      },
+      (error) => {
+        console.error("Error listening to answer history:", error);
+        callback([]);
+      }
+    );
+    
+    return unsubscribe;
+  }).catch(error => {
+    console.error("Failed to set up answer history listener:", error);
+    callback([]);
+  });
+}
+
 // ===============================
 // Export functions
 // ===============================
@@ -630,6 +678,7 @@ window.dbService = {
   getStudyStreak,
   saveTestResult,
   getTestResults,
+  listenToAnswerHistory,
 };
 
 console.log("✅ Database service loaded");

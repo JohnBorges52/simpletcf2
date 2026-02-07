@@ -118,7 +118,7 @@ function fmtPct(n) {
     }
 
     try {
-      const stats = await window.dbService.getUserStats(userId);
+      const stats = await window.dbService.getUserStatistics(userId);
       const total = stats.totalAnswers || 0;
       const correct = stats.correctAnswers || 0;
       const wrong = total - correct;

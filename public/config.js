@@ -8,7 +8,22 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 import { getRemoteConfig, fetchAndActivate } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { 
   applyActionCode, 
   checkActionCode, 
@@ -34,6 +49,12 @@ const firebaseConfig = {
 };
 
 // ===============================
+// Promises for Service Readiness
+// ===============================
+let resolveFirestoreReady;
+window.__firestoreReady = new Promise((res) => (resolveFirestoreReady = res));
+
+// ===============================
 // Initialize Firebase Services
 // ===============================
 const app = initializeApp(firebaseConfig);
@@ -57,7 +78,24 @@ console.log("✅ Storage initialized");
 
 // Initialize Firestore
 firestore = getFirestore(app);
-console.log("✅ Fire store initialized");
+window.__firestore = firestore;
+window.firestoreExports = { 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  serverTimestamp,
+  Timestamp,
+  onSnapshot
+};
+resolveFirestoreReady(firestore);
+console.log("✅ Firestore initialized");
 
 // Initialize Remote Config
 remoteConfig = getRemoteConfig(app);
