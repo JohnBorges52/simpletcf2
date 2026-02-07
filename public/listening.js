@@ -1298,7 +1298,7 @@ import {
     }
   }
 
-  function renderResults() {
+  async function renderResults() {
     RT.container()?.classList.add(CLS.hidden);
     els.quiz()?.classList.add(CLS.hidden);
     RT.results()?.classList.remove(CLS.hidden);
