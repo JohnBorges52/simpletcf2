@@ -175,8 +175,9 @@ function fmtPct(n) {
       const streakEl = $("pStreak");
       if (streakEl) streakEl.textContent = streak ? `${streak} days` : "0";
 
-      // Render weight bars with improved design
-      renderWeightBars(stats.byWeight || {});
+      // Get ALL weight data (not filtered by category) to show complete weight breakdown
+      const allStats = await window.dbService.getUserStatistics(userId);
+      renderWeightBars(allStats.byWeight || {});
       
     } catch (error) {
       console.error("Failed to load progress stats:", error);
