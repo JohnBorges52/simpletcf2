@@ -44,7 +44,8 @@ export async function isUserAuthenticated() {
     const user = auth.currentUser;
     // Only consider users with verified emails as authenticated
     return user !== null && user.emailVerified === true;
-  } catch {
+  } catch (error) {
+    console.error("Error checking user authentication:", error);
     return false;
   }
 }
