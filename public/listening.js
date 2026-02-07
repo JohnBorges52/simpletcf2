@@ -1236,6 +1236,47 @@ import {
     return "C2";
   }
 
+  /**
+   * Save test result to Firestore database
+   */
+  async function saveTestResultToDatabase(correctAnswers, weightedScore, clb) {
+    if (!window.dbService || !window.dbService.saveTestResult) {
+      console.warn("⚠️ Database service not available, cannot save test result");
+      return;
+    }
+
+    try {
+      // Calculate detailed results per question
+      const detailedResults = state.realTestPool.map((q, index) => {
+        const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
+        const isCorrect = q.userAnswerIndex === correctIndex;
+        return {
+          questionNumber: index + 1,
+          questionId: q.id || `q${index + 1}`,
+          weight: q.weight_points || 0,
+          userAnswer: q.userAnswerIndex,
+          correctAnswer: correctIndex,
+          isCorrect: isCorrect,
+        };
+      });
+
+      const testData = {
+        testType: "listening",
+        testId: `listening_${Date.now()}`,
+        correctAnswers: correctAnswers,
+        totalQuestions: 39,
+        clbScore: clb,
+        detailedResults: detailedResults,
+        timeSpent: null, // Can be added if you track time
+      };
+
+      const docId = await window.dbService.saveTestResult(testData);
+      console.log("✅ Listening test result saved:", docId);
+    } catch (error) {
+      console.error("❌ Failed to save test result:", error);
+    }
+  }
+
   function renderResults() {
     RT.container()?.classList.add(CLS.hidden);
     els.quiz()?.classList.add(CLS.hidden);
@@ -1248,6 +1289,9 @@ import {
     const clbObj = clbForScore(weightedScore);
     const clb = clbObj.clb;
     const band = cefrForCLB(clb);
+
+    // 💾 Save test result to database
+    saveTestResultToDatabase(totalCorrect, weightedScore, clb);
 
     const pctValue = Number(pct) || 0;
 

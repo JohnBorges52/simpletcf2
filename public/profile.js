@@ -452,6 +452,122 @@ function fmtPct(n) {
   }
 
   /**
+   * Load real test results for a specific test type
+   */
+  async function loadRealTests(userId, testType = "listening") {
+    console.log(`🧪 Loading real tests for ${testType}`);
+    if (!window.dbService) {
+      console.warn("dbService not available");
+      return;
+    }
+
+    try {
+      const stats = await window.dbService.getTestResults(userId, { testType });
+      console.log("🧪 Test results loaded:", stats);
+
+      // Update KPIs
+      const rtTotal = $("rtTotal");
+      const rtBest = $("rtBest");
+      const rtAvg = $("rtAvg");
+      const rtLast = $("rtLast");
+      const rtCountPill = $("rtCountPill");
+
+      if (rtTotal) rtTotal.textContent = String(stats.totalTests || 0);
+      if (rtBest) rtBest.textContent = stats.bestScore ? `${stats.bestScore}%` : "—";
+      if (rtAvg) rtAvg.textContent = stats.averageScore ? `${stats.averageScore}%` : "—";
+      if (rtLast) {
+        if (stats.lastTest) {
+          rtLast.textContent = fmtDate(stats.lastTest);
+        } else {
+          rtLast.textContent = "—";
+        }
+      }
+      if (rtCountPill) rtCountPill.textContent = `Showing ${stats.totalTests || 0}`;
+
+      // Render test results table
+      renderRealTestsTable(stats.results || []);
+
+    } catch (error) {
+      console.error("Failed to load real tests:", error);
+    }
+  }
+
+  /**
+   * Render real tests table
+   */
+  function renderRealTestsTable(results) {
+    const table = $("realTestTableAll");
+    if (!table) return;
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
+
+    if (results.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 24px; color: #94a3b8;">
+            No real tests completed yet. Take a test to see your results here!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = results
+      .map((test, index) => {
+        const testNum = results.length - index;
+        const percentage = test.totalQuestions > 0 
+          ? Math.round((test.correctAnswers / test.totalQuestions) * 100) 
+          : 0;
+        const clbBadge = test.clbScore 
+          ? `<span class="pill pill-green">CLB ${test.clbScore}</span>` 
+          : "—";
+
+        return `
+          <tr>
+            <td>${test.testType === 'listening' ? '🎧' : '📖'} Test ${testNum}</td>
+            <td>${fmtDate(test.completedAt)}</td>
+            <td>${test.correctAnswers || 0}/${test.totalQuestions || 0} (${percentage}%)</td>
+            <td>${clbBadge}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  /**
+   * Setup real tests category toggle
+   */
+  function setupRealTestsToggle(userId) {
+    let currentTestType = "listening";
+
+    const btnRtListening = $("btnRtListening");
+    const btnRtReading = $("btnRtReading");
+
+    const switchTestType = async (testType) => {
+      currentTestType = testType;
+      
+      // Update button states
+      if (btnRtListening) btnRtListening.setAttribute("aria-pressed", testType === "listening" ? "true" : "false");
+      if (btnRtReading) btnRtReading.setAttribute("aria-pressed", testType === "reading" ? "true" : "false");
+      
+      // Reload test results
+      await loadRealTests(userId, testType);
+    };
+
+    // Bind category buttons
+    if (btnRtListening) {
+      btnRtListening.addEventListener("click", () => switchTestType("listening"));
+    }
+    if (btnRtReading) {
+      btnRtReading.addEventListener("click", () => switchTestType("reading"));
+    }
+
+    // Initial load
+    loadRealTests(userId, currentTestType);
+  }
+
+  /**
    * Bind logout button
    */
   async function bindLogout() {
@@ -524,4 +640,7 @@ function fmtPct(n) {
     
     // Setup category toggle and load initial progress (listening by default)
     setupCategoryToggle(user.uid);
+
+    // Setup real tests toggle and load initial data
+    setupRealTestsToggle(user.uid);
   });
