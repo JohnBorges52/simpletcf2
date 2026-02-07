@@ -33,12 +33,21 @@ export async function getCurrentUserId() {
 }
 
 /**
- * Check if user is authenticated
+ * Check if user is authenticated and has verified email
  * @returns {Promise<boolean>}
  */
 export async function isUserAuthenticated() {
-  const userId = await getCurrentUserId();
-  return userId !== null;
+  try {
+    // Wait for auth to be ready before checking current user
+    const auth = await window.__authReady;
+    if (!auth) return false;
+    const user = auth.currentUser;
+    // Only consider users with verified emails as authenticated
+    return user !== null && user.emailVerified === true;
+  } catch (error) {
+    console.error("Error checking user authentication:", error);
+    return false;
+  }
 }
 
 // ============================================================================
