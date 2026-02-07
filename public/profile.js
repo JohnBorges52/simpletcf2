@@ -109,10 +109,10 @@ function fmtPct(n) {
   }
 
   /**
-   * Load user statistics from Firestore
+   * Load user statistics from Firestore (for Overview - all categories combined)
    */
-  async function loadOverviewAndProgress(userId) {
-    console.log("📊 Loading statistics for user:", userId);
+  async function loadOverview(userId) {
+    console.log("📊 Loading overview statistics for user:", userId);
     if (!window.dbService) {
       console.warn("dbService not available");
       return;
@@ -128,16 +128,38 @@ function fmtPct(n) {
 
       console.log(`Stats: Total=${total}, Correct=${correct}, Wrong=${wrong}, Accuracy=${accuracy.toFixed(2)}%`);
 
-      // Overview KPIs
+      // Overview KPIs (combined listening + reading)
       const accuracyEl = $("kpiAccuracy");
-      const totalEl = $("kpiTotal");
+      const answeredEl = $("kpiAnswered");
       const correctEl = $("kpiCorrect");
       const wrongEl = $("kpiWrong");
 
       if (accuracyEl) accuracyEl.textContent = fmtPct(accuracy);
-      if (totalEl) totalEl.textContent = String(total);
+      if (answeredEl) answeredEl.textContent = String(total);
       if (correctEl) correctEl.textContent = String(correct);
       if (wrongEl) wrongEl.textContent = String(wrong);
+
+    } catch (error) {
+      console.error("Failed to load overview stats:", error);
+    }
+  }
+
+  /**
+   * Load progress statistics for a specific category
+   */
+  async function loadProgress(userId, category = "listening") {
+    console.log(`📊 Loading progress for ${category}`);
+    if (!window.dbService) {
+      console.warn("dbService not available");
+      return;
+    }
+
+    try {
+      // Get category-specific stats
+      const stats = await window.dbService.getUserStatistics(userId, { questionType: category });
+      const total = stats.totalResponses || 0;
+      const correct = stats.correctResponses || 0;
+      const accuracy = total > 0 ? (correct / total) * 100 : 0;
 
       // Progress KPIs
       const pAccuracy = $("pAccuracy");
@@ -149,85 +171,234 @@ function fmtPct(n) {
       if (pCorrect) pCorrect.textContent = String(correct);
 
       // Study streak
-      const streak = await window.dbService.getStudyStreak(userId);
+      const streak = await window.dbService.getStudyStreak(userId, { questionType: category });
       const streakEl = $("pStreak");
       if (streakEl) streakEl.textContent = streak ? `${streak} days` : "0";
 
-      // Weight bars
-      const weightBars = $("weightBars");
-      if (weightBars && stats.byWeight) {
-        const weights = Object.entries(stats.byWeight)
-          .map(([w, obj]) => {
-            const totalW = obj.total || 0;
-            const correctW = obj.correct || 0;
-            const pct = totalW ? Math.round((correctW / totalW) * 100) : 0;
-            return { weight: Number(w), total: totalW, pct };
-          })
-          .sort((a, b) => a.weight - b.weight);
-
-        weightBars.innerHTML = weights
-          .map(
-            (w) => `
-            <div class="weight-bar">
-              <div class="weight-bar__label">Weight ${w.weight} (${w.total})</div>
-              <div class="weight-bar__track">
-                <div class="weight-bar__fill" style="width:${w.pct}%"></div>
-              </div>
-              <div class="weight-bar__pct">${w.pct}%</div>
-            </div>
-          `
-          )
-          .join("");
-      }
+      // Render weight bars with improved design
+      renderWeightBars(stats.byWeight || {});
+      
     } catch (error) {
-      console.error("Failed to load user stats:", error);
+      console.error("Failed to load progress stats:", error);
     }
   }
 
   /**
-   * Start real-time listener for answer history
+   * Render weight bars with improved visualization
    */
-  async function startAnswerHistoryListener(userId) {
-    console.log("🎧 Starting answer history listener for user:", userId);
-    if (!window.dbService || !window.dbService.listenToAnswerHistory) {
-      console.warn("Answer history listener not available");
+  function renderWeightBars(byWeight) {
+    const weightBars = $("weightBars");
+    if (!weightBars) return;
+
+    const weights = Object.entries(byWeight)
+      .map(([w, obj]) => {
+        const totalW = obj.total || 0;
+        const correctW = obj.correct || 0;
+        const pct = totalW ? Math.round((correctW / totalW) * 100) : 0;
+        return { weight: Number(w), total: totalW, correct: correctW, pct };
+      })
+      .sort((a, b) => a.weight - b.weight);
+
+    if (weights.length === 0) {
+      weightBars.innerHTML = '<div class="progress-note muted">No data yet. Start practicing!</div>';
       return;
     }
 
-    const tableBody = $("answerHistoryTableBody");
-    if (!tableBody) return;
+    weightBars.innerHTML = weights
+      .map(w => `
+        <div class="weight-row">
+          <div class="weight-label">Weight ${w.weight}</div>
+          <div class="weight-track">
+            <div class="weight-fill" style="width: ${w.pct}%"></div>
+          </div>
+          <div class="weight-val">${w.pct}%</div>
+        </div>
+      `)
+      .join("");
+  }
 
-    window.dbService.listenToAnswerHistory(userId, (answers) => {
-      console.log("📝 Answer history update received:", answers.length, "answers");
-      if (!answers || answers.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5" class="text-center text-gray-500 py-4">No practice history yet</td>
-          </tr>
-        `;
+  /**
+   * Render accuracy over time chart
+   */
+  async function renderAccuracyChart(userId, category, mode = "weekly") {
+    console.log(`📈 Rendering ${mode} chart for ${category}`);
+    
+    const canvas = $("progressLineChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    try {
+      let data;
+      if (mode === "daily") {
+        data = await window.dbService.getDailyStats(userId, { questionType: category, days: 30 });
+      } else {
+        data = await window.dbService.getWeeklyStats(userId, { questionType: category, weeks: 12 });
+      }
+
+      console.log(`Chart data (${mode}):`, data);
+
+      // Update pill text
+      const pill = $("pRangePill");
+      if (pill) {
+        pill.textContent = mode === "daily" ? "Daily (Last 30 days)" : "Weekly (Last 12 weeks)";
+      }
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!data || data.length === 0) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "16px Montserrat";
+        ctx.textAlign = "center";
+        ctx.fillText("No data yet. Start practicing!", canvas.width / 2, canvas.height / 2);
         return;
       }
 
-      tableBody.innerHTML = answers
-        .map((ans) => {
-          const isCorrect = ans.isCorrect;
-          const badge = isCorrect
-            ? '<span class="pill pill-green">✓ Correct</span>'
-            : '<span class="pill pill-red">✗ Wrong</span>';
-          
-          return `
-            <tr>
-              <td>${fmtDate(ans.timestamp)}</td>
-              <td><span class="capitalize">${ans.category || "—"}</span></td>
-              <td>Weight ${ans.weight || "—"}</td>
-              <td>${badge}</td>
-              <td>${ans.timeTaken ? `${ans.timeTaken}s` : "—"}</td>
-            </tr>
-          `;
-        })
-        .join("");
-    });
+      // Chart dimensions and padding
+      const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+      const chartWidth = canvas.width - padding.left - padding.right;
+      const chartHeight = canvas.height - padding.top - padding.bottom;
+
+      // Data processing
+      const maxAccuracy = 100;
+      const dataPoints = data.map((d, i) => ({
+        x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
+        y: padding.top + chartHeight - (d.accuracy / maxAccuracy) * chartHeight,
+        accuracy: d.accuracy,
+        label: mode === "daily" ? d.date : `Week ${d.week + 1}`,
+        total: d.total
+      }));
+
+      // Draw grid lines
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = padding.top + (chartHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(padding.left + chartWidth, y);
+        ctx.stroke();
+      }
+
+      // Draw Y-axis labels
+      ctx.fillStyle = "#64748b";
+      ctx.font = "12px Montserrat";
+      ctx.textAlign = "right";
+      for (let i = 0; i <= 4; i++) {
+        const value = 100 - (i * 25);
+        const y = padding.top + (chartHeight / 4) * i;
+        ctx.fillText(`${value}%`, padding.left - 10, y + 4);
+      }
+
+      // Draw line chart
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      dataPoints.forEach((point, i) => {
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw points
+      ctx.fillStyle = "#3b82f6";
+      dataPoints.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw X-axis labels (show every nth label to avoid crowding)
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px Montserrat";
+      ctx.textAlign = "center";
+      const labelStep = mode === "daily" ? 7 : 2;
+      dataPoints.forEach((point, i) => {
+        if (i % labelStep === 0 || i === dataPoints.length - 1) {
+          const label = mode === "daily" 
+            ? new Date(data[i].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            : `W${data[i].week + 1}`;
+          ctx.fillText(label, point.x, canvas.height - 15);
+        }
+      });
+
+    } catch (error) {
+      console.error("Failed to render chart:", error);
+    }
   }
+
+  /**
+   * Setup category toggle (listening/reading) in Progress tab
+   */
+  function setupCategoryToggle(userId) {
+    let currentCategory = "listening";
+    let currentTimeMode = "weekly";
+
+    const btnListening = $("btnModeListening");
+    const btnReading = $("btnModeReading");
+    const btnDaily = $("btnDaily");
+    const btnWeekly = $("btnWeekly");
+
+    const switchCategory = async (category) => {
+      currentCategory = category;
+      
+      // Update button states
+      if (btnListening) btnListening.setAttribute("aria-pressed", category === "listening" ? "true" : "false");
+      if (btnReading) btnReading.setAttribute("aria-pressed", category === "reading" ? "true" : "false");
+      
+      // Reload progress data and chart
+      await loadProgress(userId, category);
+      await renderAccuracyChart(userId, category, currentTimeMode);
+    };
+
+    const switchTimeMode = async (mode) => {
+      currentTimeMode = mode;
+      
+      // Update button states
+      if (btnDaily) btnDaily.setAttribute("aria-current", mode === "daily" ? "true" : "false");
+      if (btnWeekly) btnWeekly.setAttribute("aria-current", mode === "weekly" ? "true" : "false");
+      
+      // Re-render chart
+      await renderAccuracyChart(userId, currentCategory, mode);
+    };
+
+    // Bind category buttons
+    if (btnListening) {
+      btnListening.addEventListener("click", () => switchCategory("listening"));
+    }
+    if (btnReading) {
+      btnReading.addEventListener("click", () => switchCategory("reading"));
+    }
+
+    // Bind time mode buttons
+    if (btnDaily) {
+      btnDaily.addEventListener("click", () => switchTimeMode("daily"));
+    }
+    if (btnWeekly) {
+      btnWeekly.addEventListener("click", () => switchTimeMode("weekly"));
+    }
+
+    // Initial load
+    loadProgress(userId, currentCategory);
+    renderAccuracyChart(userId, currentCategory, currentTimeMode);
+  }
+
+  /**
+   * Remove old weight bars and answer history code
+   */
+  async function oldCodeRemoved_loadOverviewAndProgress(userId) {
+    // THIS FUNCTION IS NO LONGER USED - REPLACED BY loadOverview() and loadProgress()
+    return;
+  }
+
+  async function oldCodeRemoved_startAnswerHistoryListener(userId) {
+    // THIS FUNCTION IS NO LONGER USED - REMOVED PER USER REQUEST
+    return;
 
   /**
    * Bind logout button
@@ -297,7 +468,9 @@ function fmtPct(n) {
       pill.classList.toggle("pill-green", plan !== "free");
     }
 
-    // Load stats and start listeners
-    await loadOverviewAndProgress(user.uid);
-    await startAnswerHistoryListener(user.uid);
+    // Load overview stats (all categories combined)
+    await loadOverview(user.uid);
+    
+    // Setup category toggle and load initial progress (listening by default)
+    setupCategoryToggle(user.uid);
   });

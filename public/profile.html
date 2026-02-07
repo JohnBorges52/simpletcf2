@@ -246,7 +246,7 @@
                     class="profile-btn"
                     id="btnDaily"
                     type="button"
-                    aria-current="true"
+                    aria-current="false"
                   >
                     Daily
                   </button>
@@ -288,49 +288,6 @@
                   what moves your CLB fastest.
                 </div>
               </div>
-            </div>
-
-            <!-- Answer History Section -->
-            <div class="section-card" style="margin-top: 20px;">
-              <div class="section-head">
-                <h2>📝 Recent Answer History</h2>
-                <span class="pill" id="answerHistoryPill">From Database</span>
-              </div>
-              
-              <div class="progress-note muted" style="margin-bottom: 16px;">
-                Your quiz answers stored in Firestore database. Updates in real-time.
-              </div>
-
-              <!-- Loading State -->
-              <div id="answerHistoryLoading" class="progress-note" style="text-align: center; padding: 20px;">
-                <span>Loading answer history...</span>
-              </div>
-
-              <!-- Empty State -->
-              <div id="answerHistoryEmpty" class="progress-note muted" style="text-align: center; padding: 20px; display: none;">
-                No answers recorded yet. Start practicing to see your history here!
-              </div>
-
-              <!-- Answer History Table -->
-              <div id="answerHistoryTableWrap" style="display: none; overflow-x: auto;">
-                <table class="answer-history-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Question</th>
-                      <th>Result</th>
-                      <th>Correct</th>
-                      <th>Wrong</th>
-                      <th>Accuracy</th>
-                    </tr>
-                  </thead>
-                  <tbody id="answerHistoryBody">
-                    <!-- Populated by JS -->
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Note: Showing up to 50 most recent answers for performance -->
             </div>
           </div>
 
