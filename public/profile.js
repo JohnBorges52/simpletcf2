@@ -6,17 +6,16 @@
 
 import { signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-(function () {
-  // ----------------------------
-  // Helpers
-  // ----------------------------
-  const $ = (id) => document.getElementById(id);
+// ----------------------------
+// Helpers
+// ----------------------------
+const $ = (id) => document.getElementById(id);
 
-  function fmtPct(n) {
-    const num = Number(n);
-    if (!Number.isFinite(num)) return "—";
-    return `${Math.round(num)}%`;
-  }
+function fmtPct(n) {
+  const num = Number(n);
+  if (!Number.isFinite(num)) return "—";
+  return `${Math.round(num)}%`;
+}
 
   function fmtDate(ts) {
     try {
@@ -296,4 +295,3 @@ import { signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth
     await loadOverviewAndProgress(user.uid);
     await startAnswerHistoryListener(user.uid);
   });
-})();
