@@ -1510,7 +1510,7 @@ import {
       });
     }
 
-    tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
+    await tlRecordTest({ weightedScore, pct, clb, band, totalCorrect });
     updateKpiVisibility();
   }
 
