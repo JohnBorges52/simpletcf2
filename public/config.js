@@ -148,34 +148,8 @@ function updateAuthNavItem(user) {
   }
 }
 
-// ✅ FAST UI: update nav immediately using localStorage (before Firebase is ready)
-// Firebase will override this once onAuthStateChanged runs.
-function updateAuthNavFromLocalStorage() {
-  const authLink = document.getElementById("auth-link");
-  const authItem = document.getElementById("auth-item");
-  if (!authItem || !authLink) return;
-
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const userName = localStorage.getItem("userName") || "User";
-  const userEmail = localStorage.getItem("userEmail") || "";
-
-  if (isLoggedIn) {
-    // show Profile immediately
-    authLink.textContent = "Profile";
-    authLink.href = "/profile.html";
-  } else {
-    authLink.textContent = "Sign In";
-    authLink.href = "/login.html";
-  }
-
-  // (Optional debug)
-  // console.log("⚡ Nav from localStorage:", { isLoggedIn, userName, userEmail });
-}
-
-// Update nav ASAP when DOM is ready (localStorage-based)
-document.addEventListener("DOMContentLoaded", () => {
-  updateAuthNavFromLocalStorage();
-});
+// Note: Auth nav is now updated only by Firebase onAuthStateChanged
+// No localStorage needed for auth state
 
 // Field error helpers
 function showFieldError(inputEl, errId, msg) {
@@ -414,10 +388,6 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
           if (auth.currentUser.emailVerified) {
             const name = auth.currentUser.displayName || "User";
             const mail = auth.currentUser.email || email || "";
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userName", name);
-            localStorage.setItem("userEmail", mail);
-            updateAuthNavFromLocalStorage();
             showWelcomeAndRedirect(name, mail);
             return;
           }
@@ -447,12 +417,8 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     // ✅ updates "Sign In" -> "Profile" wherever the nav exists
     updateAuthNavItem(user);
 
-    // Keep localStorage consistent
+    // ✅ Save user to Firestore if authenticated and verified
     if (user && user.emailVerified) {
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-      
       // ✅ Save user to Firestore if db-service is available
       // Guard against concurrent saves (e.g., on token refresh)
       if (window.dbService && window.dbService.saveUser && !savingUser) {
@@ -469,14 +435,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
           savingUser = false;
         }
       }
-    } else {
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
     }
-
-    // Optional: update nav again in case DOM loaded later
-    updateAuthNavFromLocalStorage();
   });
 })();
 
@@ -631,10 +590,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       await signOut(authNow);
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-      updateAuthNavFromLocalStorage();
 
       showVerifyOverlay({ email, name });
 
@@ -676,11 +631,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch {}
         await signOut(auth);
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
-
         showVerifyOverlay({
           email: user.email,
           name: user.displayName || "User",
@@ -688,11 +638,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(user.displayName || "User", user.email || "");
@@ -790,10 +735,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateAuthNavItem(user);
 
       if (!user) {
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         return;
       }
       if (isLoginPage) return;
@@ -801,11 +742,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = user.displayName || "User";
       const email = user.email || "";
-
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", name);
-      localStorage.setItem("userEmail", email);
-      updateAuthNavFromLocalStorage();
 
       showWelcomeAndRedirect(name, email);
     });
@@ -873,10 +809,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         shakeLoginForm();
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         updateAuthNavItem(null);
 
         return;
@@ -885,11 +817,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = user.displayName || "User";
       const cleanEmail = user.email || email;
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", name);
-      localStorage.setItem("userEmail", cleanEmail);
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(name, cleanEmail);
@@ -942,20 +869,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         shakeLoginForm();
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         updateAuthNavItem(null);
 
         return;
       }
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(user.displayName || "User", user.email || "");
