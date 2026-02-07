@@ -6,7 +6,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 import { getRemoteConfig, fetchAndActivate } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { 
@@ -92,6 +92,28 @@ window.firebaseAnalytics = analytics;
 
 // Export auth service methods globally for easy access
 window.AuthService = AuthService;
+
+// ===============================
+// Firebase Storage Helper
+// ===============================
+window.getFirebaseStorageUrl = async (path) => {
+  if (!path) return null;
+  
+  // If already absolute URL, return as-is
+  if (/^https?:\/\//i.test(path)) return path;
+  
+  try {
+    if (!storage) return null;
+    
+    // Clean path and get download URL
+    const cleanPath = path.replace(/^\/+/, "");
+    const fileRef = ref(storage, cleanPath);
+    return await getDownloadURL(fileRef);
+  } catch (err) {
+    console.warn(`Storage URL failed for ${path}:`, err);
+    return null;
+  }
+};
 
 // ===============================
 // UI Helper Functions
