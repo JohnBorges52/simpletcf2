@@ -1476,7 +1476,7 @@ import {
   /* 11) Init & bindings */
   async function init() {
     // ✅ Wait for Firebase to initialize before using Storage
-    await window.__authReady;
+    await window.AuthService.waitForAuth();
     console.log('✅ Firebase ready, initializing listening page...');
     
     await loadData();

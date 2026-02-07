@@ -115,14 +115,19 @@ async function logQuestionResponse(responseData) {
   const db = await getFirestore();
   const { collection, addDoc, serverTimestamp } = window.firestoreExports;
   
-  // Get current user
-  const auth = await window.__authReady;
-  if (!auth || !auth.currentUser) {
+  // Get current user from AuthService
+  if (!window.AuthService) {
+    console.warn("⚠️ AuthService not available, cannot log response");
+    return null;
+  }
+  
+  const user = window.AuthService.getCurrentUser();
+  if (!user) {
     console.warn("⚠️ User not authenticated, cannot log response");
     return null;
   }
   
-  const userId = auth.currentUser.uid;
+  const userId = user.uid;
   
   const responseDoc = {
     userId: userId,
@@ -516,13 +521,13 @@ async function saveTestResult(testData) {
   const { collection, addDoc, serverTimestamp } = window.firestoreExports;
   
   // Get current user
-  const auth = await window.__authReady;
-  if (!auth || !auth.currentUser) {
+  const user = window.AuthService.getCurrentUser();
+  if (!user) {
     console.warn("⚠️ User not authenticated, cannot save test result");
     return null;
   }
   
-  const userId = auth.currentUser.uid;
+  const userId = user.uid;
   
   const testDoc = {
     userId: userId,
