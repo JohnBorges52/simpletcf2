@@ -104,13 +104,18 @@ function humanFirebaseError(err) {
     "auth/operation-not-allowed": "Email/password sign-up is disabled.",
     "auth/weak-password": "Password is too weak.",
     "auth/popup-closed-by-user": "Sign-in was canceled.",
-    "auth/popup-blocked": "Popup was blocked by the browser.",
+    "auth/popup-blocked": "Popup was blocked by the browser. Please allow popups for this site.",
     "auth/unauthorized-domain":
       "This domain isn’t authorized in Firebase Auth settings.",
     "auth/invalid-credential": "Email or password is incorrect.",
     "auth/wrong-password": "Wrong password.",
     "auth/user-not-found": "No account found with this email.",
     "auth/too-many-requests": "Too many attempts. Try again later.",
+    "auth/cancelled-popup-request": "Sign-in was canceled. Please try again.",
+    "auth/account-exists-with-different-credential": "An account already exists with this email using a different sign-in method.",
+    "auth/network-request-failed": "Network error. Please check your connection and try again.",
+    "auth/user-disabled": "This account has been disabled.",
+    "auth/invalid-api-key": "Invalid API key. Please contact support.",
   };
   return map[code] || err?.message || "Something went wrong.";
 }
@@ -453,6 +458,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Only run on register page
   if (!startBtn && !googleBtn && !nameInput && !emailInput) return;
 
+  // Flag to prevent multiple simultaneous Google sign-in popups
+  let isGoogleSignInProgress = false;
+
   wirePasswordToggle({
     buttonId: "register-toggle-password",
     inputId: "register-password",
@@ -609,6 +617,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google Sign-In (register page)
   googleBtn?.addEventListener("click", async () => {
+    // Prevent multiple simultaneous popup requests
+    if (isGoogleSignInProgress) {
+      return;
+    }
+
+    isGoogleSignInProgress = true;
+
     const auth = await window.__authReady;
     if (!auth) {
       showFieldError(
@@ -617,6 +632,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "⚠️ Auth not ready. Check console for Firebase errors.",
       );
       shakeLoginForm();
+      isGoogleSignInProgress = false;
       return;
     }
 
@@ -650,6 +666,8 @@ document.addEventListener("DOMContentLoaded", () => {
         msg,
       );
       shakeLoginForm();
+    } finally {
+      isGoogleSignInProgress = false;
     }
   });
 });
@@ -666,6 +684,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginSubmit");
   const googleBtn = document.getElementById("googleBtn");
   const forgotLink = document.getElementById("forgotLink");
+
+  // Flag to prevent multiple simultaneous Google sign-in popups
+  let isGoogleSignInProgress = false;
 
   // Prefill after verification + green success line
   (() => {
@@ -833,7 +854,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google login
   googleBtn?.addEventListener("click", async () => {
+    // Prevent multiple simultaneous popup requests
+    if (isGoogleSignInProgress) {
+      return;
+    }
+
     clearLoginErrors();
+    isGoogleSignInProgress = true;
 
     const auth = await window.__authReady;
     if (!auth) {
@@ -843,6 +870,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "⚠️ Auth not ready. Check console for errors.",
       );
       shakeLoginForm();
+      isGoogleSignInProgress = false;
       return;
     }
 
@@ -882,6 +910,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = humanFirebaseError(err);
       showFieldError(emailInput, "err-login-email", msg);
       shakeLoginForm();
+    } finally {
+      isGoogleSignInProgress = false;
     }
   });
 
