@@ -275,9 +275,12 @@ async function getDailyStats(userId, options = {}) {
   const db = await getFirestore();
   const { collection, query, where, orderBy, getDocs, Timestamp } = window.firestoreExports;
   
-  const days = options.days || 30;
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+  const days = options.days || 28;
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - (days - 1));
   startDate.setHours(0, 0, 0, 0);
   
   const responsesRef = collection(db, "questionResponses");
@@ -325,7 +328,7 @@ async function getDailyStats(userId, options = {}) {
       accuracy: stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0
     }));
     
-    // Fill in missing days with 0
+    // Fill in missing days with 0 (last 28 days ending with today)
     const result = [];
     for (let i = 0; i < days; i++) {
       const d = new Date(startDate);
@@ -354,8 +357,16 @@ async function getWeeklyStats(userId, options = {}) {
   const { collection, query, where, orderBy, getDocs, Timestamp } = window.firestoreExports;
   
   const weeks = options.weeks || 12;
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - (weeks * 7));
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  // Start from beginning of the week (weeks - 1) weeks ago, so current week is included
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - ((weeks - 1) * 7));
+  
+  // Set to start of week (Sunday)
+  const dayOfWeek = startDate.getDay();
+  startDate.setDate(startDate.getDate() - dayOfWeek);
   startDate.setHours(0, 0, 0, 0);
   
   const responsesRef = collection(db, "questionResponses");
@@ -379,11 +390,10 @@ async function getWeeklyStats(userId, options = {}) {
     
     const weeklyMap = new Map();
     
-    // Helper to get week number
+    // Helper to get week number (0 = oldest week, weeks-1 = current week)
     const getWeekKey = (date) => {
-      const firstDay = new Date(startDate);
-      const diff = Math.floor((date - firstDay) / (7 * 24 * 60 * 60 * 1000));
-      return Math.max(0, diff);
+      const diff = Math.floor((date - startDate) / (7 * 24 * 60 * 60 * 1000));
+      return Math.max(0, Math.min(diff, weeks - 1));
     };
     
     querySnapshot.forEach((doc) => {

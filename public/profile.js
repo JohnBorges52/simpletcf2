@@ -190,6 +190,8 @@ function fmtPct(n) {
     const weightBars = $("weightBars");
     if (!weightBars) return;
 
+    console.log("📊 Weight data:", byWeight);
+
     const weights = Object.entries(byWeight)
       .map(([w, obj]) => {
         const totalW = obj.total || 0;
@@ -198,6 +200,8 @@ function fmtPct(n) {
         return { weight: Number(w), total: totalW, correct: correctW, pct };
       })
       .sort((a, b) => a.weight - b.weight);
+
+    console.log("📊 Processed weights:", weights);
 
     if (weights.length === 0) {
       weightBars.innerHTML = '<div class="progress-note muted">No data yet. Start practicing!</div>';
@@ -232,7 +236,7 @@ function fmtPct(n) {
     try {
       let data;
       if (mode === "daily") {
-        data = await window.dbService.getDailyStats(userId, { questionType: category, days: 30 });
+        data = await window.dbService.getDailyStats(userId, { questionType: category, days: 28 });
       } else {
         data = await window.dbService.getWeeklyStats(userId, { questionType: category, weeks: 12 });
       }
@@ -242,7 +246,7 @@ function fmtPct(n) {
       // Update pill text
       const pill = $("pRangePill");
       if (pill) {
-        pill.textContent = mode === "daily" ? "Daily (Last 30 days)" : "Weekly (Last 12 weeks)";
+        pill.textContent = mode === "daily" ? "Daily (Last 28 days)" : "Weekly (Last 12 weeks)";
       }
 
       // Clear canvas
@@ -326,6 +330,51 @@ function fmtPct(n) {
           ctx.fillText(label, point.x, canvas.height - 15);
         }
       });
+
+      // Add hover tooltip functionality
+      const tooltip = $("chartTooltip");
+      if (tooltip) {
+        // Remove old listeners if they exist
+        canvas.onmousemove = null;
+        canvas.onmouseout = null;
+
+        canvas.onmousemove = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          // Find closest data point
+          let closestPoint = null;
+          let minDistance = Infinity;
+
+          dataPoints.forEach(point => {
+            const distance = Math.sqrt(
+              Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2)
+            );
+            if (distance < minDistance && distance < 15) {
+              minDistance = distance;
+              closestPoint = point;
+            }
+          });
+
+          if (closestPoint) {
+            tooltip.hidden = false;
+            // Position relative to canvas
+            tooltip.style.left = `${mouseX}px`;
+            tooltip.style.top = `${mouseY}px`;
+            tooltip.textContent = `${closestPoint.accuracy}% (${closestPoint.total} questions)`;
+            canvas.style.cursor = "pointer";
+          } else {
+            tooltip.hidden = true;
+            canvas.style.cursor = "default";
+          }
+        };
+
+        canvas.onmouseout = () => {
+          tooltip.hidden = true;
+          canvas.style.cursor = "default";
+        };
+      }
 
     } catch (error) {
       console.error("Failed to render chart:", error);
