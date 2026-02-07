@@ -497,9 +497,7 @@ function getFirebaseAuthUser() {
 
 function isLoggedIn() {
   const fbUser = getFirebaseAuthUser();
-  if (fbUser && fbUser.email) return true;
-  const fallbackEmail = localStorage.getItem("userEmail");
-  return !!fallbackEmail;
+  return !!(fbUser && fbUser.email);
 }
 
 // =======================
