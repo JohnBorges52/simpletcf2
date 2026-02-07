@@ -25,6 +25,7 @@ import {
 let authInstance = null;
 let currentUser = null;
 const authStateCallbacks = new Set();
+let authInitPromise = null;
 
 /**
  * Initialize authentication
@@ -34,29 +35,35 @@ const authStateCallbacks = new Set();
 export async function initAuth(app) {
   if (authInstance) return authInstance;
   
-  authInstance = getAuth(app);
+  if (authInitPromise) return authInitPromise;
   
-  // Set persistence to LOCAL (survives browser restarts)
-  try {
-    await setPersistence(authInstance, browserLocalPersistence);
-  } catch (error) {
-    console.error("Failed to set auth persistence:", error);
-  }
+  authInitPromise = (async () => {
+    authInstance = getAuth(app);
+    
+    // Set persistence to LOCAL (survives browser restarts)
+    try {
+      await setPersistence(authInstance, browserLocalPersistence);
+    } catch (error) {
+      console.error("Failed to set auth persistence:", error);
+    }
 
-  // Listen to auth state changes
-  onAuthStateChanged(authInstance, (user) => {
-    currentUser = user;
-    // Notify all subscribers
-    authStateCallbacks.forEach(callback => {
-      try {
-        callback(user);
-      } catch (error) {
-        console.error("Auth state callback error:", error);
-      }
+    // Listen to auth state changes
+    onAuthStateChanged(authInstance, (user) => {
+      currentUser = user;
+      // Notify all subscribers
+      authStateCallbacks.forEach(callback => {
+        try {
+          callback(user);
+        } catch (error) {
+          console.error("Auth state callback error:", error);
+        }
+      });
     });
-  });
 
-  return authInstance;
+    return authInstance;
+  })();
+  
+  return authInitPromise;
 }
 
 /**
@@ -120,6 +127,11 @@ export function waitForAuth() {
  * @returns {Promise<Object>} User credential
  */
 export async function registerWithEmail(email, password, displayName) {
+  // Wait for auth to be initialized
+  if (!authInstance) {
+    await authInitPromise;
+  }
+  
   if (!authInstance) throw new Error("Auth not initialized");
   
   const userCredential = await createUserWithEmailAndPassword(
@@ -146,6 +158,11 @@ export async function registerWithEmail(email, password, displayName) {
  * @returns {Promise<Object>} User credential
  */
 export async function signInWithEmail(email, password) {
+  // Wait for auth to be initialized
+  if (!authInstance) {
+    await authInitPromise;
+  }
+  
   if (!authInstance) throw new Error("Auth not initialized");
   
   return await signInWithEmailAndPassword(authInstance, email, password);
@@ -156,6 +173,11 @@ export async function signInWithEmail(email, password) {
  * @returns {Promise<Object>} User credential
  */
 export async function signInWithGoogle() {
+  // Wait for auth to be initialized
+  if (!authInstance) {
+    await authInitPromise;
+  }
+  
   if (!authInstance) throw new Error("Auth not initialized");
   
   const provider = new GoogleAuthProvider();

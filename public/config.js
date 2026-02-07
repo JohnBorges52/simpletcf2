@@ -256,6 +256,9 @@ document.addEventListener("DOMContentLoaded", () => {
       googleBtn.disabled = true;
       googleBtn.textContent = "Signing in...";
 
+      // Wait for auth to be ready
+      await AuthService.waitForAuth();
+
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
@@ -387,6 +390,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       googleLoginBtn.disabled = true;
       googleLoginBtn.textContent = "Signing in...";
+
+      // Wait for auth to be ready
+      await AuthService.waitForAuth();
 
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
