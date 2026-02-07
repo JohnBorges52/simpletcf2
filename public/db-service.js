@@ -4,6 +4,9 @@
 // This module provides helper functions for interacting with Firestore.
 // It handles user data and question response logging.
 
+// Debug mode - set to true to enable verbose logging
+const DEBUG_MODE = false;
+
 /**
  * Database Collections Structure:
  * 
@@ -64,7 +67,9 @@ async function saveUser(userId, userData) {
   
   try {
     await setDoc(userRef, userDoc, { merge: true });
-    console.log("✅ User saved to Firestore:", userId);
+    if (DEBUG_MODE) {
+      console.log("✅ User synced to Firestore:", userId);
+    }
   } catch (error) {
     console.error("❌ Error saving user to Firestore:", error);
     throw error;
