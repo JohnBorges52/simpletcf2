@@ -38,6 +38,21 @@ import {
   getNumber,
   getBoolean,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-remote-config.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ===============================
 // Firebase Config - Hardcoded
@@ -74,6 +89,10 @@ window.__remoteConfig = null;
 let resolveStorageReady;
 window.__storageReady = new Promise((res) => (resolveStorageReady = res));
 
+// Firestore readiness
+let resolveFirestoreReady;
+window.__firestoreReady = new Promise((res) => (resolveFirestoreReady = res));
+
 // ===============================
 // Shared helpers
 // ===============================
@@ -85,13 +104,18 @@ function humanFirebaseError(err) {
     "auth/operation-not-allowed": "Email/password sign-up is disabled.",
     "auth/weak-password": "Password is too weak.",
     "auth/popup-closed-by-user": "Sign-in was canceled.",
-    "auth/popup-blocked": "Popup was blocked by the browser.",
+    "auth/popup-blocked": "Popup was blocked by the browser. Please allow popups for this site.",
     "auth/unauthorized-domain":
       "This domain isn’t authorized in Firebase Auth settings.",
     "auth/invalid-credential": "Email or password is incorrect.",
     "auth/wrong-password": "Wrong password.",
     "auth/user-not-found": "No account found with this email.",
     "auth/too-many-requests": "Too many attempts. Try again later.",
+    "auth/cancelled-popup-request": "Sign-in was canceled. Please try again.",
+    "auth/account-exists-with-different-credential": "An account already exists with this email using a different sign-in method.",
+    "auth/network-request-failed": "Network error. Please check your connection and try again.",
+    "auth/user-disabled": "This account has been disabled.",
+    "auth/invalid-api-key": "Invalid API key. Please contact support.",
   };
   return map[code] || err?.message || "Something went wrong.";
 }
@@ -129,34 +153,8 @@ function updateAuthNavItem(user) {
   }
 }
 
-// ✅ FAST UI: update nav immediately using localStorage (before Firebase is ready)
-// Firebase will override this once onAuthStateChanged runs.
-function updateAuthNavFromLocalStorage() {
-  const authLink = document.getElementById("auth-link");
-  const authItem = document.getElementById("auth-item");
-  if (!authItem || !authLink) return;
-
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const userName = localStorage.getItem("userName") || "User";
-  const userEmail = localStorage.getItem("userEmail") || "";
-
-  if (isLoggedIn) {
-    // show Profile immediately
-    authLink.textContent = "Profile";
-    authLink.href = "/profile.html";
-  } else {
-    authLink.textContent = "Sign In";
-    authLink.href = "/login.html";
-  }
-
-  // (Optional debug)
-  // console.log("⚡ Nav from localStorage:", { isLoggedIn, userName, userEmail });
-}
-
-// Update nav ASAP when DOM is ready (localStorage-based)
-document.addEventListener("DOMContentLoaded", () => {
-  updateAuthNavFromLocalStorage();
-});
+// Note: Auth nav is now updated only by Firebase onAuthStateChanged
+// No localStorage needed for auth state
 
 // Field error helpers
 function showFieldError(inputEl, errId, msg) {
@@ -318,6 +316,26 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     resolveStorageReady(storage);
     console.log("✅ Storage ready");
 
+    // Firestore
+    const db = getFirestore(app);
+    window.__firestore = db;
+    window.firestoreExports = { 
+      collection, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      addDoc, 
+      query, 
+      where, 
+      orderBy, 
+      limit, 
+      serverTimestamp,
+      Timestamp 
+    };
+    resolveFirestoreReady(db);
+    console.log("✅ Firestore ready");
+
     // Remote Config (optional, doesn't break if offline)
     try {
       const remoteConfig = getRemoteConfig(app);
@@ -345,6 +363,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     console.error("❌ Firebase init failed:", err);
     resolveAuthReady(null);
     resolveStorageReady(null);
+    resolveFirestoreReady(null);
   }
 })();
 
@@ -374,10 +393,6 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
           if (auth.currentUser.emailVerified) {
             const name = auth.currentUser.displayName || "User";
             const mail = auth.currentUser.email || email || "";
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userName", name);
-            localStorage.setItem("userEmail", mail);
-            updateAuthNavFromLocalStorage();
             showWelcomeAndRedirect(name, mail);
             return;
           }
@@ -401,7 +416,9 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
   const auth = await window.__authReady;
   if (!auth) return;
 
-  onAuthStateChanged(auth, (user) => {
+  let savingUser = false; // Guard to prevent concurrent saves
+
+  onAuthStateChanged(auth, async (user) => {
     // ✅ updates "Sign In" -> "Profile" wherever the nav exists
     updateAuthNavItem(user);
 
@@ -438,6 +455,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Only run on register page
   if (!startBtn && !googleBtn && !nameInput && !emailInput) return;
+
+  // Flag to prevent multiple simultaneous Google sign-in popups
+  let isGoogleSignInProgress = false;
 
   wirePasswordToggle({
     buttonId: "register-toggle-password",
@@ -576,10 +596,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       await signOut(authNow);
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-      updateAuthNavFromLocalStorage();
 
       showVerifyOverlay({ email, name });
 
@@ -599,6 +615,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google Sign-In (register page)
   googleBtn?.addEventListener("click", async () => {
+    // Prevent multiple simultaneous popup requests
+    if (isGoogleSignInProgress) {
+      return;
+    }
+
+    isGoogleSignInProgress = true;
+
     const auth = await window.__authReady;
     if (!auth) {
       showFieldError(
@@ -607,6 +630,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "⚠️ Auth not ready. Check console for Firebase errors.",
       );
       shakeLoginForm();
+      isGoogleSignInProgress = false;
       return;
     }
 
@@ -621,11 +645,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch {}
         await signOut(auth);
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
-
         showVerifyOverlay({
           email: user.email,
           name: user.displayName || "User",
@@ -633,11 +652,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(user.displayName || "User", user.email || "");
@@ -650,6 +664,8 @@ document.addEventListener("DOMContentLoaded", () => {
         msg,
       );
       shakeLoginForm();
+    } finally {
+      isGoogleSignInProgress = false;
     }
   });
 });
@@ -666,6 +682,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginSubmit");
   const googleBtn = document.getElementById("googleBtn");
   const forgotLink = document.getElementById("forgotLink");
+
+  // Flag to prevent multiple simultaneous Google sign-in popups
+  let isGoogleSignInProgress = false;
 
   // Prefill after verification + green success line
   (() => {
@@ -735,10 +754,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateAuthNavItem(user);
 
       if (!user) {
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         return;
       }
       if (isLoginPage) return;
@@ -746,11 +761,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = user.displayName || "User";
       const email = user.email || "";
-
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", name);
-      localStorage.setItem("userEmail", email);
-      updateAuthNavFromLocalStorage();
 
       showWelcomeAndRedirect(name, email);
     });
@@ -818,10 +828,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         shakeLoginForm();
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         updateAuthNavItem(null);
 
         return;
@@ -830,11 +836,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = user.displayName || "User";
       const cleanEmail = user.email || email;
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", name);
-      localStorage.setItem("userEmail", cleanEmail);
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(name, cleanEmail);
@@ -851,7 +852,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google login
   googleBtn?.addEventListener("click", async () => {
+    // Prevent multiple simultaneous popup requests
+    if (isGoogleSignInProgress) {
+      return;
+    }
+
     clearLoginErrors();
+    isGoogleSignInProgress = true;
 
     const auth = await window.__authReady;
     if (!auth) {
@@ -861,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "⚠️ Auth not ready. Check console for errors.",
       );
       shakeLoginForm();
+      isGoogleSignInProgress = false;
       return;
     }
 
@@ -887,20 +895,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         shakeLoginForm();
 
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-        updateAuthNavFromLocalStorage();
         updateAuthNavItem(null);
 
         return;
       }
 
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userName", user.displayName || "User");
-      localStorage.setItem("userEmail", user.email || "");
-
-      updateAuthNavFromLocalStorage();
       updateAuthNavItem(user);
 
       showWelcomeAndRedirect(user.displayName || "User", user.email || "");
@@ -909,6 +908,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = humanFirebaseError(err);
       showFieldError(emailInput, "err-login-email", msg);
       shakeLoginForm();
+    } finally {
+      isGoogleSignInProgress = false;
     }
   });
 

@@ -161,12 +161,12 @@
                 <div class="lbl">Accuracy</div>
               </div>
               <div class="profile-kpi">
-                <div class="big" id="kpiRealTests">—</div>
-                <div class="lbl">Real Tests Done</div>
+                <div class="big" id="kpiCorrect">—</div>
+                <div class="lbl">Correct answers</div>
               </div>
               <div class="profile-kpi">
-                <div class="big" id="kpiStreak">—</div>
-                <div class="lbl">Study streak</div>
+                <div class="big" id="kpiWrong">—</div>
+                <div class="lbl">Wrong answers</div>
               </div>
             </div>
           </div>
@@ -177,8 +177,7 @@
               <div>
                 <h1>My Progress</h1>
                 <p class="muted">
-                  Track your performance and keep improving (placeholders for
-                  now).
+                  Track your performance and keep improving.
                 </p>
               </div>
 
@@ -271,13 +270,6 @@
                   ></canvas>
                   <div class="chart-tooltip" id="chartTooltip" hidden></div>
                 </div>
-
-                <div class="progress-legend">
-                  <span class="muted">
-                    Tip: later you can connect this to your answer tracking JSON
-                    / DB.
-                  </span>
-                </div>
               </div>
 
               <!-- Accuracy by weight -->
@@ -297,6 +289,49 @@
                 </div>
               </div>
             </div>
+
+            <!-- Answer History Section -->
+            <div class="section-card" style="margin-top: 20px;">
+              <div class="section-head">
+                <h2>📝 Recent Answer History</h2>
+                <span class="pill" id="answerHistoryPill">From Database</span>
+              </div>
+              
+              <div class="progress-note muted" style="margin-bottom: 16px;">
+                Your quiz answers stored in Firestore database. Updates in real-time.
+              </div>
+
+              <!-- Loading State -->
+              <div id="answerHistoryLoading" class="progress-note" style="text-align: center; padding: 20px;">
+                <span>Loading answer history...</span>
+              </div>
+
+              <!-- Empty State -->
+              <div id="answerHistoryEmpty" class="progress-note muted" style="text-align: center; padding: 20px; display: none;">
+                No answers recorded yet. Start practicing to see your history here!
+              </div>
+
+              <!-- Answer History Table -->
+              <div id="answerHistoryTableWrap" style="display: none; overflow-x: auto;">
+                <table class="answer-history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Question</th>
+                      <th>Result</th>
+                      <th>Correct</th>
+                      <th>Wrong</th>
+                      <th>Accuracy</th>
+                    </tr>
+                  </thead>
+                  <tbody id="answerHistoryBody">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Note: Showing up to 50 most recent answers for performance -->
+            </div>
           </div>
 
           <!-- REAL TESTS -->
@@ -306,7 +341,7 @@
                 <h1>Real Tests</h1>
 
                 <p class="muted">
-                  Showing your latest results (placeholders for now).
+                  Showing your latest test results.
                 </p>
               </div>
               <div
@@ -384,9 +419,6 @@
                 >
                   Load more (+5)
                 </button>
-                <span class="muted" id="rtHint"
-                  >Only placeholders for now.</span
-                >
               </div>
             </div>
           </div>
@@ -551,8 +583,9 @@
     </main>
 
     <!-- Firebase initialization (config hardcoded) -->
-    <script type=\"module\" src="config.js"></script>
+    <script type="module\" src="config.js"></script>
+    <script type="module\" src="db-service.js"></script>
     <!-- Then app scripts -->
-    <script src="profile.js" defer></script>
+    <script type="module" src="profile.js"></script>
   </body>
 </html>

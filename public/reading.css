@@ -1,26 +1,6 @@
 /* ============================================================================
-   reading.css — FULL (PDF iframe “page-width” fit + copy overlay)
-   Fixes: tiny PDF inside big dark area by forcing page-width rendering and
-   giving the iframe a stable A4-ish viewport.
+   reading.css — FULL (PDF.js canvas render = NO black PDF viewer background)
 ============================================================================ */
-
-/* ============================
-   Reading – PDF selectable text layer (optional)
-============================ */
-.pdf-text-layer {
-  position: absolute;
-  inset: 0;
-  color: transparent;
-  user-select: text;
-  pointer-events: auto;
-}
-
-.pdf-wrapper {
-  position: relative;
-  display: block;
-  width: 100%;
-  max-width: 100%;
-}
 
 /* ----------------------------------------
    Reading – Question text (JSON)
@@ -129,48 +109,53 @@
 }
 
 /* ============================
-   ✅ PDF container + iframe sizing (FIX)
-   - Removes “huge dark area”
-   - Forces a stable A4-like viewport
-   - Makes iframe fill that viewport
+   ✅ PDF container (PDF.js canvas render) — NO black viewer background
 ============================ */
+
+/* IMPORTANT: some global styles paint .quiz--media dark.
+   This forces the PDF area to stay clean/white. */
+.quiz--media.quiz--pdf-wrap,
 .quiz--pdf-wrap {
   position: relative;
   width: 100%;
   max-width: 100%;
   overflow: hidden;
   border-radius: 16px;
-  background: #ffffff; /* ✅ avoid dark empty area */
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
 }
 
-/* This is the box that defines the PDF viewport */
+/* The inner box becomes exactly the PDF page height */
 .quiz--pdf-inner {
+  position: relative;
   width: 100%;
-  /* A4-ish aspect ratio (portrait) */
-  aspect-ratio: 1 / 1.414;
+  max-width: 100%;
   background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  overflow: hidden;
 }
 
-/* If the browser doesn't support aspect-ratio, give a fallback height */
-@supports not (aspect-ratio: 1 / 1.414) {
-  .quiz--pdf-inner {
-    height: 70vh;
-    min-height: 520px;
-  }
-}
-
-/* Make iframe fill */
-.quiz--pdf-inner iframe {
+/* Canvas fills width; height scales automatically */
+.quiz--pdf-canvas {
   width: 100%;
-  height: 100%;
-  border: 0;
+  height: auto;
   display: block;
   background: #ffffff;
 }
 
+/* Optional selectable text layer (if you want it later) */
+.pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  user-select: text;
+  pointer-events: auto;
+}
+
 /* ============================
-   ✅ Copy button overlay (top-right of PDF container)
+   ✅ Copy button overlay
 ============================ */
 .quiz--copybtn-overlay {
   position: absolute;
@@ -192,25 +177,6 @@
   background: rgba(16, 185, 129, 1);
   border-color: rgba(0, 0, 0, 1);
   color: #ffffff;
-}
-
-/* (optional) small status bubble */
-.quiz--copy-status-overlay {
-  position: absolute;
-  top: 14px;
-  right: 132px;
-  z-index: 20;
-  font-weight: 800;
-  font-size: 0.95rem;
-  opacity: 0.95;
-  pointer-events: none;
-}
-
-@media (max-width: 520px) {
-  .quiz--copy-status-overlay {
-    right: 10px;
-    top: 52px;
-  }
 }
 
 /* ============================

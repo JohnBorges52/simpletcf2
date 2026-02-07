@@ -532,15 +532,15 @@ img {
 }
 
 .price__img--1 {
-  background-image: url("/public/general/tree1.png");
+  background-image: url("/general/tree1.png");
 }
 
 .price__img--2 {
-  background-image: url("/public/general/tree2.png");
+  background-image: url("/general/tree2.png");
 }
 
 .price__img--3 {
-  background-image: url("/public/general/tree3.png");
+  background-image: url("/general/tree3.png");
 }
 
 .price__title {
@@ -1164,7 +1164,7 @@ img {
 .login-illustration {
   width: 100%;
   height: 100%;
-  background: url("public/general/Studying-illustration.png") center/contain no-repeat;
+  background: url("/general/Studying-illustration.png") center/contain no-repeat;
 }
 
 /* Popup */

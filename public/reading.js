@@ -1,9 +1,14 @@
 /* ============================================================================
-   reading.js — FULL (Listening-style UI) — FIXED PDF sizing
-   ✅ Forces Chrome PDF viewer to "page-width" inside iframe
-   ✅ Keeps overlay button intact by rendering PDF into #pdfInner only
-   ✅ Stable A4 viewport via CSS (aspect-ratio), no JS height hacks
+   reading.js — FULL
+   ✅ Uses PDF.js canvas render (NO black PDF viewer background)
+   ✅ Keeps copy overlay button
+   ✅ Re-renders on resize to keep perfect fit
 ============================================================================ */
+
+import {
+  getTracking as getTrackingFS,
+  setTracking as setTrackingFS,
+} from "./firestore-storage.js";
 
 (() => {
   /* =====================
@@ -72,7 +77,7 @@
     quiz: () => $("#quiz"),
     qNumber: () => $("#questionNumber"),
     pictureContainer: () => $("#pictureContainer"),
-    pdfInner: () => $("#pdfInner"), // must exist inside pictureContainer
+    pdfInner: () => $("#pdfInner"),
     qText: () => $("#questionText"),
     options: () => $("#alternatives"),
     confirmBtn: () => $("#confirmBtn"),
@@ -85,8 +90,6 @@
     realTestBtn: () => $("#realTestBtn"),
     deservesBtn: () => $("#deservesBtn"),
     emptyState: () => $("#emptyState"),
-
-    // Copy overlay button (MUST be unique)
     copyBtn: () => $("#copyReadingBtn"),
   };
 
@@ -105,47 +108,50 @@
     return arr;
   }
 
-  function getTracking() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.TRACKING) || "{}");
-    } catch {
-      return {};
-    }
+  async function getTracking() {
+    return getTrackingFS();
   }
 
-  function setTracking(o) {
-    try {
-      localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(o || {}));
-    } catch {}
+  async function setTracking(o) {
+    return setTrackingFS(o || {});
   }
 
   function keyFor(q) {
     return `${q.test_id || "unknownTest"}-question${q.question_number}`;
   }
 
-  function readLifetime(q) {
-    const t = getTracking();
+  function getStableQuestionId(q) {
+    // Generate stable ID like tlQuestionKey in listening.js
+    return (
+      q?.question_ID ||
+      q?.number_ID ||
+      `${q?.test_id || "unknownTest"}-q${String(q?.question_number || 0).padStart(4, "0")}`
+    );
+  }
+
+  async function readLifetime(q) {
+    const t = await getTracking();
     const rec = t[keyFor(q)] || { correct: 0, wrong: 0 };
     const correct = Number(rec.correct || 0);
     const wrong = Number(rec.wrong || 0);
     return { correct, wrong, total: correct + wrong };
   }
 
-  function bumpLifetime(q, isCorrect) {
+  async function bumpLifetime(q, isCorrect) {
     const key = keyFor(q);
-    const tracking = getTracking();
+    const tracking = await getTracking();
     if (!tracking[key]) tracking[key] = { correct: 0, wrong: 0 };
 
-    if (isCorrect)
-      tracking[key].correct = Number(tracking[key].correct || 0) + 1;
+    if (isCorrect) tracking[key].correct = Number(tracking[key].correct || 0) + 1;
     else tracking[key].wrong = Number(tracking[key].wrong || 0) + 1;
 
     tracking[key].lastAnswered = Date.now();
-    setTracking(tracking);
+    await setTracking(tracking);
   }
 
-  function isUnansweredLifetime(q) {
-    return readLifetime(q).total === 0;
+  async function isUnansweredLifetime(q) {
+    const lifetime = await readLifetime(q);
+    return lifetime.total === 0;
   }
 
   function fmt2or3(n) {
@@ -165,8 +171,7 @@
       }
       return Number(q.question_number);
     }
-    if (q.overall_question_number != null)
-      return Number(q.overall_question_number);
+    if (q.overall_question_number != null) return Number(q.overall_question_number);
     return null;
   }
 
@@ -264,7 +269,7 @@
     anchor.insertAdjacentElement("afterend", stats);
   }
 
-  function updateQuestionStats(q) {
+  async function updateQuestionStats(q) {
     ensureQuestionStatsDOM();
     const node = els.qStats();
     if (!node) return;
@@ -272,39 +277,38 @@
       safeText(node, "");
       return;
     }
-    const { correct, wrong, total } = readLifetime(q);
+    const { correct, wrong, total } = await readLifetime(q);
     safeText(node, `: ✅ ${correct} | ❌ ${wrong} (total ${total})`);
   }
 
-  function updateDeservesButton() {
+  async function updateDeservesButton() {
     const btn = els.deservesBtn();
     if (!btn) return;
 
-    const count = countDeservesAttentionForCurrentScope();
+    const count = await countDeservesAttentionForCurrentScope();
     btn.textContent = `📚 Deserves Attention (${count})`;
     btn.classList.toggle("quiz--toggled", !!state.deservesMode);
     btn.setAttribute("aria-pressed", state.deservesMode ? "true" : "false");
   }
 
-  function deservesFromTracking(q) {
-    const { correct, wrong, total } = readLifetime(q);
+  async function deservesFromTracking(q) {
+    const { correct, wrong, total } = await readLifetime(q);
     if (total === 0) return false;
     return Math.abs(correct - wrong) < 2;
   }
 
-  function countDeservesAttentionForCurrentScope() {
+  async function countDeservesAttentionForCurrentScope() {
     if (state.currentWeight == null) return 0;
 
     let pool = state.allData;
     if (state.currentWeight !== "all") {
-      pool = pool.filter(
-        (q) => Number(q.weight_points) === Number(state.currentWeight),
-      );
+      pool = pool.filter((q) => Number(q.weight_points) === Number(state.currentWeight));
     }
-    return pool.filter(deservesFromTracking).length;
+    const results = await Promise.all(pool.map(deservesFromTracking));
+    return results.filter(Boolean).length;
   }
 
-  function recomputeFiltered() {
+  async function recomputeFiltered() {
     if (!state.realTestMode && state.currentWeight == null) {
       state.filtered = [];
       return;
@@ -314,31 +318,34 @@
 
     if (!state.realTestMode) {
       if (state.currentWeight !== "all") {
-        items = items.filter(
-          (q) => Number(q.weight_points) === Number(state.currentWeight),
-        );
+        items = items.filter((q) => Number(q.weight_points) === Number(state.currentWeight));
       }
     }
 
-    if (state.deservesMode) items = items.filter(deservesFromTracking);
-    else if (state.onlyUnanswered) items = items.filter(isUnansweredLifetime);
+    if (state.deservesMode) {
+      const results = await Promise.all(items.map(deservesFromTracking));
+      items = items.filter((_, i) => results[i]);
+    } else if (state.onlyUnanswered) {
+      const results = await Promise.all(items.map(isUnansweredLifetime));
+      items = items.filter((_, i) => results[i]);
+    }
 
     state.filtered = items;
   }
 
-  function showSelectWeightEmptyState() {
+  async function showSelectWeightEmptyState() {
     els.emptyState()?.classList.remove(CLS.hidden);
     els.quiz()?.classList.add(CLS.hidden);
 
     safeText(els.qNumber(), "");
     safeText(els.qText(), "");
 
-    els.pdfInner() && (els.pdfInner().innerHTML = "");
+    if (els.pdfInner()) els.pdfInner().innerHTML = "";
 
-    els.options() && (els.options().innerHTML = "");
+    if (els.options()) els.options().innerHTML = "";
     els.confirmBtn()?.classList.add(CLS.hidden);
     safeText(els.score(), "");
-    updateQuestionStats(null);
+    await updateQuestionStats(null);
   }
 
   function hideEmptyState() {
@@ -396,10 +403,21 @@
   }
 
   /* =====================
-     6) PDF rendering (IFRAME)
+     6) PDF rendering (PDF.js CANVAS)
   ===================== */
+  function ensurePdfJsWorker() {
+    const lib = window.pdfjsLib;
+    if (!lib) return false;
+
+    if (!lib.GlobalWorkerOptions.workerSrc) {
+      lib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+    }
+    return true;
+  }
+
   async function renderPdf(q) {
-    const wrap = els.pdfInner() || els.pictureContainer();
+    const wrap = els.pdfInner();
     if (!wrap) return;
 
     const myToken = ++pdfRenderToken;
@@ -420,8 +438,8 @@
       return;
     }
 
-    // If you have a helper that converts storage paths to signed download URLs
-    if (!(/^https?:\/\//i.test(url)) && window.getFirebaseStorageUrl) {
+    // If you have helper: storage path -> download URL
+    if (!/^https?:\/\//i.test(url) && window.getFirebaseStorageUrl) {
       try {
         const storageUrl = await window.getFirebaseStorageUrl(url);
         if (storageUrl) url = storageUrl;
@@ -430,51 +448,95 @@
       }
     }
 
+    if (!ensurePdfJsWorker()) {
+      wrap.textContent = "PDF.js not loaded.";
+      return;
+    }
+
     const loading = document.createElement("div");
     loading.style.cssText =
       "padding:10px 12px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;opacity:.75;font-weight:700;";
     loading.textContent = "Loading page…";
     wrap.appendChild(loading);
 
-    if (myToken !== pdfRenderToken) return;
+    const renderToCanvas = async () => {
+      if (myToken !== pdfRenderToken) return;
+      if (activePdfRenderController.signal.aborted) return;
 
-    // ✅ Use iframe to display PDF (no CORS issues)
-    wrap.innerHTML = "";
-    wrap.style.width = "100%";
-    wrap.style.aspectRatio = "1 / 1.414";
-    wrap.style.height = "auto";
-    wrap.style.overflow = "hidden";
-    wrap.style.background = "#fff";
-    wrap.style.position = "relative";
+      wrap.innerHTML = "";
 
-    const iframe = document.createElement("iframe");
+      const canvas = document.createElement("canvas");
+      canvas.className = "quiz--pdf-canvas";
+      wrap.appendChild(canvas);
 
-    // ✅ KEY FIX: force built-in PDF viewer zoom to page width
-    const params = "#zoom=page-width&toolbar=0&navpanes=0&scrollbar=0";
+      const lib = window.pdfjsLib;
 
-    iframe.src = url.includes("#")
-      ? `${url}&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0`
-      : `${url}${params}`;
+      const task = lib.getDocument({
+        url,
+        disableStream: true,
+        disableAutoFetch: true,
+      });
 
-    iframe.style.position = "absolute";
-    iframe.style.inset = "0";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "0";
-    iframe.style.display = "block";
-    iframe.style.background = "#fff";
-    iframe.loading = "lazy";
-    iframe.style.pointerEvents = "none";
-    iframe.setAttribute("scrolling", "no");
+      const pdf = await task.promise;
+      if (activePdfRenderController.signal.aborted) {
+        try {
+          await pdf.destroy();
+        } catch {}
+        return;
+      }
+
+      const page = await pdf.getPage(1);
+
+      const containerWidth = wrap.clientWidth || 800;
+      const viewport1 = page.getViewport({ scale: 1 });
+
+      const scale = containerWidth / viewport1.width;
+      const viewport = page.getViewport({ scale });
+
+      const ctx = canvas.getContext("2d", { alpha: false });
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      try {
+        await pdf.destroy();
+      } catch {}
+    };
+
+    try {
+      await renderToCanvas();
+    } catch (err) {
+      if (myToken !== pdfRenderToken) return;
+      console.error("PDF render failed:", err);
+      wrap.innerHTML = "";
+      wrap.textContent = "Failed to render PDF.";
+      return;
+    }
+
+    const onResize = () => {
+      if (activePdfRenderController.signal.aborted) return;
+      clearTimeout(renderPdf._t);
+      renderPdf._t = setTimeout(() => {
+        renderToCanvas().catch(() => {});
+      }, 120);
+    };
+
+    window.removeEventListener("resize", renderPdf._resizeHandler);
+    renderPdf._resizeHandler = onResize;
+    window.addEventListener("resize", onResize);
 
     activePdfRenderController.signal.addEventListener("abort", () => {
-      try {
-        iframe.src = "about:blank";
-      } catch {}
+      window.removeEventListener("resize", onResize);
     });
-
-    if (myToken !== pdfRenderToken) return;
-    wrap.appendChild(iframe);
   }
 
   /* =====================
@@ -536,7 +598,13 @@
       container.appendChild(div);
     });
 
-    if (confirmBtn) confirmBtn.onclick = () => confirmAnswer(q);
+    if (confirmBtn) confirmBtn.onclick = async () => {
+      try {
+        await confirmAnswer(q);
+      } catch (err) {
+        console.error("Error confirming answer:", err);
+      }
+    };
   }
 
   function updateScore() {
@@ -546,18 +614,18 @@
     }
     safeText(
       els.score(),
-      `✅ ${state.score} correct out of ${state.answered} answered.`,
+      `✅ ${state.score} correct out of ${state.answered} answered.`
     );
   }
 
   /* =====================
      8) Render Question
   ===================== */
-  function renderQuestion() {
+  async function renderQuestion() {
     ensureQuestionStatsDOM();
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
+      await showSelectWeightEmptyState();
       return;
     }
 
@@ -565,7 +633,7 @@
     state.currentQuestion = q || null;
 
     if (!q) {
-      showSelectWeightEmptyState();
+      await showSelectWeightEmptyState();
       return;
     }
 
@@ -589,19 +657,19 @@
       typeof q.correct_index === "number"
         ? Number(q.correct_index)
         : Array.isArray(q.alternatives)
-          ? q.alternatives.findIndex((a) => a?.is_correct === true)
-          : -1;
+        ? q.alternatives.findIndex((a) => a?.is_correct === true)
+        : -1;
 
     renderOptions(q, alreadyAnswered, correctIndex);
 
     updateScore();
-    updateQuestionStats(q);
+    await updateQuestionStats(q);
   }
 
   /* =====================
      9) Confirm Answer
   ===================== */
-  function confirmAnswer(q) {
+  async function confirmAnswer(q) {
     if (q.userAnswerIndex !== undefined && q.userAnswerIndex !== null) {
       els.confirmBtn()?.classList.add(CLS.hidden);
       return;
@@ -613,8 +681,8 @@
       typeof q.correct_index === "number"
         ? Number(q.correct_index)
         : Array.isArray(q.alternatives)
-          ? q.alternatives.findIndex((a) => a?.is_correct === true)
-          : -1;
+        ? q.alternatives.findIndex((a) => a?.is_correct === true)
+        : -1;
 
     q.userAnswerIndex = state.selectedOptionIndex;
 
@@ -622,8 +690,7 @@
     if (isCorrect) state.score++;
     state.answered++;
 
-    bumpLifetime(q, isCorrect);
-
+    // ✅ Show UI feedback immediately (non-blocking)
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
@@ -631,23 +698,44 @@
 
     updateScore();
     updateQuestionStats(q);
+    
+    // ✅ Run database writes in background without blocking UI
+    bumpLifetime(q, isCorrect).catch(err => {
+      console.error("Failed to save answer to database:", err);
+    });
+    
+    // ✅ Log to Firestore (non-blocking)
+    if (window.dbService && window.dbService.logQuestionResponse) {
+      const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
+      window.dbService.logQuestionResponse({
+        questionId: getStableQuestionId(q),
+        questionType: "reading",
+        testId: q.test_id || null,
+        questionNumber: q.question_number || q.overall_question_number?.toString() || "",
+        weight: q.weight_points || 0,
+        selectedOption: selectedLetter,
+        isCorrect: isCorrect,
+      }).catch(err => {
+        console.warn("Failed to log reading response to Firestore:", err);
+      });
+    }
   }
 
   /* =====================
      10) Navigation
   ===================== */
-  function nextQuestion() {
+  async function nextQuestion() {
     if (!state.filtered.length) return;
     if (state.index < state.filtered.length - 1) state.index++;
 
-    renderQuestion();
+    await renderQuestion();
     if (state.realTestMode) renderRealTestDots();
   }
 
-  function prevQuestion() {
+  async function prevQuestion() {
     if (!state.filtered.length) return;
     if (state.index > 0) state.index--;
-    renderQuestion();
+    await renderQuestion();
     if (state.realTestMode) renderRealTestDots();
   }
 
@@ -669,15 +757,15 @@
       state.currentWeight === "all"
         ? document.querySelector(`.${CLS.weightBtn}[data-all="1"]`)
         : document.querySelector(
-            `.${CLS.weightBtn}[data-weight="${state.currentWeight}"]`,
+            `.${CLS.weightBtn}[data-weight="${state.currentWeight}"]`
           );
     selectedBtn?.classList.add(CLS.selectedWeight);
 
-    recomputeFiltered();
+    await recomputeFiltered();
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
-      updateDeservesButton();
+      await showSelectWeightEmptyState();
+      await updateDeservesButton();
       return;
     }
 
@@ -689,11 +777,11 @@
     state.answered = 0;
 
     els.quiz()?.classList.remove(CLS.hidden);
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
   }
 
-  function toggleDeserves() {
+  async function toggleDeserves() {
     state.deservesMode = !state.deservesMode;
 
     if (state.deservesMode) {
@@ -702,7 +790,7 @@
       if (chk) chk.checked = false;
     }
 
-    recomputeFiltered();
+    await recomputeFiltered();
     shuffle(state.filtered);
 
     state.index = 0;
@@ -710,15 +798,15 @@
     state.answered = 0;
 
     if (!state.realTestMode && state.currentWeight == null) {
-      showSelectWeightEmptyState();
-      updateDeservesButton();
+      await showSelectWeightEmptyState();
+      await updateDeservesButton();
       return;
     }
 
     hideEmptyState();
     els.quiz()?.classList.remove(CLS.hidden);
-    renderQuestion();
-    updateDeservesButton();
+    await renderQuestion();
+    await updateDeservesButton();
   }
 
   // ============================
@@ -849,9 +937,9 @@
 
       if (i === state.index) dot.classList.add("quiz--active");
 
-      dot.addEventListener("click", () => {
+      dot.addEventListener("click", async () => {
         state.index = i;
-        renderQuestion();
+        await renderQuestion();
         renderRealTestDots();
       });
 
@@ -859,7 +947,7 @@
     });
   }
 
-  function startRealTest() {
+  async function startRealTest() {
     closeRealTestOverlay();
 
     state.realTestMode = true;
@@ -881,11 +969,11 @@
     els.quiz()?.classList.remove(CLS.hidden);
     hideEmptyState();
 
-    renderQuestion();
+    await renderQuestion();
     renderRealTestDots();
   }
 
-  function finishRealTest() {
+  async function finishRealTest() {
     state.realTestFinished = true;
     state.realTestMode = false;
 
@@ -897,8 +985,8 @@
     state.filtered = [];
     state.index = 0;
 
-    showSelectWeightEmptyState();
-    updateDeservesButton();
+    await showSelectWeightEmptyState();
+    await updateDeservesButton();
   }
 
   /* =====================
@@ -925,31 +1013,22 @@
 
     els.realTestBtn()?.addEventListener("click", openRealTestOverlay);
 
-    document
-      .getElementById("rtClose")
-      ?.addEventListener("click", closeRealTestOverlay);
-    document
-      .getElementById("rtBackdrop")
-      ?.addEventListener("click", closeRealTestOverlay);
+    document.getElementById("rtClose")?.addEventListener("click", closeRealTestOverlay);
+    document.getElementById("rtBackdrop")?.addEventListener("click", closeRealTestOverlay);
 
-    document
-      .getElementById("startRealTestBtn")
-      ?.addEventListener("click", startRealTest);
+    document.getElementById("startRealTestBtn")?.addEventListener("click", startRealTest);
+    document.getElementById("finishRealTestBtn")?.addEventListener("click", finishRealTest);
 
-    document
-      .getElementById("finishRealTestBtn")
-      ?.addEventListener("click", finishRealTest);
-
-    els.onlyChk()?.addEventListener("click", (e) => {
+    els.onlyChk()?.addEventListener("click", async (e) => {
       state.onlyUnanswered = !!e.target.checked;
 
       if (state.onlyUnanswered) state.deservesMode = false;
 
-      updateDeservesButton();
-      recomputeFiltered();
+      await updateDeservesButton();
+      await recomputeFiltered();
 
       if (!state.realTestMode && state.currentWeight == null) {
-        showSelectWeightEmptyState();
+        await showSelectWeightEmptyState();
         return;
       }
 
@@ -957,7 +1036,7 @@
       state.index = 0;
       state.score = 0;
       state.answered = 0;
-      renderQuestion();
+      await renderQuestion();
     });
 
     window.addEventListener("keydown", (e) => {
@@ -991,9 +1070,9 @@
     state.onlyUnanswered = false;
     state.deservesMode = false;
 
-    recomputeFiltered();
-    showSelectWeightEmptyState();
-    updateDeservesButton();
+    await recomputeFiltered();
+    await showSelectWeightEmptyState();
+    await updateDeservesButton();
   }
 
   window.filterQuestions = filterQuestions;
