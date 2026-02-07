@@ -225,6 +225,9 @@ async function getUserStatistics(userId, options = {}) {
     return stats;
   } catch (error) {
     console.error("❌ Error getting user statistics:", error);
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      console.error("\n🔥 FIRESTORE INDEX REQUIRED:\nYou need to create a composite index for 'questionResponses' collection:\n- Field: userId (Ascending)\n- Field: answeredAt (Descending)\n\nClick the link in the error above or go to Firebase Console > Firestore > Indexes\n");
+    }
     throw error;
   }
 }
@@ -657,7 +660,10 @@ function listenToAnswerHistory(userId, callback, limitCount = 50) {
         callback(answers);
       },
       (error) => {
-        console.error("Error listening to answer history:", error);
+        console.error("❌ Error listening to answer history:", error);
+        if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+          console.error("\n🔥 FIRESTORE INDEX REQUIRED:\nYou need to create a composite index for 'questionResponses' collection:\n- Field: userId (Ascending)\n- Field: answeredAt (Descending)\n\nClick the link in the error above or go to Firebase Console > Firestore > Indexes\n");
+        }
         callback([]);
       }
     );

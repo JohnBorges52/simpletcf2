@@ -112,6 +112,7 @@ function fmtPct(n) {
    * Load user statistics from Firestore
    */
   async function loadOverviewAndProgress(userId) {
+    console.log("📊 Loading statistics for user:", userId);
     if (!window.dbService) {
       console.warn("dbService not available");
       return;
@@ -119,10 +120,13 @@ function fmtPct(n) {
 
     try {
       const stats = await window.dbService.getUserStatistics(userId);
-      const total = stats.totalAnswers || 0;
-      const correct = stats.correctAnswers || 0;
+      console.log("📊 User statistics loaded:", stats);
+      const total = stats.totalResponses || 0;
+      const correct = stats.correctResponses || 0;
       const wrong = total - correct;
       const accuracy = total > 0 ? (correct / total) * 100 : 0;
+
+      console.log(`Stats: Total=${total}, Correct=${correct}, Wrong=${wrong}, Accuracy=${accuracy.toFixed(2)}%`);
 
       // Overview KPIs
       const accuracyEl = $("kpiAccuracy");
@@ -184,6 +188,7 @@ function fmtPct(n) {
    * Start real-time listener for answer history
    */
   async function startAnswerHistoryListener(userId) {
+    console.log("🎧 Starting answer history listener for user:", userId);
     if (!window.dbService || !window.dbService.listenToAnswerHistory) {
       console.warn("Answer history listener not available");
       return;
@@ -193,6 +198,7 @@ function fmtPct(n) {
     if (!tableBody) return;
 
     window.dbService.listenToAnswerHistory(userId, (answers) => {
+      console.log("📝 Answer history update received:", answers.length, "answers");
       if (!answers || answers.length === 0) {
         tableBody.innerHTML = `
           <tr>
