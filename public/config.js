@@ -161,6 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!startBtn && !googleBtn) return;
 
   console.log("📝 Register page detected");
+  console.log("Start button:", startBtn);
+  console.log("Google button:", googleBtn);
 
   // Wire password toggles
   wirePasswordToggle({
@@ -252,16 +254,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google Sign-in
   googleBtn?.addEventListener("click", async () => {
+    console.log("Google register button clicked!");
+    
+    const originalHTML = googleBtn.innerHTML;
     try {
       googleBtn.disabled = true;
-      googleBtn.textContent = "Signing in...";
+      googleBtn.innerHTML = '<span>Signing in with Google...</span>';
 
+      console.log("Waiting for auth...");
       // Wait for auth to be ready
       await AuthService.waitForAuth();
 
+      console.log("Calling signInWithGoogle...");
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
+      console.log("Google sign-in successful:", user.email);
       // For Google sign-in, users are auto-verified
       showWelcomeMessage(user.displayName || "User", user.email);
 
@@ -270,6 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
         // User cancelled, just re-enable button
+        console.log("User cancelled Google sign-in");
       } else {
         const msg = AuthService.formatAuthError(error);
         showFieldError(emailInput, "err-email", msg);
@@ -277,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } finally {
       googleBtn.disabled = false;
-      googleBtn.textContent = "Continue with Google";
+      googleBtn.innerHTML = originalHTML;
     }
   });
 });
@@ -286,26 +295,32 @@ document.addEventListener("DOMContentLoaded", () => {
 // Login Page Logic
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-  const emailInput = document.getElementById("login-email");
-  const passwordInput = document.getElementById("login-password");
-  const loginBtn = document.getElementById("login-btn");
-  const googleLoginBtn = document.getElementById("login-btn-google");
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const loginForm = document.getElementById("loginForm");
+  const loginBtn = document.getElementById("loginSubmit");
+  const googleLoginBtn = document.getElementById("googleBtn");
 
   // Only run on login page
-  if (!loginBtn && !googleLoginBtn) return;
+  if (!loginForm && !googleLoginBtn) return;
 
   console.log("🔐 Login page detected");
+  console.log("Login form:", loginForm);
+  console.log("Google button:", googleLoginBtn);
+  console.log("Email input:", emailInput);
+  console.log("Password input:", passwordInput);
 
   // Wire password toggle
   wirePasswordToggle({
     buttonId: "login-toggle-password",
-    inputId: "login-password",
+    inputId: "passwordInput",
     eyeOnId: "login-eye-on",
     eyeOffId: "login-eye-off",
   });
 
   // Email/Password Login
-  loginBtn?.addEventListener("click", async () => {
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
     const email = emailInput?.value.trim() || "";
     const password = passwordInput?.value || "";
 
@@ -343,9 +358,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Sign in
+    const originalText = loginBtn.innerHTML;
     try {
       loginBtn.disabled = true;
-      loginBtn.textContent = "Signing in...";
+      loginBtn.innerHTML = '<span>Signing in...</span>';
 
       const result = await AuthService.signInWithEmail(email, password);
       const user = result.user;
@@ -381,22 +397,28 @@ document.addEventListener("DOMContentLoaded", () => {
       shakeElement("#loginForm");
     } finally {
       loginBtn.disabled = false;
-      loginBtn.textContent = "Sign In";
+      loginBtn.innerHTML = originalText || '<span class="ml-3">Log in</span>';
     }
   });
 
   // Google Login
   googleLoginBtn?.addEventListener("click", async () => {
+    console.log("Google login button clicked!");
+    
+    const originalHTML = googleLoginBtn.innerHTML;
     try {
       googleLoginBtn.disabled = true;
-      googleLoginBtn.textContent = "Signing in...";
+      googleLoginBtn.innerHTML = '<span>Signing in with Google...</span>';
 
+      console.log("Waiting for auth...");
       // Wait for auth to be ready
       await AuthService.waitForAuth();
 
+      console.log("Calling signInWithGoogle...");
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
+      console.log("Google sign-in successful:", user.email);
       // Google users are typically pre-verified
       showWelcomeMessage(user.displayName || "User", user.email);
 
@@ -405,6 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
         // User cancelled
+        console.log("User cancelled Google sign-in");
       } else {
         const msg = AuthService.formatAuthError(error);
         showFieldError(emailInput, "err-login-email", msg);
@@ -412,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } finally {
       googleLoginBtn.disabled = false;
-      googleLoginBtn.textContent = "Sign in with Google";
+      googleLoginBtn.innerHTML = originalHTML;
     }
   });
 });
