@@ -399,6 +399,7 @@ function fmtPct(n) {
   async function oldCodeRemoved_startAnswerHistoryListener(userId) {
     // THIS FUNCTION IS NO LONGER USED - REMOVED PER USER REQUEST
     return;
+  }
 
   /**
    * Bind logout button
