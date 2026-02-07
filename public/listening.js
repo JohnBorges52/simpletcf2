@@ -650,7 +650,7 @@ import {
   }
 
   /* 7) Rendering */
-  function renderPicture(q, displayNumStr) {
+  async function renderPicture(q, displayNumStr) {
     const picWrap = els.picture();
     if (!picWrap) return;
 
@@ -658,6 +658,22 @@ import {
       const imgSrc = resolveImageSrc(q);
       if (imgSrc) {
         const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));
+        
+        // Try to get Firebase Storage URL if it's a relative path
+        if (!(/^https?:\/\//i.test(imgSrc)) && window.getFirebaseStorageUrl) {
+          try {
+            const storageUrl = await window.getFirebaseStorageUrl(imgSrc);
+            if (storageUrl) {
+              picWrap.innerHTML = `<img src="${storageUrl}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
+              picWrap.classList.remove(CLS.hidden);
+              return;
+            }
+          } catch (err) {
+            console.warn("Storage URL failed for picture, trying local path:", imgSrc, err);
+          }
+        }
+        
+        // Fallback to direct path (for absolute URLs or if storage fetch failed)
         picWrap.innerHTML = `<img src="${imgSrc}" alt="Question ${numForAlt} illustration" class="quiz--question-picture">`;
         picWrap.classList.remove(CLS.hidden);
         return;
@@ -805,7 +821,7 @@ import {
     const qNumDisplayStr = fmt2or3(headerNum);
     safeText(qNum, `Question ${qNumDisplayStr}`);
 
-    renderPicture(q, qNumDisplayStr);
+    await renderPicture(q, qNumDisplayStr);
     renderAudio(q);
 
     const alreadyAnswered = q.userAnswerIndex !== undefined;

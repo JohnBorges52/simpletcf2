@@ -30,7 +30,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test1_question01.png",
+    "picture": "pictures/COpicture_test1_question01.png",
     "transcript": "A. Allez-y, entrez. B. Asseyez-vous, je vous en prie. C. Fermez la porte, s'il vous plaît. D. Merci pour ce café."
   },
   {
@@ -64,7 +64,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test1_question02.png",
+    "picture": "pictures/COpicture_test1_question02.png",
     "transcript": "A. A bientôt, au plaisir de vous revoir. B. Le programme est affiché sur la porte. C. Voici la salle pour prendre le petit déjeuner. D. Vous pouvez laisser vos bagages là."
   },
   {
@@ -1356,7 +1356,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test2_question01.png",
+    "picture": "pictures/COpicture_test2_question01.png",
     "transcript": "A. J'aimerais ouvrir ce colis. C'est un cadeau. B. Je n'arrive pas à écrire le courrier pour le directeur. C. Je voudrais envoyer cette lettre, s'il vous plaît. D. Le facteur est passé. Tu vas chercher le courrier ?"
   },
   {
@@ -1390,7 +1390,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test2_question02.png",
+    "picture": "pictures/COpicture_test2_question02.png",
     "transcript": "A. Arrête de jouer avec le ballon. B. Fais attention avant de traverser. C. Mets ton bonnet tout de suite. D. Regarde les enfants."
   },
   {
@@ -1424,7 +1424,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test2_question03.png",
+    "picture": "pictures/COpicture_test2_question03.png",
     "transcript": "A. Bravo aux cuisiniers, c'est délicieux. B. Je voudrais une table près de la fenêtre. C. Un autre café, s'il vous plaît. D. Vous pouvez garder la monnaie."
   },
   {
@@ -2614,7 +2614,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test3_question01.png",
+    "picture": "pictures/COpicture_test3_question01.png",
     "transcript": "A. La séance débute tout de suite, salle 3. Bon film. B. Voilà votre carte d'embarquement. Bon voyage. C. Votre table est juste devant vous. Bon appétit. D. Votre train part dans 30 minutes. Bon après-midi."
   },
   {
@@ -2648,7 +2648,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test3_question02.png",
+    "picture": "pictures/COpicture_test3_question02.png",
     "transcript": "A. Alors, les cabines se trouvent à droite. B. Bien, ça vous fait 49 dollars. C. Oui, je vous apporte la taille en dessous. D. Vraiment, cette robe vous va très bien."
   },
   {
@@ -3906,7 +3906,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test4_question02.png",
+    "picture": "pictures/COpicture_test4_question02.png",
     "transcript": "A. Il est interdit de courir. B. Le toboggan est fermé. C. Mettez votre bonnet de bain. D. Vous devez sortir de l'eau."
   },
   {
@@ -5164,7 +5164,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test5_question04.png",
+    "picture": "pictures/COpicture_test5_question04.png",
     "transcript": "A. J'espère qu'on va pouvoir entrer. B. Attendons dehors, c'est mieux. C. Ma glace est très bonne. D. Bonjour, deux places s'il vous plaît."
   },
   {
@@ -5198,7 +5198,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test5_question05.png",
+    "picture": "pictures/COpicture_test5_question05.png",
     "transcript": "A. Voici le résultat de vos analyses médicales. B. Temps chaud et sec au sud de l'Europe. C. Voilà une peinture moderne. D. Les indices économiques sont bons."
   },
   {
@@ -5232,7 +5232,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test5_question06.png",
+    "picture": "pictures/COpicture_test5_question06.png",
     "transcript": "A. Baissez les bras. B. Enlevez votre pull. C. Installez-vous. D. Respirez bien fort."
   },
   {
@@ -5266,7 +5266,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test5_question08.png",
+    "picture": "pictures/COpicture_test5_question08.png",
     "transcript": "C'est un acteur formidable je déteste la publicité tu vas payer nos billets viens on va s'asseoir là"
   },
   {
@@ -7068,7 +7068,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test7_question02.png",
+    "picture": "pictures/COpicture_test7_question02.png",
     "transcript": "A. M. Tremblay est devant sa femme. B. M. Tremblay suit avec les achats. C. Mme Tremblay sort d'une parfumerie. D. Mme Tremblay porte tous les paquets."
   },
   {
@@ -7884,7 +7884,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test8_question01.png",
+    "picture": "pictures/COpicture_test8_question01.png",
     "transcript": "A. Maman, achète-moi un jouet. B. Maman, regarde le joli chien. C. Maman, tu me lis une histoire. D. Maman, je veux jouer avec eux."
   },
   {
@@ -7918,7 +7918,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test8_question02.png",
+    "picture": "pictures/COpicture_test8_question02.png",
     "transcript": "A. Alors, tu viens t'asseoir pour dîner ? B. Ça y est, tu es prêt à mettre la table ? C. Pourquoi tu ne veux pas manger ? D. Tu peux m'aider à préparer le repas ?"
   },
   {
@@ -9618,7 +9618,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test10_question01.png",
+    "picture": "pictures/COpicture_test10_question01.png",
     "transcript": "A. Bienvenue à Paris-Agora. B. Deux cents euros, s'il vous plaît. C. Il est 20h30. D. Il vient du Japon."
   },
   {
@@ -9652,7 +9652,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test10_question02.png",
+    "picture": "pictures/COpicture_test10_question02.png",
     "transcript": "A. Tu aimes le bœuf à la québécoise ? B. Tu connais l'heure du prochain film ? C. Tu sais où est la station de métro ? D. Tu vois où j'habite sur ce plan ?"
   },
   {
@@ -9686,7 +9686,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test10_question03.png",
+    "picture": "pictures/COpicture_test10_question03.png",
     "transcript": "A. Sept au troisième étage. B. Entreprise Lapex, bonjour. C. La cafétéria est derrière vous. D. Voici votre badge, monsieur."
   },
   {
@@ -9720,7 +9720,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test10_question04.png",
+    "picture": "pictures/COpicture_test10_question04.png",
     "transcript": "A. Deux baguettes, s'il vous plaît. B. Cette boutique est magnifique. C. J'adore toutes ces chaussures. D. Ouah, j'achète cette veste."
   },
   {
@@ -10774,7 +10774,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test11_question02.png",
+    "picture": "pictures/COpicture_test11_question02.png",
     "transcript": "A. Dis bonjour à ta sœur. B. Donne-moi mon sac. C. Prends des gâteaux. D. Viens boire ton thé."
   },
   {
@@ -11760,7 +11760,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test12_question01.png",
+    "picture": "pictures/COpicture_test12_question01.png",
     "transcript": "A. La Seymarque à la montagne. B. La Seymarque avec ses voisins. C. La Seymarque dans sa voiture. D. La Seymarque devant le musée."
   },
   {
@@ -12576,7 +12576,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test13_question01.png",
+    "picture": "pictures/COpicture_test13_question01.png",
     "transcript": "A. Après vous, je vous en prie. B. Enchanté, je suis Julie. C. Je suis désolée, c'est complet. D. Un instant, ne quittez pas. Sous-titres réalisés para la communauté d'Amara. Org"
   },
   {
@@ -12610,7 +12610,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test13_question02.png",
+    "picture": "pictures/COpicture_test13_question02.png",
     "transcript": "A. Et là, c'est ta maison ? B. C'est toi, le joli bébé ? C. Il est gentil, ce gros chien ? D. Ta sœur, elle est sur le vélo ? Sous-titres réalisés para la communauté d'Amara. Org"
   },
   {
@@ -12644,7 +12644,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test13_question03.png",
+    "picture": "pictures/COpicture_test13_question03.png",
     "transcript": "A. Essaie une taille plus grande. B. La couleur de ta robe est très jolie. C. Mets tes chaussures. D. Toutes les cabines sont occupées."
   },
   {
@@ -13460,7 +13460,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test14_question01.png",
+    "picture": "pictures/COpicture_test14_question01.png",
     "transcript": "A. Il est beau ces danseurs. B. J'adore cette chanson. C. Ma radio est trop forte. D. Tu joues bien du piano."
   },
   {
@@ -13494,7 +13494,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test14_question02.png",
+    "picture": "pictures/COpicture_test14_question02.png",
     "transcript": "A. Je peux m'asseoir ici ? B. Mon chien peut venir avec moi ? C. Quand part le prochain bus ? D. Vous pouvez me donner un ticket ?"
   },
   {
@@ -13528,7 +13528,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test14_question03.png",
+    "picture": "pictures/COpicture_test14_question03.png",
     "transcript": "A, levez-vous. B, attention, souriez. C, chantez ensemble. D, prêts, partez."
   },
   {
@@ -13562,7 +13562,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test14_question04.png",
+    "picture": "pictures/COpicture_test14_question04.png",
     "transcript": "Regardez image 4. A. Au salon de la chambure. B. Demandez à emprunter la ville. C. L'entrée de la préfecture Yara. D. La voiture est au parking. Écouter l'expression et les propres propositions. Choisissez votre réponse."
   },
   {
@@ -14310,7 +14310,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test15_question01.png",
+    "picture": "pictures/COpicture_test15_question01.png",
     "transcript": "A. Passez dans la salle suivante. B. Posez vos manteaux ici. C. Prenez un billet à la caisse. D. Regardez bien ce paysage."
   },
   {
@@ -14344,7 +14344,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test15_question02.png",
+    "picture": "pictures/COpicture_test15_question02.png",
     "transcript": "A. Dépêche-toi. Le train va bientôt partir. B. Fais un beau sourire pour la photo. C. Passe une bonne journée et travaille bien. D. Prends ton parapluie. Il va bientôt pleuvoir."
   },
   {
@@ -15092,7 +15092,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test16_question01.png",
+    "picture": "pictures/COpicture_test16_question01.png",
     "transcript": "A. Ce pantalon me va ? B. Je mets quelle cravate ? C. Où est ma chemise ? Tu aimes ce pull ?"
   },
   {
@@ -16078,7 +16078,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test17_question02.png",
+    "picture": "pictures/COpicture_test17_question02.png",
     "transcript": "A. Quel temps fait-il ? B. Qu'est-ce que tu lis ? C. Qui est au téléphone ? D. Veux-tu aller dehors ? Merci à vous."
   },
   {
@@ -16112,7 +16112,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test17_question03.png",
+    "picture": "pictures/COpicture_test17_question03.png",
     "transcript": "A. Éteins la lumière. B. Ferme la fenêtre. C. Lève-toi, c'est l'heure. D. Pose ton livre."
   },
   {
@@ -17642,7 +17642,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test19_question02.png",
+    "picture": "pictures/COpicture_test19_question02.png",
     "transcript": "A. J'aime prendre l'avion. B. Le train est arrivé. C. Quelle belle voiture. D. Voilà enfin l'autobus."
   },
   {
@@ -18458,7 +18458,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test20_question01.png",
+    "picture": "pictures/COpicture_test20_question01.png",
     "transcript": "A. Donne-moi ça, maman. B. Attention, c'est très chaud. C. Bon anniversaire, maman. D. Non, je n'ai pas envie."
   },
   {
@@ -19206,7 +19206,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test21_question01.png",
+    "picture": "pictures/COpicture_test21_question01.png",
     "transcript": "A. Cours vite, le train arrive. B. Descends vite de ton vélo. C. Entre vite dans la voiture. D. Monte vite dans le bus."
   },
   {
@@ -20532,7 +20532,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test23_question01.png",
+    "picture": "pictures/COpicture_test23_question01.png",
     "transcript": "A. Le film a déjà commencé. B. Je vous fais un paquet cadeau. C. Prenez votre température. D. Voilà votre médicament."
   },
   {
@@ -20566,7 +20566,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test23_question02.png",
+    "picture": "pictures/COpicture_test23_question02.png",
     "transcript": "A. Lisez les lettres. B. Ouvrez la bouche. C. Pliez la jambe. D. Respirez fort."
   },
   {
@@ -21246,7 +21246,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test24_question02.png",
+    "picture": "pictures/COpicture_test24_question02.png",
     "transcript": "A. Madame, c'est libre ici ? B. Madame, je peux m'asseoir ? C. Madame, où est votre billet ? D. Madame, vous voulez ma place ?"
   },
   {
@@ -21416,7 +21416,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test26_question04.png",
+    "picture": "pictures/COpicture_test26_question04.png",
     "transcript": "A. Cette chaleur me fatigue. B. Il va bientôt faire nuit. C. Je commence à avoir froid. D. Le temps est très nuageux."
   },
   {
@@ -21450,7 +21450,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test26_question05.png",
+    "picture": "pictures/COpicture_test26_question05.png",
     "transcript": "A. Il neige encore. B. J'attends le soleil. C. Quelle belle journée. D. Qu'est-ce qu'il pleut."
   },
   {
@@ -21994,7 +21994,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test27_question01.png",
+    "picture": "pictures/COpicture_test27_question01.png",
     "transcript": "A. Ouvre ton livre. B. Retourne à ta place. C. Sors tes affaires. D. Viens répondre."
   },
   {
@@ -22742,7 +22742,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test28_question01.png",
+    "picture": "pictures/COpicture_test28_question01.png",
     "transcript": "A. Attention, vous allez vous blesser. B. Le cours d'anglais commence à 8 heures. C. Pierre, tu es libre pour un tennis ? D. Voici le dossier d'inscription à compléter."
   },
   {
@@ -24204,7 +24204,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test30_question01.png",
+    "picture": "pictures/COpicture_test30_question01.png",
     "transcript": "A. Donne-moi un verre de lait. B. Elle est belle, votre viande. C. Je voudrais un kilo de tomates. D Pardon, je cherche le marché."
   },
   {
@@ -24306,7 +24306,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test31_question01.png",
+    "picture": "pictures/COpicture_test31_question01.png",
     "transcript": "A. Regarde, c'est fermé ce soir. B. Regarde, il manque un document. C. Regarde, il s'est cassé la jambe. D. Regarde, la fumée vient de là."
   },
   {
@@ -24340,7 +24340,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test31_question03.png",
+    "picture": "pictures/COpicture_test31_question03.png",
     "transcript": "A. Circulation tout à fait normale sur l'autoroute 440. B. Aucune circulation dans les deux sens sur l'autoroute. C. Un terrible accident sur la route des vacances. D. Attention, gros embouteillage sur l'autoroute 440."
   },
   {
@@ -25088,7 +25088,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test32_question01.png",
+    "picture": "pictures/COpicture_test32_question01.png",
     "transcript": "A. Attention, votre valise est ouverte. B. Ce modèle de valise coûte 69 euros. C. Posez votre valise ici, s'il vous plaît. Et voilà, votre balise est prête."
   },
   {
@@ -25122,7 +25122,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test32_question02.png",
+    "picture": "pictures/COpicture_test32_question02.png",
     "transcript": "A. Bonjour, un set de frites, s'il vous plaît. B. Bonsoir, une table pour autre personne. C. Monsieur, un kilo de tomates, je vous prie. D. Tenez, vous pouvez garder la main lèvre."
   },
   {
@@ -25156,7 +25156,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test32_question03.png",
+    "picture": "pictures/COpicture_test32_question03.png",
     "transcript": "A. Quel modèle vous modélez ? B. Quel coup vous préférez ? C. Quelle est votre pointure ? D. Quelle taille vous faites ?"
   },
   {
@@ -25190,7 +25190,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test32_question04.png",
+    "picture": "pictures/COpicture_test32_question04.png",
     "transcript": "A. Attention, elle est très lourde. B. Je voudrais un billet pour Strasbourg. C. Le plan de Diesel, c'est mignon. D. Mettez votre ceinture, monsieur. Sous-titrage ST' 501"
   },
   {
@@ -25802,7 +25802,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test33_question01.png",
+    "picture": "pictures/COpicture_test33_question01.png",
     "transcript": "A. Arrêtez de vous disputer. B. Finissez votre goûter les enfants. C. Rentrez, vous allez attraper froid. D. Sortez de dessous vos lits."
   },
   {
@@ -26040,7 +26040,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test34_question01.png",
+    "picture": "pictures/COpicture_test34_question01.png",
     "transcript": "Regardez les mailles d'âne. A. Voici le chef, il décore le restaurant. B. Voici le chef, il lave les assiettes. C. Voici le chef, il prépare les glaces. D. Voici le chef, il prend les commandes."
   },
   {
@@ -26210,7 +26210,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test35_question01.png",
+    "picture": "pictures/COpicture_test35_question01.png",
     "transcript": "A. C'est une bonne idée de peindre des enfants. B. Cette sculpture est très intéressante. C. Il y a beaucoup de visiteurs aujourd'hui. D. J'aime les couleurs de ce tableau."
   },
   {
@@ -26924,7 +26924,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test36_question01.png",
+    "picture": "pictures/COpicture_test36_question01.png",
     "transcript": "A. Bonjour, un aller-retour pour Paris, s'il vous plaît. B. Bonjour, un pain au chocolat, s'il vous plaît. C. Bonjour, une boîte d'aspirine, s'il vous plaît. D. Bonjour, une enveloppe avec un câble, s'il vous plaît."
   },
   {
@@ -26958,7 +26958,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test36_question02.png",
+    "picture": "pictures/COpicture_test36_question02.png",
     "transcript": "Regardez image 2. A. Éteignez votre téléphone, madame. B. Mettez votre manteau, il fait froid ici. C. Restez couché, j'appelle un médecin. D. Venez, je vais regarder votre bras."
   },
   {
@@ -27434,7 +27434,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test37_question01.png",
+    "picture": "pictures/COpicture_test37_question01.png",
     "transcript": "Question 1. Écoutez les 4 propositions, choisissez celle qui correspond à l'image. A. Ce spectacle est vraiment intéressant. B. Oh là là, je m'ennuie vraiment. C. J'adore le football. D. Je préfère le menu à 50 dollars."
   },
   {
@@ -28284,7 +28284,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test38_question02.png",
+    "picture": "pictures/COpicture_test38_question02.png",
     "transcript": "A. Ferme les yeux. B. Donne la main. C. Brosse-toi les dents. D. Ouvre la bouche."
   },
   {
@@ -28318,7 +28318,7 @@
       }
     ],
     "is_picture": true,
-    "picture": "data/pictures/COpicture_test38_question03.png",
+    "picture": "pictures/COpicture_test38_question03.png",
     "transcript": "A. Je t'apporte un verre d'eau. B. Je te dépose un roman policier. C. Je te donne le courrier urgent. D. Je te montre le programme télé."
   },
   {
