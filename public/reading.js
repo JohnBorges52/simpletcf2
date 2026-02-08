@@ -1696,6 +1696,10 @@ import {
      12) Init
   ===================== */
   async function init() {
+    // ✅ Wait for Firebase to initialize before using subscription service
+    await window.AuthService?.waitForAuth();
+    console.log('✅ Firebase ready, initializing reading page...');
+    
     // ✅ Initialize subscription service and check access
     await initializeSubscription();
     const hasAccess = await checkReadingAccess();

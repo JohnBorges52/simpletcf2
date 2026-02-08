@@ -627,6 +627,10 @@
   // Init
   // =====================
   (async () => {
+    // ✅ Wait for Firebase to initialize before using subscription service
+    await window.AuthService?.waitForAuth();
+    console.log('✅ Firebase ready, initializing writing page...');
+    
     // Initialize subscription first
     await initializeSubscription();
     
