@@ -1009,13 +1009,42 @@ import {
     overlay?.classList.add(CLS.hidden);
   }
 
-  function buildRealTestSet() {
-    const pool = state.allData.slice();
-    shuffle(pool);
+  const REAL_TEST_COUNTS = Object.freeze({
+    3: 4,    // Questions 1-4
+    9: 6,    // Questions 5-10
+    15: 9,   // Questions 11-19
+    21: 10,  // Questions 20-29
+    26: 6,   // Questions 30-35
+    33: 4,   // Questions 36-39
+  });
 
-    const needed = 39;
-    if (pool.length <= needed) return pool;
-    return pool.slice(0, needed);
+  function pickRandomByWeight(weight, count) {
+    const pool = state.allData.filter(
+      (q) => Number(q.weight_points) === Number(weight),
+    );
+    const bag = pool.slice();
+    shuffle(bag);
+    const out = [];
+    while (out.length < count) {
+      if (!bag.length) {
+        shuffle(pool);
+        bag.push(...pool);
+      }
+      out.push(bag.pop());
+    }
+    return out;
+  }
+
+  function buildRealTestSet() {
+    const seq = [];
+    for (const [wStr, cnt] of Object.entries(REAL_TEST_COUNTS)) {
+      seq.push(...pickRandomByWeight(Number(wStr), cnt));
+    }
+    seq.forEach((q, i) => {
+      q.overall_question_number = i + 1;
+      q.userAnswerIndex = undefined;
+    });
+    return seq;
   }
 
   function renderRealTestDots() {
@@ -1187,6 +1216,10 @@ import {
     // els.quiz()?.classList.add(CLS.hidden); // REMOVED - quiz stays visible
     document.getElementById("realTestResults")?.classList.remove(CLS.hidden);
 
+    // ✅ Hide KPI elements in results page
+    const kpis = document.querySelectorAll(".quiz--kpi");
+    kpis.forEach((kpi) => kpi.classList.add(CLS.hidden));
+
     // Calculate scores
     let totalCorrect = 0;
     let weightedScore = 0;
@@ -1322,6 +1355,7 @@ import {
             const letter = a.letter || String.fromCharCode(65 + idx);
             const isC = idx === correctIndex;
             const isU = idx === ua;
+            const altText = a.text || a.alternative || "";
             return `
               <div style="
                 padding:6px 10px;border-radius:10px;margin:6px 0;
@@ -1329,7 +1363,9 @@ import {
                 background:${isC ? "rgba(16,185,129,.10)" : isU ? "rgba(239,68,68,.10)" : "#fff"};
                 font-weight:${isC ? "601" : "600"};
               ">
-                ${letter}. ${isC ? "✅ correct" : isU && !isC ? "❌ your answer" : ""}
+                ${letter}. ${altText}
+                ${isC ? " <span style='margin-left:6px;font-size:.85rem;opacity:.85'>✅ correct</span>" : ""}
+                ${isU && !isC ? " <span style='margin-left:6px;font-size:.85rem;opacity:.85'>❌ your answer</span>" : ""}
               </div>
             `;
           })
@@ -1425,7 +1461,9 @@ import {
       state.realTestMode = false;
       state.realTestFinished = false;
       state.realTestCircles = [];
-      await openRealTestOverlay();
+      
+      // Open overlay and wait for user to click start
+      openRealTestOverlay();
     });
 
     els.onlyChk()?.addEventListener("click", async (e) => {
