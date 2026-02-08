@@ -230,11 +230,14 @@ class SubscriptionService {
         return listeningResult;
       
       case 'reading':
-        return (usage.readingQuestionsAnswered || 0) < tierLimits.readingQuestions;
+        const readingResult = (usage.readingQuestionsAnswered || 0) < tierLimits.readingQuestions;
+        console.log('🔍 [DEBUG] Reading check:', usage.readingQuestionsAnswered, '<', tierLimits.readingQuestions, '=', readingResult);
+        return readingResult;
       
       case 'writing':
-        if (!tierLimits.hasWriting) return false;
-        return (usage.writingPromptsUsed || 0) < tierLimits.writingPrompts;
+        const writingResult = !tierLimits.hasWriting ? false : (usage.writingPromptsUsed || 0) < tierLimits.writingPrompts;
+        console.log('🔍 [DEBUG] Writing check - hasWriting:', tierLimits.hasWriting, 'usage:', usage.writingPromptsUsed, '<', tierLimits.writingPrompts, '=', writingResult);
+        return writingResult;
       
       case 'realTests':
         return tierLimits.hasRealTests;

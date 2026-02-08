@@ -1537,7 +1537,7 @@ import {
       
       const userData = await window.SubscriptionService.init();
       state.userSubscription = userData;
-      console.log('✅ Subscription initialized:', userData?.tier || 'unknown');
+      console.log('🔍 [DEBUG] Reading - Subscription initialized, full data:', JSON.stringify(userData, null, 2));
 
       // ✅ Migrate existing answered questions to subscription usage counter
       await migrateExistingAnswers();
@@ -1552,7 +1552,10 @@ import {
   async function migrateExistingAnswers() {
     try {
       const user = window.AuthService?.getCurrentUser();
-      if (!user || !window.SubscriptionService) return;
+      if (!user || !window.SubscriptionService) {
+        console.log('🔍 [DEBUG] Migration skipped - no user or service');
+        return;
+      }
 
       // ✅ Ensure user has subscription data with usage object
       if (!state.userSubscription || !state.userSubscription.usage) {
@@ -1566,6 +1569,8 @@ import {
 
       // Get current subscription usage
       const currentUsage = state.userSubscription.usage.readingQuestionsAnswered || 0;
+
+      console.log('🔍 [DEBUG] Migration check - tracked:', answeredCount, 'subscriptionUsage:', currentUsage);
 
       // If old tracking has more answers than subscription counter, sync them
       if (answeredCount > currentUsage && answeredCount > 0) {
@@ -1581,6 +1586,8 @@ import {
         // Refresh subscription data
         state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
         console.log('✅ Reading usage synced:', answeredCount);
+      } else {
+        console.log('🔍 [DEBUG] No migration needed');
       }
     } catch (error) {
       console.error('Error migrating existing answers:', error);
@@ -1603,9 +1610,12 @@ import {
       return true; // Fail open
     }
 
+    console.log('🔍 [DEBUG] checkReadingAccess - state.userSubscription:', JSON.stringify(state.userSubscription, null, 2));
     const canAccess = window.SubscriptionService.canAccess('reading', state.userSubscription);
+    console.log('🔍 [DEBUG] canAccess result:', canAccess);
     
     if (!canAccess) {
+      console.log('❌ Access denied - showing upgrade modal');
       const remaining = window.SubscriptionService.getRemainingUsage(state.userSubscription);
       window.SubscriptionService.showUpgradeModal(
         `You've used all ${15} free reading questions! Keep enjoying SimpleTCF by selecting a plan.`
@@ -1617,6 +1627,7 @@ import {
       return false;
     }
 
+    console.log('✅ Access granted to reading practice');
     return true;
   }
 
