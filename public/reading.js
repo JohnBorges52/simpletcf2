@@ -56,6 +56,8 @@ import {
     // Real Test flags
     realTestMode: false,
     realTestFinished: false,
+    realTestPool: [],
+    realTestCircles: [],
 
     // For Copy button
     currentQuestion: null,
@@ -618,6 +620,17 @@ import {
     );
   }
 
+  function updateKpiVisibility() {
+    const kpis = document.querySelectorAll(".quiz--kpi");
+    kpis.forEach((kpi) => {
+      if (state.realTestMode && !state.realTestFinished) {
+        kpi.classList.add(CLS.hidden);
+      } else {
+        kpi.classList.remove(CLS.hidden);
+      }
+    });
+  }
+
   /* =====================
      8) Render Question
   ===================== */
@@ -698,6 +711,25 @@ import {
 
     updateScore();
     updateQuestionStats(q);
+
+    // ✅ Update dots and auto-jump in Real Test mode
+    if (state.realTestMode) {
+      renderRealTestDots();
+      updateFinishButtonState();
+      
+      if (!state.realTestFinished) {
+        const nextIdx = rtFindNextUnanswered(state.index);
+        if (nextIdx != null) {
+          state.index = nextIdx;
+          await renderQuestion();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          await renderQuestion();
+        }
+      }
+    }
+    
+    updateKpiVisibility();
     
     // ✅ Run database writes in background without blocking UI
     bumpLifetime(q, isCorrect).catch(err => {
@@ -721,6 +753,33 @@ import {
     }
   }
 
+  function rtFindNextUnanswered(fromIndex) {
+    const n = state.filtered.length;
+    if (!n) return null;
+    for (let step = 1; step <= n; step++) {
+      const idx = (fromIndex + step) % n;
+      if (state.filtered[idx]?.userAnswerIndex == null) return idx;
+    }
+    return null;
+  }
+
+  function updateFinishButtonState() {
+    const btn = document.getElementById("finishRealTestBtn");
+    if (!btn) return;
+
+    if (!state.realTestMode || state.realTestFinished) {
+      btn.classList.remove("quiz--finish-ready");
+      return;
+    }
+
+    const missing = state.filtered.filter(
+      (q) => q.userAnswerIndex == null,
+    ).length;
+
+    if (missing === 0) btn.classList.add("quiz--finish-ready");
+    else btn.classList.remove("quiz--finish-ready");
+  }
+
   /* =====================
      10) Navigation
   ===================== */
@@ -729,14 +788,20 @@ import {
     if (state.index < state.filtered.length - 1) state.index++;
 
     await renderQuestion();
-    if (state.realTestMode) renderRealTestDots();
+    if (state.realTestMode) {
+      renderRealTestDots();
+      updateKpiVisibility();
+    }
   }
 
   async function prevQuestion() {
     if (!state.filtered.length) return;
     if (state.index > 0) state.index--;
     await renderQuestion();
-    if (state.realTestMode) renderRealTestDots();
+    if (state.realTestMode) {
+      renderRealTestDots();
+      updateKpiVisibility();
+    }
   }
 
   /* =====================
@@ -922,28 +987,68 @@ import {
     const nav = document.getElementById("questionNav");
     if (!nav) return;
 
-    nav.innerHTML = "";
+    // Create dots if not created
+    if (state.realTestCircles.length === 0) {
+      nav.innerHTML = "";
+      state.realTestCircles = [];
+      
+      state.filtered.forEach((q, i) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "quiz--qdot";
+        dot.textContent = String(i + 1);
+        dot.title = `Question ${i + 1}`;
 
-    state.filtered.forEach((q, i) => {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "quiz--qdot";
-      dot.textContent = String(i + 1);
-      dot.title = `Question ${i + 1}`;
+        dot.addEventListener("click", async () => {
+          try {
+            if (!state.realTestFinished) {
+              state.index = i;
+              await renderQuestion();
+              renderRealTestDots();
+              updateFinishButtonState();
+              updateKpiVisibility();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          } catch (err) {
+            console.error("Error in dot navigation:", err);
+          }
+        });
 
-      const answered =
-        q.userAnswerIndex !== undefined && q.userAnswerIndex !== null;
-      if (answered) dot.style.opacity = "0.75";
-
-      if (i === state.index) dot.classList.add("quiz--active");
-
-      dot.addEventListener("click", async () => {
-        state.index = i;
-        await renderQuestion();
-        renderRealTestDots();
+        nav.appendChild(dot);
+        state.realTestCircles.push(dot);
       });
+    }
 
-      nav.appendChild(dot);
+    // Update dot styling
+    const answeredSet = new Set(
+      state.filtered
+        .map((q, i) => (q.userAnswerIndex != null ? i : null))
+        .filter((x) => x != null),
+    );
+
+    state.realTestCircles.forEach((dot, i) => {
+      dot.style.opacity = "1";
+      dot.style.background =
+        answeredSet.has(i) && !state.realTestFinished ? "#dedede" : "#fff";
+
+      if (i === state.index && !state.realTestFinished) {
+        dot.classList.add("quiz--active");
+        dot.style.outline = "2px solid #2196f3";
+      } else {
+        dot.classList.remove("quiz--active");
+        dot.style.outline = "none";
+      }
+
+      if (state.realTestFinished) {
+        const q = state.filtered[i];
+        const correctIndex =
+          typeof q.correct_index === "number"
+            ? Number(q.correct_index)
+            : q.alternatives.findIndex((a) => a?.is_correct === true);
+        const correct = q.userAnswerIndex === correctIndex;
+        dot.style.background = correct ? "#d4edda" : "#f8d7da";
+        dot.style.borderColor = correct ? "#28a745" : "#dc3545";
+      }
     });
   }
 
@@ -955,8 +1060,10 @@ import {
     state.deservesMode = false;
     state.onlyUnanswered = false;
     state.currentWeight = "all";
+    state.realTestCircles = [];
 
     setUiLocked(true);
+    updateKpiVisibility();
 
     document.getElementById("realTestContainer")?.classList.remove(CLS.hidden);
     document.getElementById("realTestResults")?.classList.add(CLS.hidden);
@@ -971,22 +1078,79 @@ import {
 
     await renderQuestion();
     renderRealTestDots();
+    updateFinishButtonState();
   }
 
   async function finishRealTest() {
+    const missing = state.filtered.filter(
+      (q) => q.userAnswerIndex == null,
+    ).length;
+
+    if (
+      missing > 0 &&
+      !confirm(
+        `You still have ${missing} unanswered question(s). Finish anyway?`,
+      )
+    )
+      return;
+
     state.realTestFinished = true;
-    state.realTestMode = false;
-
-    setUiLocked(false);
-
-    document.getElementById("realTestContainer")?.classList.add(CLS.hidden);
-
-    state.currentWeight = null;
-    state.filtered = [];
-    state.index = 0;
-
-    await showSelectWeightEmptyState();
-    await updateDeservesButton();
+    renderRealTestDots();
+    updateFinishButtonState();
+    updateKpiVisibility();
+    
+    // Calculate results
+    let totalCorrect = 0;
+    const detailedResults = [];
+    
+    state.filtered.forEach((q, i) => {
+      const correctIndex =
+        typeof q.correct_index === "number"
+          ? Number(q.correct_index)
+          : q.alternatives.findIndex((a) => a?.is_correct === true);
+      const isCorrect = q.userAnswerIndex === correctIndex;
+      if (isCorrect) totalCorrect++;
+      
+      detailedResults.push({
+        questionNumber: i + 1,
+        questionId: getStableQuestionId(q),
+        weight: q.weight_points || 0,
+        userAnswer: q.userAnswerIndex !== undefined ? q.alternatives?.[q.userAnswerIndex]?.letter : null,
+        correctAnswer: q.alternatives?.[correctIndex]?.letter,
+        isCorrect: isCorrect,
+      });
+    });
+    
+    const percentage = ((totalCorrect / state.filtered.length) * 100).toFixed(1);
+    const clbScore = calculateCLBScore(totalCorrect, state.filtered.length);
+    
+    // Save test result to database
+    if (window.dbService?.saveTestResult) {
+      window.dbService.saveTestResult({
+        testType: "reading",
+        testId: `reading-test-${Date.now()}`,
+        correctAnswers: totalCorrect,
+        totalQuestions: state.filtered.length,
+        clbScore: clbScore,
+        detailedResults: detailedResults,
+        timeSpent: null,
+      }).catch(err => {
+        console.error("Failed to save reading test result:", err);
+      });
+    }
+    
+    alert(`Test Complete!\n\nScore: ${totalCorrect}/${state.filtered.length} (${percentage}%)\nCLB: ${clbScore}\n\nYou can review your answers below.`);
+  }
+  
+  function calculateCLBScore(correct, total) {
+    const percentage = (correct / total) * 100;
+    if (percentage >= 95) return 10;
+    if (percentage >= 90) return 9;
+    if (percentage >= 85) return 8;
+    if (percentage >= 75) return 7;
+    if (percentage >= 65) return 6;
+    if (percentage >= 55) return 5;
+    return 4;
   }
 
   /* =====================

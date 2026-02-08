@@ -229,3 +229,19 @@
 .quiz--expand-btn:hover {
   text-decoration: underline;
 }
+
+/* Finish Test button ready state */
+#finishRealTestBtn.quiz--finish-ready {
+  border-color: rgba(16, 185, 129, 1) !important;
+  animation: quizFinishPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes quizFinishPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
