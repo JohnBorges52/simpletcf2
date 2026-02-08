@@ -1538,8 +1538,46 @@ import {
       const userData = await window.SubscriptionService.init();
       state.userSubscription = userData;
       console.log('✅ Subscription initialized:', userData?.tier || 'unknown');
+
+      // ✅ Migrate existing answered questions to subscription usage counter
+      await migrateExistingAnswers();
     } catch (error) {
       console.error('Error initializing subscription:', error);
+    }
+  }
+
+  /**
+   * Migrate existing answered questions from old tracking system to subscription usage
+   */
+  async function migrateExistingAnswers() {
+    try {
+      const user = window.AuthService?.getCurrentUser();
+      if (!user || !window.SubscriptionService) return;
+
+      // Get old tracking data
+      const tracking = await getTracking();
+      const answeredCount = Object.keys(tracking || {}).length;
+
+      // Get current subscription usage
+      const currentUsage = state.userSubscription?.usage?.readingQuestionsAnswered || 0;
+
+      // If old tracking has more answers than subscription counter, sync them
+      if (answeredCount > currentUsage) {
+        console.log(`📊 Migrating ${answeredCount} existing reading answers to subscription system`);
+        
+        await window.SubscriptionService.updateUserSubscriptionData(user.uid, {
+          usage: {
+            ...state.userSubscription?.usage,
+            readingQuestionsAnswered: answeredCount
+          }
+        });
+
+        // Refresh subscription data
+        state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
+        console.log('✅ Reading usage synced:', answeredCount);
+      }
+    } catch (error) {
+      console.error('Error migrating existing answers:', error);
     }
   }
 
