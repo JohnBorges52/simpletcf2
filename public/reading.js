@@ -1554,20 +1554,26 @@ import {
       const user = window.AuthService?.getCurrentUser();
       if (!user || !window.SubscriptionService) return;
 
+      // ✅ Ensure user has subscription data with usage object
+      if (!state.userSubscription || !state.userSubscription.usage) {
+        console.log('⚠️ No subscription data yet, skipping migration');
+        return;
+      }
+
       // Get old tracking data
       const tracking = await getTracking();
       const answeredCount = Object.keys(tracking || {}).length;
 
       // Get current subscription usage
-      const currentUsage = state.userSubscription?.usage?.readingQuestionsAnswered || 0;
+      const currentUsage = state.userSubscription.usage.readingQuestionsAnswered || 0;
 
       // If old tracking has more answers than subscription counter, sync them
-      if (answeredCount > currentUsage) {
+      if (answeredCount > currentUsage && answeredCount > 0) {
         console.log(`📊 Migrating ${answeredCount} existing reading answers to subscription system`);
         
         await window.SubscriptionService.updateUserSubscriptionData(user.uid, {
           usage: {
-            ...state.userSubscription?.usage,
+            ...state.userSubscription.usage,
             readingQuestionsAnswered: answeredCount
           }
         });

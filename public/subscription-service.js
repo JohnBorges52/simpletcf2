@@ -90,7 +90,23 @@ class SubscriptionService {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      return userSnap.data();
+      const data = userSnap.data();
+      
+      // ✅ Ensure usage object exists with default values
+      if (!data.usage) {
+        data.usage = {
+          listeningQuestionsAnswered: 0,
+          readingQuestionsAnswered: 0,
+          writingPromptsUsed: 0
+        };
+      }
+      
+      // ✅ Ensure tier exists
+      if (!data.tier) {
+        data.tier = TIERS.FREE;
+      }
+      
+      return data;
     } else {
       // Create default free tier user
       const defaultData = {
@@ -188,21 +204,21 @@ class SubscriptionService {
    */
   canAccess(feature, userData = null) {
     const data = userData || this.currentUserData;
-    if (!data) return false;
+    if (!data) return true; // ✅ No data yet = new user, allow access
 
     const tierLimits = TIER_LIMITS[data.tier] || TIER_LIMITS[TIERS.FREE];
-    const usage = data.usage || {};
+    const usage = data.usage || {}; // ✅ Default to empty usage object
 
     switch (feature) {
       case 'listening':
-        return usage.listeningQuestionsAnswered < tierLimits.listeningQuestions;
+        return (usage.listeningQuestionsAnswered || 0) < tierLimits.listeningQuestions;
       
       case 'reading':
-        return usage.readingQuestionsAnswered < tierLimits.readingQuestions;
+        return (usage.readingQuestionsAnswered || 0) < tierLimits.readingQuestions;
       
       case 'writing':
         if (!tierLimits.hasWriting) return false;
-        return usage.writingPromptsUsed < tierLimits.writingPrompts;
+        return (usage.writingPromptsUsed || 0) < tierLimits.writingPrompts;
       
       case 'realTests':
         return tierLimits.hasRealTests;
