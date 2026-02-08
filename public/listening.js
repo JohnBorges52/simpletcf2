@@ -22,7 +22,23 @@ import {
   setTCFListening as setTCFListeningFS,
 } from "./firestore-storage.js";
 
-(() => {
+import {
+  waitForAuth,
+  getCurrentUser
+} from "./auth-service.js";
+
+(async () => {
+  // ✅ AUTHENTICATION CHECK - Redirect non-logged-in users to plans
+  await waitForAuth();
+  const user = getCurrentUser();
+  
+  if (!user) {
+    console.log("🔒 User not logged in, redirecting to plans page...");
+    window.location.href = "/plan.html";
+    return;
+  }
+  
+  console.log("✅ User authenticated:", user.email);
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
 

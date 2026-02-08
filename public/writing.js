@@ -3,7 +3,23 @@
 // ✅ Random topic per section (1/2/3)
 // ✅ Section 3 loads 2 documents + shows title
 // ✅ WORD limits + per-section drafts + palette-only accents, persistent
-(() => {
+(async () => {
+  // ✅ AUTHENTICATION CHECK - Redirect non-logged-in users to plans
+  // Wait for AuthService to be available (loaded by config.js)
+  while (!window.AuthService) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  await window.AuthService.waitForAuth();
+  const user = window.AuthService.getCurrentUser();
+  
+  if (!user) {
+    console.log("🔒 User not logged in, redirecting to plans page...");
+    window.location.href = "/plan.html";
+    return;
+  }
+  
+  console.log("✅ User authenticated:", user.email);
   // =====================
   // Helpers
   // =====================
