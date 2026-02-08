@@ -714,7 +714,6 @@ import {
 
     // ✅ Update dots and auto-jump in Real Test mode
     if (state.realTestMode) {
-      renderRealTestDots();
       updateFinishButtonState();
       
       if (!state.realTestFinished) {
@@ -722,10 +721,14 @@ import {
         if (nextIdx != null) {
           state.index = nextIdx;
           await renderQuestion();
+          renderRealTestDots();  // ✅ Called AFTER state.index is updated
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           await renderQuestion();
+          renderRealTestDots();  // ✅ Called AFTER renderQuestion
         }
+      } else {
+        renderRealTestDots();  // ✅ Update dots when test is finished
       }
     }
     
