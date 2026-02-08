@@ -10,6 +10,7 @@ const STORAGE_KEYS = Object.freeze({
   EVENTS: "answer_events_v1",
   TCF_LISTENING: "TCF Listening",
   MIGRATION_FLAG: "firestore_migration_done",
+  TRACKING_OWNER: "tracking_data_owner_uid", // Stores userId who owns the localStorage data
 });
 
 // ============================================================================
@@ -58,6 +59,16 @@ export async function getTracking() {
   // Fallback to localStorage if not authenticated
   if (!userId) {
     return getTrackingFromLocalStorage();
+  }
+  
+  // ✅ Clear localStorage if it belongs to a different user
+  const dataOwner = localStorage.getItem(STORAGE_KEYS.TRACKING_OWNER);
+  if (dataOwner && dataOwner !== userId) {
+    console.log(`🧹 Clearing localStorage data from different user (${dataOwner})`);
+    localStorage.removeItem(STORAGE_KEYS.TRACKING);
+    localStorage.removeItem(STORAGE_KEYS.EVENTS);
+    localStorage.removeItem(STORAGE_KEYS.TCF_LISTENING);
+    localStorage.removeItem(STORAGE_KEYS.TRACKING_OWNER);
   }
   
   try {
@@ -287,6 +298,11 @@ function getTrackingFromLocalStorage() {
 function setTrackingToLocalStorage(tracking) {
   try {
     localStorage.setItem(STORAGE_KEYS.TRACKING, JSON.stringify(tracking || {}));
+    // Store the userId who owns this data
+    const userId = getCurrentUserId();
+    if (userId) {
+      localStorage.setItem(STORAGE_KEYS.TRACKING_OWNER, userId);
+    }
   } catch (error) {
     console.error("Error saving to localStorage:", error);
   }
@@ -371,10 +387,24 @@ async function migrateTrackingIfNeeded(userId) {
   
   const localData = getTrackingFromLocalStorage();
   
+  // ✅ Check if localStorage data belongs to current user
+  const dataOwner = localStorage.getItem(STORAGE_KEYS.TRACKING_OWNER);
+  
+  // Only migrate if:
+  // 1. No owner stored (legacy data from before this fix) AND user has no Firestore data yet
+  // 2. Owner matches current user
+  const shouldMigrate = !dataOwner || dataOwner === userId;
+  
+  if (!shouldMigrate) {
+    console.log(`⚠️ Skipping migration - localStorage data belongs to different user (${dataOwner})`);
+    return {};
+  }
+  
   // If there's local data, migrate it
   if (Object.keys(localData).length > 0) {
     console.log("Migrating tracking data to Firestore...");
     await setTracking(localData);
+    markMigrationComplete(userId);
     console.log("✅ Tracking data migrated");
   }
   
