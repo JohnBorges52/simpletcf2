@@ -863,6 +863,8 @@ body.plans .hero__center {
   z-index: 2;
   max-width: 700px;
   padding: 24px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 body.plans .hero__title {
