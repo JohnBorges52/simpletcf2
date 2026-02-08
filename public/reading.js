@@ -1140,7 +1140,7 @@ import {
     setTimeout(async () => {
       hideOverlay();
       state.realTestFinished = true;
-      disableFiltersDuringRealTest(false);
+      setUiLocked(false);
       
       // Render results page
       await renderResults();
