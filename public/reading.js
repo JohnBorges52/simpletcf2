@@ -636,14 +636,29 @@ import {
 
   function updateKpiVisibility() {
     const kpis = document.querySelectorAll(".quiz--kpi");
-    kpis.forEach((kpi) => {
-      // Hide KPI during real test mode (both during test and when viewing results)
-      if (state.realTestMode) {
-        kpi.classList.add(CLS.hidden);
-      } else {
-        kpi.classList.remove(CLS.hidden);
-      }
-    });
+    const questionNumber = document.getElementById("questionNumber");
+    const scoreElement = document.getElementById("score");
+    const questionStats = document.getElementById("questionStats");
+    
+    if (state.realTestMode && !state.realTestFinished) {
+      // Hide during real test (not when viewing results)
+      kpis.forEach((kpi) => kpi.classList.add(CLS.hidden));
+      if (questionNumber) questionNumber.classList.add(CLS.hidden);
+      if (scoreElement) scoreElement.classList.add(CLS.hidden);
+      if (questionStats) questionStats.classList.add(CLS.hidden);
+    } else if (state.realTestMode && state.realTestFinished) {
+      // Keep hidden when viewing results
+      kpis.forEach((kpi) => kpi.classList.add(CLS.hidden));
+      if (questionNumber) questionNumber.classList.add(CLS.hidden);
+      if (scoreElement) scoreElement.classList.add(CLS.hidden);
+      if (questionStats) questionStats.classList.add(CLS.hidden);
+    } else {
+      // Show in practice mode
+      kpis.forEach((kpi) => kpi.classList.remove(CLS.hidden));
+      if (questionNumber) questionNumber.classList.remove(CLS.hidden);
+      if (scoreElement) scoreElement.classList.remove(CLS.hidden);
+      if (questionStats) questionStats.classList.remove(CLS.hidden);
+    }
   }
 
   /* =====================
@@ -692,6 +707,7 @@ import {
 
     updateScore();
     await updateQuestionStats(q);
+    updateKpiVisibility();
   }
 
   /* =====================
@@ -1153,17 +1169,6 @@ import {
     document.getElementById("realTestContainer")?.classList.remove(CLS.hidden);
     document.getElementById("realTestResults")?.classList.add(CLS.hidden);
 
-    // ✅ Re-show KPI elements when starting a new test
-    const kpis = document.querySelectorAll(".quiz--kpi");
-    kpis.forEach((kpi) => kpi.classList.remove(CLS.hidden));
-    
-    const questionNumber = document.getElementById("questionNumber");
-    const scoreElement = document.getElementById("score");
-    const kpiBox = document.getElementById("kpiBox");
-    if (questionNumber) questionNumber.classList.remove(CLS.hidden);
-    if (scoreElement) scoreElement.classList.remove(CLS.hidden);
-    if (kpiBox) kpiBox.classList.remove(CLS.hidden);
-
     state.filtered = buildRealTestSet();
     state.index = 0;
     state.score = 0;
@@ -1207,7 +1212,7 @@ import {
   }
 
   const CLB_RANGES = [
-    { clb: 4, min: 331, max: 368, band: "A2" },
+    { clb: 4, min: 331, max: 368, band: "A1" },
     { clb: 5, min: 369, max: 397, band: "A2" },
     { clb: 6, min: 398, max: 457, band: "B1" },
     { clb: 7, min: 458, max: 502, band: "B2" },
@@ -1217,7 +1222,7 @@ import {
   ];
 
   function clbForScore(score) {
-    if (score < 331) return { clb: 4, band: "A2", notReached: true };
+    if (score < 331) return { clb: 4, band: "A1", notReached: true };
     return (
       CLB_RANGES.find((r) => score >= r.min && score <= r.max) || {
         clb: 10,
@@ -1227,7 +1232,7 @@ import {
   }
 
   function cefrForCLB(clb) {
-    if (clb <= 4) return "A2";
+    if (clb <= 4) return "A1";
     if (clb === 5) return "A2";
     if (clb === 6) return "B1";
     if (clb === 7 || clb === 8) return "B2";
