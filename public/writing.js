@@ -589,12 +589,6 @@
 
     // ✅ Track for ALL users (limits are checked separately)
     try {
-      // ✅ Ensure Firestore is ready before tracking
-      if (!window.dbService?.getFirestore) {
-        console.warn('⚠️ Database service not ready, skipping usage tracking');
-        return;
-      }
-      
       await window.SubscriptionService.incrementUsage(user.uid, 'writing');
       console.log('✅ Writing usage incremented');
       

@@ -82,8 +82,11 @@ class SubscriptionService {
    * Get user subscription data from Firestore
    */
   async getUserSubscriptionData(userId) {
-    const db = await window.dbService?.getFirestore();
-    if (!db) throw new Error('Firestore not available');
+    // ✅ Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
+      throw new Error('Firestore not available');
+    }
 
     const { doc, getDoc } = window.firestoreExports;
     const userRef = doc(db, 'users', userId);
@@ -129,8 +132,11 @@ class SubscriptionService {
    * Update user subscription data in Firestore
    */
   async updateUserSubscriptionData(userId, data) {
-    const db = await window.dbService?.getFirestore();
-    if (!db) throw new Error('Firestore not available');
+    // ✅ Wait for Firestore to be ready
+    const db = await window.__firestoreReady;
+    if (!db || !window.firestoreExports) {
+      throw new Error('Firestore not available');
+    }
 
     const { doc, setDoc, serverTimestamp } = window.firestoreExports;
     const userRef = doc(db, 'users', userId);
