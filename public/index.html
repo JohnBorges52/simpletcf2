@@ -407,44 +407,50 @@
           </div>
 
           <form class="form" id="contact" novalidate>
-            <label class="field">
+            <label class="field" id="topic-field">
               <span class="field__label">Topic*</span>
-              <select class="field__control">
-                <option value="" selected placeholder="Choose a topic"></option>
+              <select class="field__control" id="contact-topic" name="topic" required>
+                <option value="" selected>Choose a topic</option>
                 <option>General Inquiry</option>
                 <option>Success Stories</option>
                 <option>Feedback</option>
               </select>
+              <span class="field__error" id="topic-error">Please select a topic</span>
             </label>
 
             <div class="grid grid--2 gap">
-              <label class="field">
+              <label class="field" id="name-field">
                 <span class="field__label">Name*</span>
-                <input class="field__control" type="text" required />
+                <input class="field__control" id="contact-name" name="name" type="text" required />
+                <span class="field__error" id="name-error">Please enter your name</span>
               </label>
               <label class="field">
                 <span class="field__label">Surname</span>
-                <input class="field__control" type="text" />
+                <input class="field__control" id="contact-surname" name="surname" type="text" />
               </label>
             </div>
 
             <div class="grid grid--2 gap">
-              <label class="field">
+              <label class="field" id="email-field">
                 <span class="field__label">Email*</span>
-                <input class="field__control" type="email" required />
+                <input class="field__control" id="contact-email" name="email" type="email" required />
+                <span class="field__error" id="email-error">Please enter a valid email</span>
               </label>
               <label class="field">
                 <span class="field__label">Phone</span>
-                <input class="field__control" type="tel" />
+                <input class="field__control" id="contact-phone" name="phone" type="tel" />
               </label>
             </div>
 
-            <label class="field">
+            <label class="field" id="message-field">
               <span class="field__label">Your message*</span>
               <textarea
                 class="field__control field__control--textarea"
+                id="contact-message"
+                name="message"
                 required
               ></textarea>
+              <span class="field__error" id="message-error">Please enter a message</span>
             </label>
 
             <div class="form__actions">

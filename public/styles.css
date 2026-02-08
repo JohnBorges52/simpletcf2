@@ -873,6 +873,34 @@ img {
   resize: vertical;
 }
 
+/* Field error styles */
+.field__error {
+  display: none;
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.field--error .field__control,
+.field__control--error {
+  border: 2px solid #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.field--error .field__label {
+  color: #dc2626;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
 .form__actions {
   display: flex;
   justify-content: flex-end;

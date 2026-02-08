@@ -389,21 +389,91 @@ run("hero-rotator", () => {
 });
 
 /* -------------------------------------------------
-   6) Contact submit button animation
+   6) Contact submit button animation + email form
 ---------------------------------------------------*/
 run("contact-button", () => {
   const button = document.getElementById("submit-button");
-  if (!button) return;
+  const form = document.getElementById("contact");
+  if (!button || !form) return;
 
-  button.addEventListener("click", () => {
+  // Get form fields
+  const topicField = document.getElementById("contact-topic");
+  const nameField = document.getElementById("contact-name");
+  const surnameField = document.getElementById("contact-surname");
+  const emailField = document.getElementById("contact-email");
+  const phoneField = document.getElementById("contact-phone");
+  const messageField = document.getElementById("contact-message");
+
+  // Validation function
+  const validateField = (field, errorId, fieldId) => {
+    const fieldContainer = document.getElementById(fieldId);
+    const errorElement = document.getElementById(errorId);
+    
+    if (!field.value.trim()) {
+      fieldContainer.classList.add("field--error");
+      field.classList.add("field__control--error");
+      if (errorElement) errorElement.style.display = "block";
+      return false;
+    } else {
+      fieldContainer.classList.remove("field--error");
+      field.classList.remove("field__control--error");
+      if (errorElement) errorElement.style.display = "none";
+      return true;
+    }
+  };
+
+  // Email validation
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  button.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // Validate required fields
+    const isTopicValid = validateField(topicField, "topic-error", "topic-field");
+    const isNameValid = validateField(nameField, "name-error", "name-field");
+    const isEmailValid = validateField(emailField, "email-error", "email-field") && validateEmail(emailField.value);
+    const isMessageValid = validateField(messageField, "message-error", "message-field");
+
+    // Check email format
+    if (emailField.value.trim() && !validateEmail(emailField.value)) {
+      document.getElementById("email-field").classList.add("field--error");
+      emailField.classList.add("field__control--error");
+      document.getElementById("email-error").textContent = "Please enter a valid email";
+      document.getElementById("email-error").style.display = "block";
+    }
+
+    if (!isTopicValid || !isNameValid || !isEmailValid || !isMessageValid) {
+      // Shake the button to indicate error
+      button.classList.add("shake");
+      setTimeout(() => button.classList.remove("shake"), 500);
+      return;
+    }
+
+    // Build email content
+    const subject = `SimpleTCF Contact: ${topicField.value}`;
+    const fullName = surnameField.value ? `${nameField.value} ${surnameField.value}` : nameField.value;
+    const body = `Name: ${fullName}%0D%0AEmail: ${emailField.value}%0D%0A${phoneField.value ? `Phone: ${phoneField.value}%0D%0A` : ""}%0D%0AMessage:%0D%0A${messageField.value}`;
+
+    // Create mailto link
+    const mailtoLink = `mailto:info@simpletcf.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+
+    // Animate button
     button.classList.add("onclic");
     setTimeout(() => {
       button.classList.remove("onclic");
       button.classList.add("validate");
+      
+      // Open email client
+      window.location.href = mailtoLink;
+      
+      // Reset form after a delay
       setTimeout(() => {
         button.classList.remove("validate");
+        form.reset();
       }, 1750);
-    }, 2250);
+    }, 500);
   });
 });
 
