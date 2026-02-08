@@ -968,6 +968,7 @@ import {
     overlay.classList.remove("quiz--rt-ready");
     startBtn.classList.remove("quiz--ready");
     startBtn.disabled = true;
+    startBtn.style.display = ""; // ✅ Reset display in case it was hidden by showOverlay("score")
 
     txt.classList.remove("quiz--fade-out", "quiz--fade-in");
     txt.classList.add("quiz--loading-flash");
