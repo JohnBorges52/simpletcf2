@@ -977,6 +977,38 @@ import {
     }
   }
 
+  function showOverlay(mode = "prepare") {
+    const textEl = document.getElementById("rtLoadingText");
+    const startBtn = document.getElementById("startRealTestBtn");
+    const overlay = document.getElementById("realTestLoading");
+
+    overlay?.classList.remove(CLS.hidden);
+    overlay?.classList.remove("quiz--rt-ready");
+
+    if (textEl) {
+      textEl.textContent = mode === "score" ? "Scoring test…" : "Preparing Test...";
+      textEl.classList.remove("quiz--fade-out", "quiz--fade-in");
+      textEl.classList.add("quiz--loading-flash");
+    }
+
+    if (startBtn) {
+      if (mode === "score") {
+        startBtn.style.display = "none";
+        startBtn.disabled = true;
+        startBtn.classList.remove("quiz--ready");
+      } else {
+        startBtn.style.display = "";
+        startBtn.disabled = true;
+        startBtn.classList.remove("quiz--ready");
+      }
+    }
+  }
+
+  function hideOverlay() {
+    const overlay = document.getElementById("realTestLoading");
+    overlay?.classList.add(CLS.hidden);
+  }
+
   function buildRealTestSet() {
     const pool = state.allData.slice();
     shuffle(pool);
@@ -1103,14 +1135,20 @@ import {
     )
       return;
 
-    state.realTestFinished = true;
-    
-    // Render results page
-    await renderResults();
-    
-    renderRealTestDots();
-    updateFinishButtonState();
-    updateKpiVisibility();
+    showOverlay("score");
+
+    setTimeout(async () => {
+      hideOverlay();
+      state.realTestFinished = true;
+      disableFiltersDuringRealTest(false);
+      
+      // Render results page
+      await renderResults();
+      
+      renderRealTestDots();
+      updateFinishButtonState();
+      updateKpiVisibility();
+    }, 700);
   }
 
   const CLB_RANGES = [
@@ -1143,9 +1181,10 @@ import {
   }
 
   async function renderResults() {
-    // Hide quiz, show results
+    // ✅ Hide real test controls, but keep quiz visible for navigation
     document.getElementById("realTestContainer")?.classList.add(CLS.hidden);
-    els.quiz()?.classList.add(CLS.hidden);
+    // ✅ Keep quiz visible so users can see their answers
+    // els.quiz()?.classList.add(CLS.hidden); // REMOVED - quiz stays visible
     document.getElementById("realTestResults")?.classList.remove(CLS.hidden);
 
     // Calculate scores
@@ -1302,7 +1341,14 @@ import {
             box-shadow:0 10px 30px rgba(0,0,0,.06);
           ">
             <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-              <div style="font-weight:600">Question ${i + 1}</div>
+              <button
+                type="button"
+                class="quiz--btn quiz--pill"
+                data-goto-question="${i}"
+                style="font-weight:600;cursor:pointer;padding:8px 14px"
+              >
+                Question ${i + 1}
+              </button>
               <div style="font-weight:800; color:${ok ? "#10b981" : "#ef4444"}">
                 ${ok ? "Correct" : "Wrong"}
               </div>
@@ -1320,6 +1366,25 @@ import {
         <div style="margin-top:18px;font-weight:800;font-size:1.10rem">Review</div>
         ${reviewHtml}
       `;
+
+      // ✅ Add click handlers for "Question X" buttons
+      const gotoButtons = allQuestionsReview.querySelectorAll("[data-goto-question]");
+      gotoButtons.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetIndex = parseInt(btn.getAttribute("data-goto-question"), 10);
+          if (isNaN(targetIndex)) return;
+
+          state.index = targetIndex;
+          await renderQuestion();
+          renderRealTestDots();
+
+          // Scroll to quiz container
+          const quiz = document.getElementById("quiz");
+          if (quiz) {
+            quiz.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      });
     }
   }
   
