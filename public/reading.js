@@ -1011,6 +1011,12 @@ import {
               updateFinishButtonState();
               updateKpiVisibility();
               window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              // When test is finished, scroll to review question
+              const target = document.getElementById(`qsec-${i + 1}`);
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
             }
           } catch (err) {
             console.error("Error in dot navigation:", err);
@@ -1098,12 +1104,53 @@ import {
       return;
 
     state.realTestFinished = true;
+    
+    // Render results page
+    await renderResults();
+    
     renderRealTestDots();
     updateFinishButtonState();
     updateKpiVisibility();
-    
-    // Calculate results
+  }
+
+  const CLB_RANGES = [
+    { clb: 4, min: 331, max: 368, band: "A2" },
+    { clb: 5, min: 369, max: 397, band: "A2" },
+    { clb: 6, min: 398, max: 457, band: "B1" },
+    { clb: 7, min: 458, max: 502, band: "B2" },
+    { clb: 8, min: 503, max: 522, band: "B2" },
+    { clb: 9, min: 523, max: 548, band: "C1" },
+    { clb: 10, min: 549, max: 699, band: "C2" },
+  ];
+
+  function clbForScore(score) {
+    if (score < 331) return { clb: 4, band: "A2", notReached: true };
+    return (
+      CLB_RANGES.find((r) => score >= r.min && score <= r.max) || {
+        clb: 10,
+        band: "C2",
+      }
+    );
+  }
+
+  function cefrForCLB(clb) {
+    if (clb <= 4) return "A2";
+    if (clb === 5) return "A2";
+    if (clb === 6) return "B1";
+    if (clb === 7 || clb === 8) return "B2";
+    if (clb === 9) return "C1";
+    return "C2";
+  }
+
+  async function renderResults() {
+    // Hide quiz, show results
+    document.getElementById("realTestContainer")?.classList.add(CLS.hidden);
+    els.quiz()?.classList.add(CLS.hidden);
+    document.getElementById("realTestResults")?.classList.remove(CLS.hidden);
+
+    // Calculate scores
     let totalCorrect = 0;
+    let weightedScore = 0;
     const detailedResults = [];
     
     state.filtered.forEach((q, i) => {
@@ -1112,7 +1159,11 @@ import {
           ? Number(q.correct_index)
           : q.alternatives.findIndex((a) => a?.is_correct === true);
       const isCorrect = q.userAnswerIndex === correctIndex;
-      if (isCorrect) totalCorrect++;
+      
+      if (isCorrect) {
+        totalCorrect++;
+        weightedScore += Number(q.weight_points) || 0;
+      }
       
       detailedResults.push({
         questionNumber: i + 1,
@@ -1124,9 +1175,11 @@ import {
       });
     });
     
-    const percentage = ((totalCorrect / state.filtered.length) * 100).toFixed(1);
-    const clbScore = calculateCLBScore(totalCorrect, state.filtered.length);
-    
+    const pct = (totalCorrect / state.filtered.length) * 100;
+    const clbObj = clbForScore(weightedScore);
+    const clb = clbObj.clb;
+    const band = cefrForCLB(clb);
+
     // Save test result to database
     if (window.dbService?.saveTestResult) {
       window.dbService.saveTestResult({
@@ -1134,27 +1187,143 @@ import {
         testId: `reading-test-${Date.now()}`,
         correctAnswers: totalCorrect,
         totalQuestions: state.filtered.length,
-        clbScore: clbScore,
+        clbScore: clb,
         detailedResults: detailedResults,
         timeSpent: null,
       }).catch(err => {
         console.error("Failed to save reading test result:", err);
       });
     }
-    
-    alert(`Test Complete!\n\nScore: ${totalCorrect}/${state.filtered.length} (${percentage}%)\nCLB: ${clbScore}\n\nYou can review your answers below.`);
+
+    // Results header
+    const pctValue = Number(pct) || 0;
+    let badgeStyle = "font-size:1.25rem;font-weight:800;";
+    if (pctValue <= 30) {
+      badgeStyle +=
+        "color:#991b1b;background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.35);";
+    } else if (pctValue <= 69) {
+      badgeStyle +=
+        "color:#92400e;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.40);";
+    } else {
+      badgeStyle +=
+        "color:#065f46;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.40);";
+    }
+    badgeStyle += "display:inline-block;padding:6px 10px;border-radius:999px;";
+
+    const resultsHeader = document.getElementById("resultsHeader");
+    if (resultsHeader) {
+      resultsHeader.innerHTML = `
+        <div class="quiz--results-badge" style="${badgeStyle}">${pctValue.toFixed(2)}%</div>
+        <div class="quiz--results-sub" style="margin-top:6px">
+          Score: ${weightedScore} /699
+          <span class="quiz--band-pill" style="border:1px solid #333;border-radius:12px;padding:2px 8px;margin-left:6px; background: rgba(16,185,129,.40);">
+            <strong>${band}</strong>
+          </span>
+        </div>
+        <div class="quiz--results-sub" style="margin-top:4px">
+          Correct: ${totalCorrect} /${state.filtered.length}
+        </div>
+      `;
+    }
+
+    // CLB table
+    const rows = CLB_RANGES.map((r) => {
+      const active = Number(r.clb) === Number(clb);
+      return `
+        <div class="quiz--clb-row ${active ? "quiz--clb-active" : ""}">
+          <div>CLB ${r.clb} <span style="opacity:.7">(${r.band})</span></div>
+          <div style="opacity:.85">${r.min}–${r.max}</div>
+        </div>
+      `;
+    }).join("");
+
+    const clbTable = document.getElementById("clbTable");
+    if (clbTable) {
+      clbTable.innerHTML = `
+        <div style="margin-top:1px;font-weight:600">CLB Bands</div>
+        <div style="margin-top:8px">${rows}</div>
+      `;
+    }
+
+    // Overview dots
+    const dots = state.filtered
+      .map((q, i) => {
+        const correctIndex =
+          typeof q.correct_index === "number"
+            ? Number(q.correct_index)
+            : q.alternatives.findIndex((a) => a?.is_correct === true);
+        const ok = q.userAnswerIndex === correctIndex;
+        return `<span title="Q${i + 1}" style="
+          display:inline-block;width:12px;height:12px;border-radius:999px;
+          margin:4px;background:${ok ? "#10b981" : "#ef4444"};
+        "></span>`;
+      })
+      .join("");
+
+    const resultsDots = document.getElementById("resultsDots");
+    if (resultsDots) {
+      resultsDots.innerHTML = `
+        <div style="margin-top:14px;font-weight:600; font-size: 16px;">Overview</div>
+        <div style="margin-top:8px;line-height:0">${dots}</div>
+      `;
+    }
+
+    // Review section
+    const reviewHtml = state.filtered
+      .map((q, i) => {
+        const correctIndex =
+          typeof q.correct_index === "number"
+            ? Number(q.correct_index)
+            : q.alternatives.findIndex((a) => a?.is_correct === true);
+        const ua = q.userAnswerIndex;
+        const ok = ua === correctIndex;
+
+        const alts = q.alternatives
+          .map((a, idx) => {
+            const letter = a.letter || String.fromCharCode(65 + idx);
+            const isC = idx === correctIndex;
+            const isU = idx === ua;
+            return `
+              <div style="
+                padding:6px 10px;border-radius:10px;margin:6px 0;
+                border:1px solid #e5e7eb;
+                background:${isC ? "rgba(16,185,129,.10)" : isU ? "rgba(239,68,68,.10)" : "#fff"};
+                font-weight:${isC ? "601" : "600"};
+              ">
+                ${letter}. ${isC ? "✅ correct" : isU && !isC ? "❌ your answer" : ""}
+              </div>
+            `;
+          })
+          .join("");
+
+        return `
+          <section id="qsec-${i + 1}" style="
+            margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;
+            box-shadow:0 10px 30px rgba(0,0,0,.06);
+          ">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+              <div style="font-weight:600">Question ${i + 1}</div>
+              <div style="font-weight:800; color:${ok ? "#10b981" : "#ef4444"}">
+                ${ok ? "Correct" : "Wrong"}
+              </div>
+            </div>
+
+            <div style="margin-top:10px">${alts}</div>
+          </section>
+        `;
+      })
+      .join("");
+
+    const allQuestionsReview = document.getElementById("allQuestionsReview");
+    if (allQuestionsReview) {
+      allQuestionsReview.innerHTML = `
+        <div style="margin-top:18px;font-weight:800;font-size:1.10rem">Review</div>
+        ${reviewHtml}
+      `;
+    }
   }
   
-  function calculateCLBScore(correct, total) {
-    const percentage = (correct / total) * 100;
-    if (percentage >= 95) return 10;
-    if (percentage >= 90) return 9;
-    if (percentage >= 85) return 8;
-    if (percentage >= 75) return 7;
-    if (percentage >= 65) return 6;
-    if (percentage >= 55) return 5;
-    return 4;
-  }
+
 
   /* =====================
      12) Init
@@ -1185,6 +1354,14 @@ import {
 
     document.getElementById("startRealTestBtn")?.addEventListener("click", startRealTest);
     document.getElementById("finishRealTestBtn")?.addEventListener("click", finishRealTest);
+    document.getElementById("againBtn")?.addEventListener("click", async () => {
+      // Reset and start new test
+      document.getElementById("realTestResults")?.classList.add(CLS.hidden);
+      state.realTestMode = false;
+      state.realTestFinished = false;
+      state.realTestCircles = [];
+      await openRealTestOverlay();
+    });
 
     els.onlyChk()?.addEventListener("click", async (e) => {
       state.onlyUnanswered = !!e.target.checked;
