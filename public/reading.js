@@ -1627,27 +1627,28 @@ import {
     const user = window.AuthService?.getCurrentUser();
     if (!user || !window.SubscriptionService) return;
 
-    // Only track for free tier users
-    if (state.userSubscription?.tier === 'free') {
-      try {
-        await window.SubscriptionService.incrementUsage(user.uid, 'reading');
-        console.log('✅ Reading usage incremented');
-        
-        // Refresh subscription data
-        state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
-        
-        // Check if limit reached after this answer
-        const canAccessNext = window.SubscriptionService.canAccess('reading', state.userSubscription);
-        if (!canAccessNext) {
-          // Show modal after short delay to let user see result
-          setTimeout(() => {
-            window.SubscriptionService.showUpgradeModal(
-              `You've reached your free reading question limit! Keep enjoying SimpleTCF by selecting a plan.`
-            );
-          }, 1500);
-        }
-      } catch (error) {
-        console.error('Error tracking reading usage:', error);
+    // ✅ Track for ALL users (limits are checked separately)
+    try {
+      await window.SubscriptionService.incrementUsage(user.uid, 'reading');
+      console.log('✅ Reading usage incremented');
+      
+      // Refresh subscription data
+      state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
+      
+      // Check if limit reached after this answer
+      const canAccessNext = window.SubscriptionService.canAccess('reading', state.userSubscription);
+      if (!canAccessNext) {
+        // Show modal after short delay to let user see result
+        setTimeout(() => {
+          window.SubscriptionService.showUpgradeModal(
+            `You've reached your free reading question limit! Keep enjoying SimpleTCF by selecting a plan.`
+          );
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error tracking reading usage:', error);
+    }
+  }
       }
     }
   }

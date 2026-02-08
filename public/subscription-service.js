@@ -188,6 +188,8 @@ class SubscriptionService {
       writingPromptsUsed: 0
     };
 
+    const oldValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
+
     if (type === 'listening') {
       usage.listeningQuestionsAnswered++;
     } else if (type === 'reading') {
@@ -196,7 +198,13 @@ class SubscriptionService {
       usage.writingPromptsUsed++;
     }
 
+    const newValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
+    console.log(`📊 ${type} usage: ${oldValue} → ${newValue}`);
+
     await this.updateUserSubscriptionData(userId, { usage });
+    
+    // Update current data cache
+    this.currentUserData = await this.getUserSubscriptionData(userId);
   }
 
   /**
@@ -204,14 +212,22 @@ class SubscriptionService {
    */
   canAccess(feature, userData = null) {
     const data = userData || this.currentUserData;
-    if (!data) return true; // ✅ No data yet = new user, allow access
+    console.log('🔍 [DEBUG] canAccess called - feature:', feature, 'data:', data);
+    
+    if (!data) {
+      console.log('🔍 [DEBUG] No data, returning true (new user)');
+      return true; // ✅ No data yet = new user, allow access
+    }
 
     const tierLimits = TIER_LIMITS[data.tier] || TIER_LIMITS[TIERS.FREE];
     const usage = data.usage || {}; // ✅ Default to empty usage object
+    console.log('🔍 [DEBUG] Tier:', data.tier, 'TierLimits:', tierLimits, 'Usage:', usage);
 
     switch (feature) {
       case 'listening':
-        return (usage.listeningQuestionsAnswered || 0) < tierLimits.listeningQuestions;
+        const listeningResult = (usage.listeningQuestionsAnswered || 0) < tierLimits.listeningQuestions;
+        console.log('🔍 [DEBUG] Listening check:', usage.listeningQuestionsAnswered, '<', tierLimits.listeningQuestions, '=', listeningResult);
+        return listeningResult;
       
       case 'reading':
         return (usage.readingQuestionsAnswered || 0) < tierLimits.readingQuestions;
