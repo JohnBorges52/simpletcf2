@@ -511,7 +511,7 @@
       
       const userData = await window.SubscriptionService.init();
       userSubscription = userData;
-      console.log('✅ Subscription initialized:', userData?.tier || 'unknown');
+      console.log('🔍 [DEBUG] Writing - Subscription initialized, full data:', JSON.stringify(userData, null, 2));
     } catch (error) {
       console.error('Error initializing subscription:', error);
     }
@@ -587,28 +587,33 @@
     const user = window.AuthService?.getCurrentUser();
     if (!user || !window.SubscriptionService) return;
 
-    // Only track for free tier users
-    if (userSubscription?.tier === 'free') {
-      try {
-        await window.SubscriptionService.incrementUsage(user.uid, 'writing');
-        console.log('✅ Writing usage incremented');
-        
-        // Refresh subscription data
-        userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
-        
-        // Check if limit reached after this generation
-        const canAccessNext = window.SubscriptionService.canAccess('writing', userSubscription);
-        if (!canAccessNext) {
-          showToast('You have reached your free writing prompt limit!');
-        } else {
-          const remaining = window.SubscriptionService.getRemainingUsage(userSubscription);
+    // ✅ Track for ALL users (limits are checked separately)
+    try {
+      await window.SubscriptionService.incrementUsage(user.uid, 'writing');
+      console.log('✅ Writing usage incremented');
+      
+      // Refresh subscription data
+      userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
+      
+      // Check if limit reached after this generation
+      const canAccessNext = window.SubscriptionService.canAccess('writing', userSubscription);
+      if (!canAccessNext) {
+        showToast('You have reached your writing prompt limit!');
+        setTimeout(() => {
+          window.SubscriptionService.showUpgradeModal(
+            `You've used all ${3} free writing prompts! Keep enjoying SimpleTCF by selecting a plan.`
+          );
+        }, 1500);
+      } else {
+        const remaining = window.SubscriptionService.getRemainingUsage(userSubscription);
+        if (remaining.writing !== undefined && remaining.writing !== Infinity) {
           showToast(`Writing prompt generated! ${remaining.writing} prompts remaining.`);
+        } else {
+          showToast('Writing prompt generated!');
         }
-      } catch (error) {
-        console.error('Error tracking writing usage:', error);
       }
-    } else {
-      showToast('Writing prompt generated!');
+    } catch (error) {
+      console.error('Error tracking writing usage:', error);
     }
   }
 
