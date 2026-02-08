@@ -611,6 +611,16 @@ function fmtPct(n) {
 
     console.log("✅ User authenticated:", user.email);
 
+    // Initialize subscription service (creates user document if needed)
+    try {
+      if (window.SubscriptionService) {
+        await window.SubscriptionService.init();
+        console.log("✅ Subscription service initialized");
+      }
+    } catch (error) {
+      console.warn("Failed to initialize subscription service:", error);
+    }
+
     // Load user document from Firestore (if available)
     let userDoc = null;
     try {
