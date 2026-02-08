@@ -111,8 +111,12 @@ class SubscriptionService {
       
       return data;
     } else {
-      // Create default free tier user
+      // Create default free tier user - get user info from Auth
+      const user = window.AuthService?.getCurrentUser();
+      
       const defaultData = {
+        email: user?.email || '',
+        displayName: user?.displayName || user?.email?.split('@')[0] || 'User',
         tier: TIERS.FREE,
         subscriptionStartDate: null,
         subscriptionEndDate: null,
