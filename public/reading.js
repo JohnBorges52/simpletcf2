@@ -548,6 +548,20 @@ import {
     return String.fromCharCode(65 + i);
   }
 
+  function getAlternativeLetter(alternative, index) {
+    // If alternative is an object with letter property, use it
+    if (alternative?.letter) {
+      return alternative.letter;
+    }
+    // If alternative is a string starting with a letter (like "A Compléter..."), extract it
+    if (typeof alternative === "string") {
+      const match = alternative.match(/^([A-F])\s/);
+      if (match) return match[1];
+    }
+    // Default: derive from index
+    return deriveLetters(index);
+  }
+
   function renderOptions(q, alreadyAnswered, correctIndex) {
     const container = els.options();
     const confirmBtn = els.confirmBtn();
@@ -742,9 +756,9 @@ import {
     
     // ✅ Log to Firestore (non-blocking)
     if (window.dbService && window.dbService.logQuestionResponse) {
-      const selectedLetter = q.alternatives?.[q.userAnswerIndex]?.letter || "";
+      const selectedLetter = getAlternativeLetter(q.alternatives?.[q.userAnswerIndex], q.userAnswerIndex);
       window.dbService.logQuestionResponse({
-        questionId: getStableQuestionId(q),
+        questionId: getStableQuestionId(q) || `reading-q${state.index}`,
         questionType: "reading",
         testId: q.test_id || null,
         questionNumber: q.question_number || q.overall_question_number?.toString() || "",
@@ -1257,12 +1271,19 @@ import {
         weightedScore += Number(q.weight_points) || 0;
       }
       
+      const userAnswerLetter = q.userAnswerIndex !== undefined 
+        ? getAlternativeLetter(q.alternatives?.[q.userAnswerIndex], q.userAnswerIndex)
+        : null;
+      const correctAnswerLetter = correctIndex >= 0 
+        ? getAlternativeLetter(q.alternatives?.[correctIndex], correctIndex)
+        : null;
+      
       detailedResults.push({
         questionNumber: i + 1,
-        questionId: getStableQuestionId(q),
+        questionId: getStableQuestionId(q) || `reading-q${i + 1}`,
         weight: q.weight_points || 0,
-        userAnswer: q.userAnswerIndex !== undefined ? q.alternatives?.[q.userAnswerIndex]?.letter : null,
-        correctAnswer: q.alternatives?.[correctIndex]?.letter,
+        userAnswer: userAnswerLetter,
+        correctAnswer: correctAnswerLetter,
         isCorrect: isCorrect,
       });
     });
