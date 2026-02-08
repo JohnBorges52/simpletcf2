@@ -212,7 +212,8 @@
   background: rgba(59, 130, 246, 0.06);
 }
 
-.tcf-weight-table tbody tr:nth-child(4) {
+/* Highlight only NCLC Level 7 row (4th row in NCLC table) */
+#nclc-conversion-table tbody tr:nth-child(4) {
   background-color: rgb(25, 84, 179, 0.40);
   font-weight: 500;
 }
