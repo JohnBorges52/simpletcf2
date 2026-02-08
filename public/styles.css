@@ -2097,3 +2097,168 @@ img {
     flex: 0 0 100%;
   }
 }
+
+/* ============================================
+   UPGRADE MODAL - Subscription Tier System
+   ============================================ */
+
+.upgrade-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.upgrade-modal.quiz--hidden {
+  display: none;
+}
+
+.upgrade-modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.upgrade-modal__content {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  padding: 50px 40px 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+.upgrade-modal__close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.upgrade-modal__close:hover {
+  background-color: #f0f0f0;
+  color: #333;
+  transform: rotate(90deg);
+}
+
+.upgrade-modal__icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: bounce 0.6s ease-in-out;
+}
+
+.upgrade-modal__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1954B3;
+  margin-bottom: 16px;
+}
+
+.upgrade-modal__message {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.upgrade-modal__cta {
+  display: inline-block;
+  padding: 14px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.upgrade-modal__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(25, 84, 179, 0.3);
+}
+
+/* Disabled state for buttons/features */
+.tier-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.tier-disabled::after {
+  content: '🔒';
+  margin-left: 8px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .upgrade-modal__content {
+    padding: 40px 24px 30px;
+    max-width: 95%;
+  }
+
+  .upgrade-modal__title {
+    font-size: 24px;
+  }
+
+  .upgrade-modal__message {
+    font-size: 15px;
+  }
+
+  .upgrade-modal__cta {
+    padding: 12px 32px;
+    font-size: 16px;
+  }
+}

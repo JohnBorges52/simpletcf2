@@ -61,6 +61,9 @@ import {
 
     // For Copy button
     currentQuestion: null,
+
+    // ✅ Subscription state
+    userSubscription: null,
   };
 
   // PDF render race guard
@@ -733,6 +736,13 @@ import {
     const isCorrect = q.userAnswerIndex === correctIndex;
     if (isCorrect) state.score++;
     state.answered++;
+
+    // ✅ Track usage for subscription system (only in practice mode, not Real Tests)
+    if (!state.realTestMode) {
+      trackReadingUsage().catch(err => {
+        console.error("Failed to track reading usage:", err);
+      });
+    }
 
     // ✅ Show UI feedback immediately (non-blocking)
     state.selectedOptionIndex = null;
@@ -1478,12 +1488,140 @@ import {
   
 
 
+  /* ============================================================================
+     SUBSCRIPTION TIER MANAGEMENT
+     ============================================================================ */
+  
+  /**
+   * Initialize subscription service for the current user
+   */
+  async function initializeSubscription() {
+    try {
+      if (!window.SubscriptionService) {
+        console.warn('SubscriptionService not available');
+        return;
+      }
+      
+      const userData = await window.SubscriptionService.init();
+      state.userSubscription = userData;
+      console.log('✅ Subscription initialized:', userData?.tier || 'unknown');
+    } catch (error) {
+      console.error('Error initializing subscription:', error);
+    }
+  }
+
+  /**
+   * Check if user has access to reading practice
+   * Shows upgrade modal if limit reached
+   */
+  async function checkReadingAccess() {
+    const user = window.AuthService?.getCurrentUser();
+    if (!user) {
+      console.log('No user logged in');
+      return true; // Allow access when not logged in (or redirect to login)
+    }
+
+    if (!window.SubscriptionService || !state.userSubscription) {
+      console.warn('Subscription service not initialized');
+      return true; // Fail open
+    }
+
+    const canAccess = window.SubscriptionService.canAccess('reading', state.userSubscription);
+    
+    if (!canAccess) {
+      const remaining = window.SubscriptionService.getRemainingUsage(state.userSubscription);
+      window.SubscriptionService.showUpgradeModal(
+        `You've used all ${15} free reading questions! Keep enjoying SimpleTCF by selecting a plan.`
+      );
+      
+      // Hide main quiz content
+      els.quiz()?.classList.add(CLS.hidden);
+      
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Increment usage counter after answering a question
+   */
+  async function trackReadingUsage() {
+    const user = window.AuthService?.getCurrentUser();
+    if (!user || !window.SubscriptionService) return;
+
+    // Only track for free tier users
+    if (state.userSubscription?.tier === 'free') {
+      try {
+        await window.SubscriptionService.incrementUsage(user.uid, 'reading');
+        console.log('✅ Reading usage incremented');
+        
+        // Refresh subscription data
+        state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
+        
+        // Check if limit reached after this answer
+        const canAccessNext = window.SubscriptionService.canAccess('reading', state.userSubscription);
+        if (!canAccessNext) {
+          // Show modal after short delay to let user see result
+          setTimeout(() => {
+            window.SubscriptionService.showUpgradeModal(
+              `You've reached your free reading question limit! Keep enjoying SimpleTCF by selecting a plan.`
+            );
+          }, 1500);
+        }
+      } catch (error) {
+        console.error('Error tracking reading usage:', error);
+      }
+    }
+  }
+
+  /**
+   * Apply tier-based restrictions to UI elements
+   */
+  function applyTierRestrictions() {
+    if (!window.SubscriptionService || !state.userSubscription) return;
+
+    const canAccessRealTests = window.SubscriptionService.canAccess('realTests', state.userSubscription);
+    const canAccessDeserves = window.SubscriptionService.canAccess('deservesAttention', state.userSubscription);
+
+    // Disable Real Test button for free and quick-study tiers
+    const realTestBtn = els.realTestBtn();
+    if (realTestBtn && !canAccessRealTests) {
+      realTestBtn.classList.add('tier-disabled');
+      realTestBtn.title = 'Upgrade to access Real Tests';
+      realTestBtn.style.pointerEvents = 'none';
+      realTestBtn.style.opacity = '0.5';
+      realTestBtn.style.cursor = 'not-allowed';
+    }
+
+    // Disable Deserves Attention button for free and quick-study tiers
+    const deservesBtn = els.deservesBtn();
+    if (deservesBtn && !canAccessDeserves) {
+      deservesBtn.classList.add('tier-disabled');
+      deservesBtn.title = 'Upgrade to access Deserves Attention';
+      deservesBtn.style.pointerEvents = 'none';
+      deservesBtn.style.opacity = '0.5';
+      deservesBtn.style.cursor = 'not-allowed';
+    }
+  }
+
+
   /* =====================
      12) Init
   ===================== */
   async function init() {
+    // ✅ Initialize subscription service and check access
+    await initializeSubscription();
+    const hasAccess = await checkReadingAccess();
+    if (!hasAccess) {
+      return; // Blocked by subscription modal
+    }
+
     await loadData();
     ensureQuestionStatsDOM();
+
+    // ✅ Apply tier restrictions to UI
+    applyTierRestrictions();
 
     els.copyBtn()?.addEventListener("click", async () => {
       try {

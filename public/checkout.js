@@ -180,12 +180,96 @@
     cta.type = "button";
     cta.className = "btn btn--primary";
     cta.textContent = "Activate Free Plan";
-    cta.addEventListener("click", () => {
+    cta.addEventListener("click", async () => {
+      // ✅ Set user to free tier in Firestore
+      await activateFreeTier();
       window.location.href = "profile.html";
     });
 
     row.appendChild(cta);
     card.appendChild(row);
+  }
+
+  /**
+   * Activate free tier for logged-in user
+   */
+  async function activateFreeTier() {
+    try {
+      const user = window.AuthService?.getCurrentUser();
+      if (!user) {
+        console.warn('Cannot activate free tier: no user logged in');
+        return;
+      }
+
+      if (!window.SubscriptionService) {
+        console.warn('SubscriptionService not available');
+        return;
+      }
+
+      await window.SubscriptionService.updateUserSubscriptionData(user.uid, {
+        tier: 'free',
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        usage: {
+          listeningQuestionsAnswered: 0,
+          readingQuestionsAnswered: 0,
+          writingPromptsUsed: 0
+        }
+      });
+
+      console.log('✅ Free tier activated');
+    } catch (error) {
+      console.error('Error activating free tier:', error);
+    }
+  }
+
+  /**
+   * Activate paid tier after successful payment
+   */
+  async function activatePaidTier(tierName, durationDays) {
+    try {
+      const user = window.AuthService?.getCurrentUser();
+      if (!user) {
+        console.warn('Cannot activate paid tier: no user logged in');
+        return;
+      }
+
+      if (!window.SubscriptionService) {
+        console.warn('SubscriptionService not available');
+        return;
+      }
+
+      await window.SubscriptionService.setUserTier(user.uid, tierName, durationDays);
+      console.log(`✅ ${tierName} tier activated for ${durationDays} days`);
+    } catch (error) {
+      console.error('Error activating paid tier:', error);
+    }
+  }
+
+  /**
+   * Map badge string to tier name and duration
+   */
+  function getTierConfig(badgeStr, durationStr) {
+    const badge = (badgeStr || '').toLowerCase();
+    const duration = (durationStr || '').toLowerCase();
+
+    // Quick Study: 10 days
+    if (badge.includes('quick') || badge.includes('study')) {
+      return { tier: 'quick-study', days: 10 };
+    }
+
+    // 30-day Intensive
+    if (badge.includes('30') || badge.includes('intensive') || duration.includes('30')) {
+      return { tier: '30-day', days: 30 };
+    }
+
+    // Full Preparation: 60 days
+    if (badge.includes('full') || badge.includes('prep') || duration.includes('60')) {
+      return { tier: 'full-prep', days: 60 };
+    }
+
+    // Default to 30-day if unclear
+    return { tier: '30-day', days: 30 };
   }
 
   function wirePaidPaymentToggle() {
@@ -205,15 +289,37 @@
     sync();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Wait for auth to be ready
+    if (window.AuthService) {
+      await window.AuthService.waitForAuth();
+    }
+
     const sel = readSelection();
 
-    // If user arrived with NO params and NO storage, you’ll see blanks:
+    // If user arrived with NO params and NO storage, you'll see blanks:
     // This is expected—fix by ensuring plan.html click handler runs (file name mismatch).
     fillSummaryText(sel);
     setTotals(sel);
 
-    if (sel.isFree) disablePaymentUIForFree();
-    else wirePaidPaymentToggle();
+    if (sel.isFree) {
+      disablePaymentUIForFree();
+    } else {
+      wirePaidPaymentToggle();
+      
+      // ✅ Add event listener for payment completion
+      // This is a placeholder - you'll integrate with Stripe later
+      const completePaymentBtn = $("#completePayment");
+      if (completePaymentBtn) {
+        completePaymentBtn.addEventListener("click", async () => {
+          // TODO: Replace with actual Stripe payment processing
+          const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
+          await activatePaidTier(tierConfig.tier, tierConfig.days);
+          
+          alert(`Payment successful! Your ${sel.badgeStr} plan is now active.`);
+          window.location.href = "profile.html";
+        });
+      }
+    }
   });
 })();

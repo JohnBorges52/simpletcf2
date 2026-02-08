@@ -19,8 +19,8 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       
       // Users can create/update their own document
+      // Allow email, displayName, tier, subscription data, and usage tracking
       allow create, update: if isOwner(userId) && 
-                               request.resource.data.keys().hasAll(['email', 'displayName']) &&
                                request.resource.data.email is string &&
                                request.resource.data.displayName is string;
       

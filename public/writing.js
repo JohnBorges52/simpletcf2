@@ -95,6 +95,11 @@
   };
 
   // =====================
+  // Subscription state
+  // =====================
+  let userSubscription = null;
+
+  // =====================
   // Per-section draft storage
   // =====================
   const DRAFT_KEY_PREFIX = "tcf_writing_draft_section_";
@@ -339,7 +344,13 @@
   // =====================
   const btnGenerate = $("#btnGenerateTopic");
   if (btnGenerate) {
-    btnGenerate.addEventListener("click", () => {
+    btnGenerate.addEventListener("click", async () => {
+      // ✅ Check subscription access before generating
+      const canGenerate = await canGenerateWritingPrompt();
+      if (!canGenerate) {
+        return; // Blocked by subscription limit
+      }
+
       const q = pickRandomQuestion();
       if (!q) {
         showToast("No topics loaded. Fix JSON path first.");
@@ -360,12 +371,18 @@
             title +
             "Comparez les points de vue et donnez votre opinion. Utilisez des connecteurs et des exemples.";
         }
+        
+        // ✅ Track usage after successful generation
+        trackWritingUsage();
         return;
       }
 
       // Sections 1–2: normal single prompt
       const txt = activeSection === 1 ? q.tache_1 || "" : q.tache_2 || "";
       if (topicBox) topicBox.textContent = txt || "";
+
+      // ✅ Track usage after successful generation
+      trackWritingUsage();
     });
   }
 
@@ -478,10 +495,135 @@
     saveDraft(activeSection, writingBox.value);
   });
 
+  // ============================================================================
+  // SUBSCRIPTION TIER MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Initialize subscription service for the current user
+   */
+  async function initializeSubscription() {
+    try {
+      if (!window.SubscriptionService) {
+        console.warn('SubscriptionService not available');
+        return;
+      }
+      
+      const userData = await window.SubscriptionService.init();
+      userSubscription = userData;
+      console.log('✅ Subscription initialized:', userData?.tier || 'unknown');
+    } catch (error) {
+      console.error('Error initializing subscription:', error);
+    }
+  }
+
+  /**
+   * Check if user has access to writing practice
+   * Shows upgrade modal if limit reached
+   */
+  async function checkWritingAccess() {
+    const user = window.AuthService?.getCurrentUser();
+    if (!user) {
+      console.log('No user logged in');
+      return true; // Allow access when not logged in
+    }
+
+    if (!window.SubscriptionService || !userSubscription) {
+      console.warn('Subscription service not initialized');
+      return true; // Fail open
+    }
+
+    const canAccess = window.SubscriptionService.canAccess('writing', userSubscription);
+    
+    if (!canAccess) {
+      window.SubscriptionService.showUpgradeModal(
+        `You've used all ${3} free writing prompts! Keep enjoying SimpleTCF by selecting a plan.`
+      );
+      
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if user can generate another writing prompt
+   */
+  async function canGenerateWritingPrompt() {
+    const user = window.AuthService?.getCurrentUser();
+    if (!user) return true; // Allow if not logged in
+
+    if (!window.SubscriptionService || !userSubscription) return true;
+
+    // Check if writing is accessible at all
+    const tier = userSubscription?.tier || 'free';
+    const limits = window.SubscriptionService ? window.SubscriptionService.constructor : null;
+    
+    // Quick Study tier has NO writing access
+    if (tier === 'quick-study') {
+      window.SubscriptionService.showUpgradeModal(
+        'Writing practice is not included in Quick Study plan. Upgrade to access writing prompts!'
+      );
+      return false;
+    }
+
+    const canAccess = window.SubscriptionService.canAccess('writing', userSubscription);
+    
+    if (!canAccess) {
+      const remaining = window.SubscriptionService.getRemainingUsage(userSubscription);
+      window.SubscriptionService.showUpgradeModal(
+        `You've reached your limit of ${3} free writing prompts! Keep enjoying SimpleTCF by selecting a plan.`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Increment usage counter after generating a writing prompt
+   */
+  async function trackWritingUsage() {
+    const user = window.AuthService?.getCurrentUser();
+    if (!user || !window.SubscriptionService) return;
+
+    // Only track for free tier users
+    if (userSubscription?.tier === 'free') {
+      try {
+        await window.SubscriptionService.incrementUsage(user.uid, 'writing');
+        console.log('✅ Writing usage incremented');
+        
+        // Refresh subscription data
+        userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
+        
+        // Check if limit reached after this generation
+        const canAccessNext = window.SubscriptionService.canAccess('writing', userSubscription);
+        if (!canAccessNext) {
+          showToast('You have reached your free writing prompt limit!');
+        } else {
+          const remaining = window.SubscriptionService.getRemainingUsage(userSubscription);
+          showToast(`Writing prompt generated! ${remaining.writing} prompts remaining.`);
+        }
+      } catch (error) {
+        console.error('Error tracking writing usage:', error);
+      }
+    } else {
+      showToast('Writing prompt generated!');
+    }
+  }
+
   // =====================
   // Init
   // =====================
-  updateRangeHint();
-  loadSectionDraftIntoEditor(1);
-  loadWritingQuestions();
+  (async () => {
+    // Initialize subscription first
+    await initializeSubscription();
+    
+    // Check initial access (for quick-study or exceeded limits)
+    const hasAccess = await checkWritingAccess();
+    
+    updateRangeHint();
+    loadSectionDraftIntoEditor(1);
+    loadWritingQuestions();
+  })();
 })();
