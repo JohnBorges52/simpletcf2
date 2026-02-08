@@ -1649,9 +1649,6 @@ import {
       console.error('Error tracking reading usage:', error);
     }
   }
-      }
-    }
-  }
 
   /**
    * Apply tier-based restrictions to UI elements

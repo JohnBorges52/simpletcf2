@@ -1720,9 +1720,6 @@ import {
       console.error('Error tracking listening usage:', error);
     }
   }
-      }
-    }
-  }
 
   /**
    * Apply tier-based restrictions to UI elements
