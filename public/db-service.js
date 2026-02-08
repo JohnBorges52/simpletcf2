@@ -689,6 +689,7 @@ function listenToAnswerHistory(userId, callback, limitCount = 50) {
 // Export functions
 // ===============================
 window.dbService = {
+  getFirestore,
   saveUser,
   getUser,
   logQuestionResponse,

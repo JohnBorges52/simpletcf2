@@ -18,11 +18,14 @@ service cloud.firestore {
       // Users can read their own document
       allow read: if isOwner(userId);
       
-      // Users can create/update their own document
-      // Allow email, displayName, tier, subscription data, and usage tracking
-      allow create, update: if isOwner(userId) && 
-                               request.resource.data.email is string &&
-                               request.resource.data.displayName is string;
+      // Users can create their own document (requires email & displayName)
+      allow create: if isOwner(userId) && 
+                       request.resource.data.email is string &&
+                       request.resource.data.displayName is string;
+      
+      // Users can update their own document (flexible for subscription updates)
+      // Only validate that they're updating their own document
+      allow update: if isOwner(userId);
       
       // Users cannot delete their own document (prevent accidental deletion)
       allow delete: if false;
