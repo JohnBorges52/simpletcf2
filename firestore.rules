@@ -56,6 +56,28 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     
+    // Test Results collection (Real Tests)
+    match /testResults/{resultId} {
+      // Users can read their own test results
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Users can create test results for themselves
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.keys().hasAll([
+                         'userId', 'testType', 'correctAnswers', 
+                         'totalQuestions', 'clbScore'
+                       ]) &&
+                       request.resource.data.testType in ['reading', 'listening'] &&
+                       request.resource.data.correctAnswers is int &&
+                       request.resource.data.totalQuestions is int &&
+                       request.resource.data.clbScore is int;
+      
+      // Users cannot update or delete test results (immutable history)
+      allow update, delete: if false;
+    }
+    
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
