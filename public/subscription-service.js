@@ -265,9 +265,8 @@ class SubscriptionService {
       <div id="upgradeModal" class="upgrade-modal">
         <div class="upgrade-modal__backdrop"></div>
         <div class="upgrade-modal__content">
-          <button class="upgrade-modal__close" aria-label="Close">✕</button>
           <div class="upgrade-modal__icon">🔒</div>
-          <h2 class="upgrade-modal__title">Upgrade Your Plan</h2>
+          <h2 class="upgrade-modal__title">Upgrade Required</h2>
           <p class="upgrade-modal__message">${defaultMessage}</p>
           <a href="/plan.html" class="btn btn--primary upgrade-modal__cta">View Plans</a>
         </div>
@@ -276,13 +275,8 @@ class SubscriptionService {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // Add event listeners
-    const modal = document.getElementById('upgradeModal');
-    const closeBtn = modal.querySelector('.upgrade-modal__close');
-    const backdrop = modal.querySelector('.upgrade-modal__backdrop');
-
-    closeBtn?.addEventListener('click', () => modal.classList.add('quiz--hidden'));
-    backdrop?.addEventListener('click', () => modal.classList.add('quiz--hidden'));
+    // ✅ NO event listeners - modal is non-dismissable
+    // User MUST click "View Plans" to proceed
   }
 }
 

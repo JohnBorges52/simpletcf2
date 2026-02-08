@@ -604,6 +604,17 @@ import {
         div.onclick = null;
       } else {
         div.onclick = () => {
+          // ✅ Block if subscription limit reached
+          if (!state.realTestMode && state.userSubscription) {
+            const canAccess = window.SubscriptionService?.canAccess('reading', state.userSubscription);
+            if (!canAccess) {
+              window.SubscriptionService?.showUpgradeModal(
+                'You have reached your free reading question limit! Upgrade to continue practicing.'
+              );
+              return;
+            }
+          }
+
           document
             .querySelectorAll(`.${CLS.option}`)
             .forEach((o) => o.classList.remove(CLS.optionSelected));
@@ -619,6 +630,17 @@ import {
 
     if (confirmBtn) confirmBtn.onclick = async () => {
       try {
+        // ✅ Double-check subscription limit before confirming
+        if (!state.realTestMode && state.userSubscription) {
+          const canAccess = window.SubscriptionService?.canAccess('reading', state.userSubscription);
+          if (!canAccess) {
+            window.SubscriptionService?.showUpgradeModal(
+              'You have reached your free reading question limit! Upgrade to continue practicing.'
+            );
+            return;
+          }
+        }
+
         await confirmAnswer(q);
       } catch (err) {
         console.error("Error confirming answer:", err);
@@ -723,6 +745,17 @@ import {
     }
 
     if (state.selectedOptionIndex === null) return;
+
+    // ✅ Double-check subscription limit before confirming
+    if (!state.realTestMode && state.userSubscription) {
+      const canAccess = window.SubscriptionService?.canAccess('reading', state.userSubscription);
+      if (!canAccess) {
+        window.SubscriptionService?.showUpgradeModal(
+          'You have reached your free reading question limit! Upgrade to continue practicing.'
+        );
+        return;
+      }
+    }
 
     const correctIndex =
       typeof q.correct_index === "number"

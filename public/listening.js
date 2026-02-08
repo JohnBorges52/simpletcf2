@@ -752,6 +752,17 @@ import {
         div.onclick = null;
       } else {
         div.onclick = () => {
+          // ✅ Block if subscription limit reached
+          if (!state.realTestMode && state.userSubscription) {
+            const canAccess = window.SubscriptionService?.canAccess('listening', state.userSubscription);
+            if (!canAccess) {
+              window.SubscriptionService?.showUpgradeModal(
+                'You have reached your free listening question limit! Upgrade to continue practicing.'
+              );
+              return;
+            }
+          }
+
           document
             .querySelectorAll(`.${CLS.option}`)
             .forEach((o) => o.classList.remove(CLS.optionSelected));
@@ -767,6 +778,17 @@ import {
 
     if (confirmBtn) confirmBtn.onclick = async () => {
       try {
+        // ✅ Double-check subscription limit before confirming
+        if (!state.realTestMode && state.userSubscription) {
+          const canAccess = window.SubscriptionService?.canAccess('listening', state.userSubscription);
+          if (!canAccess) {
+            window.SubscriptionService?.showUpgradeModal(
+              'You have reached your free listening question limit! Upgrade to continue practicing.'
+            );
+            return;
+          }
+        }
+
         await confirmAnswer(q);
       } catch (err) {
         console.error("Error confirming answer:", err);
@@ -910,6 +932,17 @@ import {
 
   async function confirmAnswer(q) {
     if (state.selectedOptionIndex === null) return;
+
+    // ✅ Double-check subscription limit before confirming
+    if (!state.realTestMode && state.userSubscription) {
+      const canAccess = window.SubscriptionService?.canAccess('listening', state.userSubscription);
+      if (!canAccess) {
+        window.SubscriptionService?.showUpgradeModal(
+          'You have reached your free listening question limit! Upgrade to continue practicing.'
+        );
+        return;
+      }
+    }
 
     const correctIndex = q.alternatives.findIndex((a) => a.is_correct);
     q.userAnswerIndex = state.selectedOptionIndex;
