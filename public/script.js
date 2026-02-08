@@ -389,12 +389,17 @@ run("hero-rotator", () => {
 });
 
 /* -------------------------------------------------
-   6) Contact submit button animation + email form
+   6) Contact submit button + Google Apps Script webhook
 ---------------------------------------------------*/
 run("contact-button", () => {
   const button = document.getElementById("submit-button");
   const form = document.getElementById("contact");
+  const statusDiv = document.getElementById("form-status");
   if (!button || !form) return;
+
+  // TODO: Replace this URL with your Google Apps Script web app URL
+  // See GOOGLE_APPS_SCRIPT_SETUP.md for instructions
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxk5b7x8QDBuncpfsJi8AcpVkZaJdyUMEbfxhsX-iNCZ9s7mBtd8UQ_t_TW-zW8PMx6/exec';
 
   // Get form fields
   const topicField = document.getElementById("contact-topic");
@@ -403,6 +408,17 @@ run("contact-button", () => {
   const emailField = document.getElementById("contact-email");
   const phoneField = document.getElementById("contact-phone");
   const messageField = document.getElementById("contact-message");
+
+  // Show status message
+  const showStatus = (message, isSuccess) => {
+    if (!statusDiv) return;
+    statusDiv.textContent = message;
+    statusDiv.className = `form-status ${isSuccess ? 'form-status--success' : 'form-status--error'}`;
+    statusDiv.style.display = 'block';
+    setTimeout(() => {
+      statusDiv.style.display = 'none';
+    }, 5000);
+  };
 
   // Validation function
   const validateField = (field, errorId, fieldId) => {
@@ -427,7 +443,7 @@ run("contact-button", () => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  button.addEventListener("click", (e) => {
+  button.addEventListener("click", async (e) => {
     e.preventDefault();
 
     // Validate required fields
@@ -451,29 +467,58 @@ run("contact-button", () => {
       return;
     }
 
-    // Build email content
-    const subject = `SimpleTCF Contact: ${topicField.value}`;
-    const fullName = surnameField.value ? `${nameField.value} ${surnameField.value}` : nameField.value;
-    const body = `Name: ${fullName}%0D%0AEmail: ${emailField.value}%0D%0A${phoneField.value ? `Phone: ${phoneField.value}%0D%0A` : ""}%0D%0AMessage:%0D%0A${messageField.value}`;
-
-    // Create mailto link
-    const mailtoLink = `mailto:info@simpletcf.com?subject=${encodeURIComponent(subject)}&body=${body}`;
-
-    // Animate button
+    // Disable button during submission
+    button.disabled = true;
     button.classList.add("onclic");
-    setTimeout(() => {
+
+    // Prepare form data
+    const fullName = surnameField.value ? `${nameField.value} ${surnameField.value}` : nameField.value;
+    const formData = {
+      name: fullName,
+      email: emailField.value,
+      phone: phoneField.value || 'Not provided',
+      topic: topicField.value,
+      message: messageField.value
+    };
+
+    try {
+      // Send to Google Apps Script
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      // Note: no-cors mode doesn't return response, so we assume success
+      console.log('Email sent to Google Apps Script');
+      
+      // Success animation
       button.classList.remove("onclic");
       button.classList.add("validate");
+      showStatus('✓ Message sent successfully! We\'ll get back to you soon.', true);
       
-      // Open email client
-      window.location.href = mailtoLink;
-      
-      // Reset form after a delay
+      // Reset form after delay
       setTimeout(() => {
         button.classList.remove("validate");
+        button.disabled = false;
         form.reset();
       }, 1750);
-    }, 500);
+      
+    } catch (error) {
+      console.error('Email send failed:', error);
+      
+      // Error handling
+      button.classList.remove("onclic");
+      button.disabled = false;
+      showStatus('✗ Failed to send message. Please try again or email us directly at simpletcf@gmail.com', false);
+      
+      // Shake button to indicate error
+      button.classList.add("shake");
+      setTimeout(() => button.classList.remove("shake"), 500);
+    }
   });
 });
 
