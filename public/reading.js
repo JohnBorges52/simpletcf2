@@ -623,7 +623,8 @@ import {
   function updateKpiVisibility() {
     const kpis = document.querySelectorAll(".quiz--kpi");
     kpis.forEach((kpi) => {
-      if (state.realTestMode && !state.realTestFinished) {
+      // Hide KPI during real test mode (both during test and when viewing results)
+      if (state.realTestMode) {
         kpi.classList.add(CLS.hidden);
       } else {
         kpi.classList.remove(CLS.hidden);
@@ -1138,6 +1139,17 @@ import {
     document.getElementById("realTestContainer")?.classList.remove(CLS.hidden);
     document.getElementById("realTestResults")?.classList.add(CLS.hidden);
 
+    // ✅ Re-show KPI elements when starting a new test
+    const kpis = document.querySelectorAll(".quiz--kpi");
+    kpis.forEach((kpi) => kpi.classList.remove(CLS.hidden));
+    
+    const questionNumber = document.getElementById("questionNumber");
+    const scoreElement = document.getElementById("score");
+    const kpiBox = document.getElementById("kpiBox");
+    if (questionNumber) questionNumber.classList.remove(CLS.hidden);
+    if (scoreElement) scoreElement.classList.remove(CLS.hidden);
+    if (kpiBox) kpiBox.classList.remove(CLS.hidden);
+
     state.filtered = buildRealTestSet();
     state.index = 0;
     state.score = 0;
@@ -1219,6 +1231,14 @@ import {
     // ✅ Hide KPI elements in results page
     const kpis = document.querySelectorAll(".quiz--kpi");
     kpis.forEach((kpi) => kpi.classList.add(CLS.hidden));
+    
+    // ✅ Also hide specific elements by ID
+    const questionNumber = document.getElementById("questionNumber");
+    const scoreElement = document.getElementById("score");
+    const kpiBox = document.getElementById("kpiBox");
+    if (questionNumber) questionNumber.classList.add(CLS.hidden);
+    if (scoreElement) scoreElement.classList.add(CLS.hidden);
+    if (kpiBox) kpiBox.classList.add(CLS.hidden);
 
     // Calculate scores
     let totalCorrect = 0;
@@ -1352,10 +1372,15 @@ import {
 
         const alts = q.alternatives
           .map((a, idx) => {
-            const letter = a.letter || String.fromCharCode(65 + idx);
+            const letter = a?.letter || deriveLetters(idx);
             const isC = idx === correctIndex;
             const isU = idx === ua;
-            const altText = a.text || a.alternative || "";
+            // Handle both string alternatives and object alternatives
+            const text = typeof a === "string" ? a : (a?.text ?? "");
+            const clean = String(text || "")
+              .replace(/\s*✅/g, "")
+              .replace(/^[A-F]\s*[-.)]?\s*/i, "")
+              .trim();
             return `
               <div style="
                 padding:6px 10px;border-radius:10px;margin:6px 0;
@@ -1363,7 +1388,7 @@ import {
                 background:${isC ? "rgba(16,185,129,.10)" : isU ? "rgba(239,68,68,.10)" : "#fff"};
                 font-weight:${isC ? "601" : "600"};
               ">
-                ${letter}. ${altText}
+                ${letter}. ${clean}
                 ${isC ? " <span style='margin-left:6px;font-size:.85rem;opacity:.85'>✅ correct</span>" : ""}
                 ${isU && !isC ? " <span style='margin-left:6px;font-size:.85rem;opacity:.85'>❌ your answer</span>" : ""}
               </div>

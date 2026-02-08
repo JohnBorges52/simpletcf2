@@ -310,6 +310,31 @@
         </div>
       </section>
 
+      <!-- Results (placed before quiz so it appears first) -->
+      <section
+        id="realTestResults"
+        class="quiz--hidden"
+        aria-labelledby="results-title"
+      >
+        <h2 id="results-title" class="quiz--hidden">Results</h2>
+
+        <div id="resultsHeader"></div>
+        <div id="clbTable" class="quiz--clb-table"></div>
+        <div id="resultsDots" class="quiz--results-dots"></div>
+
+        <div class="quiz--again-wrap">
+          <button
+            id="againBtn"
+            type="button"
+            class="quiz--btn quiz--pill padding-space"
+          >
+            🔁 Do another Real Test
+          </button>
+        </div>
+
+        <div id="allQuestionsReview"></div>
+      </section>
+
       <!-- Main Quiz Card -->
       <main
         id="quiz"
@@ -394,31 +419,6 @@
           </button>
         </div>
       </main>
-
-      <!-- Results -->
-      <section
-        id="realTestResults"
-        class="quiz--hidden"
-        aria-labelledby="results-title"
-      >
-        <h2 id="results-title" class="quiz--hidden">Results</h2>
-
-        <div id="resultsHeader"></div>
-        <div id="clbTable" class="quiz--clb-table"></div>
-        <div id="resultsDots" class="quiz--results-dots"></div>
-
-        <div class="quiz--again-wrap">
-          <button
-            id="againBtn"
-            type="button"
-            class="quiz--btn quiz--pill padding-space"
-          >
-            🔁 Do another Real Test
-          </button>
-        </div>
-
-        <div id="allQuestionsReview"></div>
-      </section>
 
       <noscript>
         <p><strong>JavaScript is required</strong> to run this practice app.</p>
