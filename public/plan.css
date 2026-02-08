@@ -868,6 +868,13 @@ body.plans .hero__center {
 body.plans .hero__title {
   font-size: clamp(2.2rem, 5vw, 3.2rem);
   margin: 16px 0 22px;
+  text-align: center;
+}
+
+body.plans .hero__title-big {
+  font-size: clamp(2.8rem, 6.5vw, 4.2rem);
+  display: block;
+  font-weight: 700;
 }
 
 .btn--lg {
