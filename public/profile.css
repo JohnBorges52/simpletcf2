@@ -182,6 +182,7 @@
 .pill-green {
   background: rgba(16, 185, 129, 0.15);
   border-color: rgba(16, 185, 129, 0.35);
+  padding: 7px 10px;
 }
 
 .account-info {
