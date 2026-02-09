@@ -143,6 +143,9 @@
       // Display user email and handle resend
       import * as AuthService from './auth-service.js';
       
+      // Constants
+      const RESEND_COOLDOWN_MS = 60000; // 60 seconds
+      
       document.addEventListener('DOMContentLoaded', async () => {
         try {
           // Wait for auth to be ready
@@ -183,11 +186,11 @@
                   statusEl.classList.remove('hidden');
                 }
                 
-                // Re-enable button after 60 seconds
+                // Re-enable button after cooldown period
                 setTimeout(() => {
                   resendBtn.disabled = false;
                   resendBtn.textContent = 'Resend Verification Email';
-                }, 60000);
+                }, RESEND_COOLDOWN_MS);
                 
               } catch (error) {
                 console.error('Error resending verification email:', error);
