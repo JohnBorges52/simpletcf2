@@ -218,6 +218,10 @@ exports.createCheckoutSession = onRequest(
 exports.stripeWebhook = onRequest(
     {secrets: [stripeSecretKey, stripeWebhookSecret]},
     async (req, res) => {
+      if (req.method !== "POST") {
+        return res.status(405).send("Method not allowed");
+      }
+
       // Initialize Stripe with the secret
       if (!stripe) {
         stripe = require("stripe")(stripeSecretKey.value());
@@ -236,20 +240,23 @@ exports.stripeWebhook = onRequest(
       }
 
       try {
-        // Collect raw body for signature verification
-        const rawBody = await new Promise((resolve, reject) => {
-          const chunks = [];
+        // Prefer req.rawBody (provided by Firebase runtime). If it is not
+        // available, derive a Buffer from req.body as a safe fallback.
+        let rawBody = req.rawBody;
+        if (!rawBody && req.body) {
+          if (Buffer.isBuffer(req.body)) {
+            rawBody = req.body;
+          } else if (typeof req.body === "string") {
+            rawBody = Buffer.from(req.body, "utf8");
+          } else {
+            rawBody = Buffer.from(JSON.stringify(req.body), "utf8");
+          }
+        }
 
-          req.on("error", reject);
-
-          req.on("data", (chunk) => {
-            chunks.push(chunk);
-          });
-
-          req.on("end", () => {
-            resolve(Buffer.concat(chunks));
-          });
-        });
+        if (!rawBody || rawBody.length === 0) {
+          console.error("❌ Missing raw body for webhook signature check");
+          return res.status(400).send("Missing webhook payload");
+        }
 
         let event;
 
@@ -356,4 +363,3 @@ exports.stripeWebhook = onRequest(
         return res.status(400).send("Bad request");
       }
     });
-
