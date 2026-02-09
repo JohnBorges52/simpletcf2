@@ -53,11 +53,37 @@
   }
 
   // =======================
-  // ✅ ALL paid plans → auth-gated
+  // ✅ Check if user has active paid plan
+  // =======================
+  async function checkUserPlanStatus() {
+    try {
+      // Wait for auth to be ready
+      if (window.AuthService) {
+        await window.AuthService.waitForAuth();
+        const user = window.AuthService.getCurrentUser();
+        
+        if (!user) return null;
+        
+        // Initialize subscription service to get user tier
+        if (window.SubscriptionService) {
+          await window.SubscriptionService.init();
+          const tier = window.SubscriptionService.getCurrentTier();
+          return tier;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error checking user plan status:", error);
+      return null;
+    }
+  }
+
+  // =======================
+  // ✅ ALL paid plans → auth-gated + check existing plan
   // =======================
   function initPlanCheckoutButtons() {
     document.querySelectorAll(".price__cta").forEach((button) => {
-      button.addEventListener("click", (e) => {
+      button.addEventListener("click", async (e) => {
         e.preventDefault();
 
         const price = parseFloat(button.dataset.price || "0");
@@ -77,6 +103,13 @@
         if (!isLoggedIn()) {
           console.log("🔒 Not logged in → redirect to login");
           goToLoginThenReturn(checkoutUrl);
+          return;
+        }
+
+        // ✅ Check if user already has a paid plan
+        const currentTier = await checkUserPlanStatus();
+        if (currentTier && currentTier !== 'free') {
+          alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
           return;
         }
 

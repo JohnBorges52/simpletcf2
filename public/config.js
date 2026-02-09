@@ -330,8 +330,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const user = result.user;
 
       console.log("Google sign-in successful:", user.email);
-      // For Google sign-in, users are auto-verified
-      showWelcomeMessage(user.displayName || "User", user.email);
+      
+      // Check if this is a new user (additionalUserInfo.isNewUser)
+      const isNewUser = result._tokenResponse?.isNewUser || false;
+      
+      if (isNewUser) {
+        // New user - redirect to welcome page
+        window.location.href = '/welcome.html';
+      } else {
+        // Returning user - show welcome message and redirect to home
+        showWelcomeMessage(user.displayName || "User", user.email);
+      }
 
     } catch (error) {
       console.error("Google sign-in error:", error);
@@ -596,29 +605,9 @@ function showWelcomeMessage(name, email) {
 }
 
 function showVerificationMessage(email, name) {
-  const welcomeSection = document.getElementById("welcome-screen");
-  
-  if (welcomeSection) {
-    const registerForm = document.getElementById("register-form");
-    if (registerForm) registerForm.classList.add("blur-bg");
-    
-    welcomeSection.classList.remove("hidden");
-    
-    const title = document.getElementById("verify-title");
-    const nameEl = document.getElementById("welcome-name");
-    const emailEl = document.getElementById("welcome-email");
-    const avatarEl = document.getElementById("avatar-initial");
-    
-    if (title) title.textContent = "Verify Your Email";
-    if (nameEl) nameEl.textContent = `Check your inbox, ${name}!`;
-    if (emailEl) emailEl.textContent = `We sent a verification link to ${email}`;
-    if (avatarEl) avatarEl.textContent = (name[0] || "U").toUpperCase();
-  } else {
-    alert(`✅ Account created! Please check ${email} for a verification link.`);
-    setTimeout(() => {
-      window.location.href = "/login.html";
-    }, 500);
-  }
+  // Redirect to welcome page for registered users
+  // They will stay logged in (persistence is set to LOCAL)
+  window.location.href = '/welcome.html';
 }
 
 // Handle email verification from link
