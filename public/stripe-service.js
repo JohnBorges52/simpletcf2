@@ -156,22 +156,3 @@ class StripeService {
 
 // Create global instance
 window.StripeService = new StripeService();
-  getPriceId(tier) {
-    return this.priceIds[tier];
-  }
-
-  /**
-   * Get tier configuration (duration and price mapping)
-   */
-  getTierConfig(tier) {
-    const configs = {
-      'quick-study': { days: 10, displayName: 'Quick Study (10 days)' },
-      '30-day': { days: 30, displayName: '30-Day Intensive' },
-      'full-prep': { days: 60, displayName: 'Full Preparation' }
-    };
-    return configs[tier];
-  }
-}
-
-// Export as singleton
-window.StripeService = new StripeService();
