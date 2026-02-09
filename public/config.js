@@ -335,8 +335,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const isNewUser = result._tokenResponse?.isNewUser || false;
       
       if (isNewUser) {
-        // New user - redirect to welcome page
-        window.location.href = '/welcome.html';
+        // New user - check if email is verified (Google users are usually verified)
+        if (user.emailVerified) {
+          // Email verified - redirect to welcome page
+          window.location.href = '/welcome.html';
+        } else {
+          // Email not verified - redirect to verification page
+          window.location.href = '/verify-email.html';
+        }
       } else {
         // Returning user - show welcome message and redirect to home
         showWelcomeMessage(user.displayName || "User", user.email);
@@ -707,9 +713,9 @@ function showWelcomeMessage(name, email) {
 }
 
 function showVerificationMessage(email, name) {
-  // Redirect to welcome page for registered users
+  // Redirect to verify-email page for registered users
   // They will stay logged in (persistence is set to LOCAL)
-  window.location.href = '/welcome.html';
+  window.location.href = '/verify-email.html';
 }
 
 // Handle email verification from link
