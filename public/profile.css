@@ -895,7 +895,7 @@
 
 /* Plan expiration date styling */
 .plan-expiration {
-  margin-top: 12px;
+  margin-top: 0px;
   font-size: 14px;
   color: var(--muted, #6b7280);
   font-weight: 500;
