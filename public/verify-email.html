@@ -173,6 +173,9 @@
                 
                 await AuthService.resendVerificationEmail();
                 
+                // Update button text
+                resendBtn.textContent = 'Email Sent!';
+                
                 // Show success message
                 if (statusEl) {
                   statusEl.textContent = '✅ Verification email sent! Please check your inbox.';
@@ -185,9 +188,6 @@
                   resendBtn.disabled = false;
                   resendBtn.textContent = 'Resend Verification Email';
                 }, 60000);
-                
-                // Update button text
-                resendBtn.textContent = 'Email Sent!';
                 
               } catch (error) {
                 console.error('Error resending verification email:', error);
