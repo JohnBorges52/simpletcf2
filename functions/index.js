@@ -227,8 +227,11 @@ exports.stripeWebhook = onRequest(
       const sig = req.headers["stripe-signature"];
       const webhookSecret = stripeWebhookSecret.value();
 
+      console.log("🔍 Webhook request received");
+      console.log("🔍 Has signature:", !!sig);
+
       if (!sig) {
-        console.error("Missing Stripe signature header");
+        console.error("❌ Missing Stripe signature header");
         return res.status(400).send("Missing signature");
       }
 
@@ -274,8 +277,15 @@ exports.stripeWebhook = onRequest(
             // Extract metadata (set by createCheckoutSession)
             const {userId, tier, price, durationDays} = session.metadata;
 
+            console.log("🔍 Extracted metadata:", {
+              userId,
+              tier,
+              price,
+              durationDays,
+            });
+
             if (!userId || !tier || !durationDays) {
-              console.error("Missing required metadata:", session.metadata);
+              console.error("❌ Missing required metadata:", session.metadata);
               return res.status(400).send("Invalid session metadata");
             }
 
@@ -287,6 +297,7 @@ exports.stripeWebhook = onRequest(
 
             // Update user subscription in Firestore
             // Use set with merge to create document if it doesn't exist
+            console.log("🔍 Updating user document in Firestore...");
             await admin.firestore().collection("users").doc(userId).set({
               tier: tier,
               subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
@@ -301,6 +312,7 @@ exports.stripeWebhook = onRequest(
             const planInfo = VALID_PRICE_IDS[session.metadata.priceId];
             const planName = planInfo? planInfo.name : tier;
 
+            console.log("🔍 Creating order record in Firestore...");
             await admin.firestore().collection("orders").add({
               userId: userId,
               tier: tier,
