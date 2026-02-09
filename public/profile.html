@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="styles.css" />
     <!-- Profile-only styles -->
     <link rel="stylesheet" href="profile.css" />
+    <!-- Checkout styles for badge styling -->
+    <link rel="stylesheet" href="checkout.css" />
 
     <link
       href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
@@ -426,9 +428,6 @@
           <!-- ACCOUNT -->
           <div id="tab-account" class="profile-hidden">
             <h1>Account</h1>
-            <p class="muted">
-              Update your personal info and subscription details.
-            </p>
 
             <div class="account-card">
               <div class="account-row">
@@ -456,17 +455,13 @@
                     disabled
                     autocomplete="email"
                   />
-                  <div class="account-hint">
-                    (Por enquanto isso atualiza só o LocalStorage. Depois você
-                    liga no Firebase.)
-                  </div>
                 </div>
               </div>
 
               <div class="account-row">
                 <div class="account-label">Plan</div>
                 <div class="account-field">
-                  <span class="pill" id="acctPlan">—</span>
+                  <span class="order-summary-badge" id="acctPlan">—</span>
                 </div>
               </div>
 
@@ -488,41 +483,6 @@
                 </button>
               </div>
 
-              <hr class="profile-divider" />
-
-              <div class="profile-actions">
-                <button
-                  class="profile-btn primary"
-                  id="editAccountBtn"
-                  type="button"
-                >
-                  Edit
-                </button>
-                <button
-                  class="profile-btn"
-                  id="saveAccountBtn"
-                  type="button"
-                  disabled
-                >
-                  Save
-                </button>
-                <button
-                  class="profile-btn"
-                  id="cancelAccountBtn"
-                  type="button"
-                  disabled
-                >
-                  Cancel
-                </button>
-
-                <span
-                  class="pill pill-green account-saved"
-                  id="accountSavedPill"
-                  hidden
-                >
-                  Saved ✅
-                </span>
-              </div>
             </div>
 
             <div class="profile-actions" style="margin-top: 10px">

@@ -631,18 +631,52 @@ function fmtPct(n) {
       console.warn("Failed to load user document:", error);
     }
 
-    // Set user info in UI
+    // Set user info in UI from Firestore
     setAvatarAndName(
       userDoc?.displayName || user.displayName || "User",
       userDoc?.email || user.email || "—"
     );
 
-    // Plan badge
-    const plan = userDoc?.plan || "free";
+    // Get tier from subscription service (already initialized above)
+    const tier = userDoc?.tier || "free";
+    
+    // Map tier to friendly names
+    const tierNames = {
+      "free": "Free Tier",
+      "quick-study": "Quick Study (10 days)",
+      "30-day": "30-Day Intensive",
+      "full-prep": "Full Preparation"
+    };
+    
+    // Map tier to badge classes
+    const tierBadgeClasses = {
+      "free": "order-summary-badge--free",
+      "quick-study": "order-summary-badge--bronze",
+      "30-day": "order-summary-badge--silver",
+      "full-prep": "order-summary-badge--gold"
+    };
+    
+    // Update sidebar member pill
     const pill = $("memberPill");
     if (pill) {
-      pill.textContent = plan === "free" ? "Free Member" : `${plan} Member`;
-      pill.classList.toggle("pill-green", plan !== "free");
+      pill.textContent = tierNames[tier] || "Free Tier";
+      pill.classList.toggle("pill-green", tier !== "free");
+    }
+    
+    // Update account page plan badge
+    const acctPlan = $("acctPlan");
+    if (acctPlan) {
+      acctPlan.textContent = tierNames[tier] || "Free Tier";
+      // Remove all badge classes first
+      acctPlan.classList.remove(
+        "order-summary-badge--free",
+        "order-summary-badge--bronze",
+        "order-summary-badge--silver",
+        "order-summary-badge--gold"
+      );
+      // Add the correct badge class
+      const badgeClass = tierBadgeClasses[tier] || "order-summary-badge--free";
+      acctPlan.classList.add(badgeClass);
     }
 
     // Load overview stats (all categories combined)
