@@ -624,7 +624,7 @@ function showVerificationMessage(email, name) {
         await auth.currentUser?.reload();
         console.log("✅ Email verified successfully");
       }
-      window.location.replace("/login.html?verified=1");
+      window.location.replace("/welcome.html");
     } catch (error) {
       console.error("Email verification error:", error);
       window.location.replace("/login.html?verify_error=1");
