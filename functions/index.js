@@ -272,13 +272,14 @@ exports.stripeWebhook = onRequest(
           );
 
           // Update user subscription in Firestore
-          await admin.firestore().collection("users").doc(userId).update({
+          // Use set with merge to create document if it doesn't exist
+          await admin.firestore().collection("users").doc(userId).set({
             tier: tier,
             subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
             subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
             stripeCustomerId: session.customer || null,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          }, {merge: true});
 
           console.log(`✅ User ${userId} upgraded to ${tier}`);
 
