@@ -178,6 +178,7 @@ exports.createCheckoutSession = onRequest(
             tier: planDetails.tier,
             price: planDetails.price.toString(),
             durationDays: planDetails.durationDays.toString(),
+            priceId: priceId,
           },
         });
 
