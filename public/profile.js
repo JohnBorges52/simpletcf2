@@ -639,6 +639,51 @@ function fmtPct(n) {
     });
   }
 
+  /**
+   * Wait for tier update after successful payment
+   * Polls Firestore for tier change (webhook may take a few seconds)
+   */
+  async function waitForTierUpdate(userId, maxAttempts = 10, intervalMs = 1000) {
+    console.log("⏳ Waiting for tier update from webhook...");
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        // Fetch fresh user data from Firestore
+        const db = await window.__firestoreReady;
+        if (!db || !window.firestoreExports) {
+          console.warn("Firestore not available");
+          return null;
+        }
+
+        const { doc, getDoc } = window.firestoreExports;
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          const tier = data.tier || 'free';
+          
+          // Check if tier has been updated to a paid tier
+          if (tier !== 'free') {
+            console.log(`✅ Tier updated to: ${tier}`);
+            return data;
+          }
+        }
+        
+        // Wait before next poll
+        if (i < maxAttempts - 1) {
+          console.log(`Polling attempt ${i + 1}/${maxAttempts}...`);
+          await new Promise(resolve => setTimeout(resolve, intervalMs));
+        }
+      } catch (error) {
+        console.error("Error polling for tier update:", error);
+      }
+    }
+    
+    console.warn("⚠️ Tier update timeout - webhook may still be processing");
+    return null;
+  }
+
   // ----------------------------
   // Init
   // ----------------------------
@@ -663,10 +708,11 @@ function fmtPct(n) {
     
     // Check for payment success redirect
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment') === 'success') {
-      alert('🎉 Payment successful! Your subscription is now active.');
-      // Remove query param from URL
-      window.history.replaceState({}, document.title, '/profile.html');
+    const isPaymentSuccess = urlParams.get('payment') === 'success';
+    
+    if (isPaymentSuccess) {
+      // Don't show alert yet - wait for tier update first
+      console.log("💳 Payment success detected, waiting for tier update...");
     } else if (urlParams.get('payment') === 'cancelled') {
       alert('Payment was cancelled. You can try again anytime.');
       window.history.replaceState({}, document.title, '/profile.html');
@@ -687,12 +733,32 @@ function fmtPct(n) {
 
     // Load user document from Firestore (if available)
     let userDoc = null;
-    try {
-      if (window.dbService && window.dbService.getUser) {
-        userDoc = await window.dbService.getUser(user.uid);
+    
+    // If payment was successful, wait for tier update from webhook
+    if (isPaymentSuccess) {
+      userDoc = await waitForTierUpdate(user.uid);
+      
+      // If tier was updated, show success message
+      if (userDoc && userDoc.tier !== 'free') {
+        alert('🎉 Payment successful! Your subscription is now active.');
+      } else {
+        // Fallback: webhook might be delayed, but show success anyway
+        alert('🎉 Payment successful! Your subscription will be activated shortly.');
       }
-    } catch (error) {
-      console.warn("Failed to load user document:", error);
+      
+      // Remove query param from URL
+      window.history.replaceState({}, document.title, '/profile.html');
+    }
+    
+    // Load user doc if not already loaded
+    if (!userDoc) {
+      try {
+        if (window.dbService && window.dbService.getUser) {
+          userDoc = await window.dbService.getUser(user.uid);
+        }
+      } catch (error) {
+        console.warn("Failed to load user document:", error);
+      }
     }
 
     // Set user info in UI from Firestore
@@ -701,8 +767,18 @@ function fmtPct(n) {
       userDoc?.email || user.email || "—"
     );
 
-    // Get tier from subscription service (already initialized above)
+    // Get tier from user document
     const tier = userDoc?.tier || "free";
+    
+    // If payment was successful, also refresh subscription service data
+    if (isPaymentSuccess && window.SubscriptionService) {
+      try {
+        await window.SubscriptionService.init();
+        console.log("✅ Subscription service refreshed after payment");
+      } catch (error) {
+        console.warn("Failed to refresh subscription service:", error);
+      }
+    }
     
     // Map tier to friendly names
     const tierNames = {
