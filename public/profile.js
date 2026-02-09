@@ -420,6 +420,11 @@ function fmtPct(n) {
       // Add hover tooltip functionality
       const tooltip = $("chartTooltip");
       if (tooltip) {
+        // Calculate overall average and total questions
+        const totalQuestions = data.reduce((sum, d) => sum + d.total, 0);
+        const totalCorrect = data.reduce((sum, d) => sum + (d.total * d.accuracy / 100), 0);
+        const overallAverage = totalQuestions > 0 ? Math.round(totalCorrect / totalQuestions * 100) : 0;
+        
         // Remove old listeners if they exist
         canvas.onmousemove = null;
         canvas.onmouseout = null;
@@ -431,15 +436,17 @@ function fmtPct(n) {
 
           // Find closest data point
           let closestPoint = null;
+          let closestIndex = -1;
           let minDistance = Infinity;
 
-          dataPoints.forEach(point => {
+          dataPoints.forEach((point, index) => {
             const distance = Math.sqrt(
               Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2)
             );
             if (distance < minDistance && distance < 15) {
               minDistance = distance;
               closestPoint = point;
+              closestIndex = index;
             }
           });
 
@@ -448,7 +455,13 @@ function fmtPct(n) {
             // Position relative to canvas
             tooltip.style.left = `${mouseX}px`;
             tooltip.style.top = `${mouseY}px`;
-            tooltip.textContent = `${closestPoint.accuracy}% (${closestPoint.total} questions)`;
+            
+            // Show overall stats for last point, individual stats for others
+            if (closestIndex === dataPoints.length - 1) {
+              tooltip.textContent = `Overall: ${overallAverage}% avg (${totalQuestions} questions)`;
+            } else {
+              tooltip.textContent = `${closestPoint.accuracy}% (${closestPoint.total} questions)`;
+            }
             canvas.style.cursor = "pointer";
           } else {
             tooltip.hidden = true;
