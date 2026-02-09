@@ -268,25 +268,8 @@
       return { tier: 'full-prep', days: 60 };
     }
 
-    // Default to 30-day if unclear
+  // Default to 30-day if unclear
     return { tier: '30-day', days: 30 };
-  }
-
-  function wirePaidPaymentToggle() {
-    const pmCard = $("#pm-card");
-    const pmPaypal = $("#pm-paypal");
-    const paypalBox = $("#paypalBox");
-    const cardForm = $("#cardForm");
-
-    const sync = () => {
-      const isPaypal = pmPaypal && pmPaypal.checked;
-      if (paypalBox) paypalBox.classList.toggle("hidden", !isPaypal);
-      if (cardForm) cardForm.style.display = isPaypal ? "none" : "block";
-    };
-
-    if (pmCard) pmCard.addEventListener("change", sync);
-    if (pmPaypal) pmPaypal.addEventListener("change", sync);
-    sync();
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -305,8 +288,6 @@
     if (sel.isFree) {
       disablePaymentUIForFree();
     } else {
-      wirePaidPaymentToggle();
-      
       // ✅ Payment button - Stripe integration with security
       const completePaymentBtn = $("#completePaymentBtn");
       if (completePaymentBtn) {

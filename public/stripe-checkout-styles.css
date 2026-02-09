@@ -1,0 +1,140 @@
+/* ========================================
+   Stripe Checkout Section Styles
+   ======================================== */
+
+.stripe-checkout-info {
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.stripe-checkout-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.stripe-icon {
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.stripe-checkout-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.stripe-checkout-message {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.stripe-text-primary {
+  font-size: 16px;
+  color: #1e293b;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.stripe-text-secondary {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.stripe-security-badges {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #059669;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.security-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+.btn--stripe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #635BFF 0%, #5145e6 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn--stripe:hover {
+  background: linear-gradient(135deg, #5145e6 0%, #4235d4 100%);
+  box-shadow: 0 6px 16px rgba(99, 91, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn--stripe:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+.stripe-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 16px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.info-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  stroke: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .stripe-checkout-info {
+    padding: 24px 16px;
+  }
+
+  .stripe-security-badges {
+    gap: 16px;
+  }
+
+  .security-badge {
+    font-size: 12px;
+  }
+
+  .btn--stripe {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+
+  .stripe-footnote {
+    font-size: 11px;
+  }
+}

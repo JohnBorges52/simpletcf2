@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Secure Checkout</title>
+    <title>Review Your Order</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="checkout.css" />
+    <link rel="stylesheet" href="stripe-checkout-styles.css" />
     <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
   </head>
@@ -33,7 +34,7 @@
               ></path>
             </svg>
           </div>
-          <h1 class="checkout-title">Secure Checkout</h1>
+          <h1 class="checkout-title">Review Your Order</h1>
         </div>
       </header>
 
@@ -187,215 +188,54 @@
               />
             </div>
 
-            <!-- Selector (CSS toggled) -->
-            <div class="selector">
-              <input
-                type="radio"
-                name="payment-method"
-                id="pm-card"
-                class="selector__radio"
-                value="card"
-                checked
-              />
-              <label class="selector__option" for="pm-card">
-                <span class="selector__bullet"></span>
-                <svg
-                  class="selector__icon"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="2"
-                    y="5"
-                    width="20"
-                    height="14"
-                    rx="2"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  />
-                  <path d="M2 10h20" stroke="currentColor" stroke-width="2" />
+            <!-- Stripe Checkout Information -->
+            <div class="stripe-checkout-info">
+              <div class="stripe-checkout-header">
+                <svg class="stripe-icon" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg" width="60" height="25">
+                  <path fill="#635BFF" fill-rule="evenodd" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.04 1.26-.06 1.48zm-5.92-5.62c-1.03 0-2.17.73-2.17 2.58h4.25c0-1.85-1.07-2.58-2.08-2.58zM40.95 20.3c-1.44 0-2.32-.6-2.9-1.04l-.02 4.63-4.12.87V5.57h3.76l.08 1.02a4.7 4.7 0 0 1 3.23-1.29c2.9 0 5.62 2.6 5.62 7.4 0 5.23-2.7 7.6-5.65 7.6zM40 8.95c-.95 0-1.54.34-1.97.81l.02 6.12c.4.44.98.78 1.95.78 1.52 0 2.54-1.65 2.54-3.87 0-2.15-1.04-3.84-2.54-3.84zM28.24 5.57h4.13v14.44h-4.13V5.57zm0-4.7L32.37 0v3.36l-4.13.88V.88zm-4.32 9.35v9.79H19.8V5.57h3.7l.12 1.22c1-1.77 3.07-1.41 3.62-1.22v3.79c-.52-.17-2.29-.43-3.32.86zm-8.55 4.72c0 2.43 2.6 1.68 3.12 1.46v3.36c-.55.3-1.54.54-2.89.54a4.15 4.15 0 0 1-4.27-4.24l.01-13.17 4.02-.86v3.54h3.14V9.1h-3.13v5.85zm-4.91.7c0 2.97-2.31 4.66-5.73 4.66a11.2 11.2 0 0 1-4.46-.93v-3.93c1.38.75 3.1 1.31 4.46 1.31.92 0 1.53-.24 1.53-1C6.26 13.77 0 14.51 0 9.95 0 7.04 2.28 5.3 5.62 5.3c1.36 0 2.72.2 4.09.75v3.88a9.23 9.23 0 0 0-4.1-1.06c-.86 0-1.44.25-1.44.9 0 1.85 6.29.97 6.29 5.88z" clip-rule="evenodd"/>
                 </svg>
-                <span class="selector__label">Credit/Debit</span>
-              </label>
+                <h3>Secure Payment Powered by Stripe</h3>
+              </div>
+              
+              <div class="stripe-checkout-message">
+                <p class="stripe-text-primary">You'll be redirected to Stripe's secure checkout page to complete your payment.</p>
+                <p class="stripe-text-secondary">Stripe accepts all major credit cards and PayPal.</p>
+              </div>
 
-              <input
-                type="radio"
-                name="payment-method"
-                id="pm-paypal"
-                class="selector__radio"
-                value="paypal"
-              />
-              <label class="selector__option" for="pm-paypal">
-                <span class="selector__bullet"></span>
-                <img
-                  class="selector__pp"
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/2560px-PayPal.svg.png"
-                  alt="PayPal"
-                />
-                <span class="selector__label">PayPal</span>
-              </label>
-            </div>
-
-            <!-- Forms (CSS toggled by #pm-… state) -->
-            <div class="forms">
-              <!-- Card form -->
-              <form
-                class="form form--card"
-                id="cardForm"
-                autocomplete="off"
-                aria-label="Card payment form"
-              >
-                <div class="grid grid--2">
-                  <div class="grid__col--full">
-                    <div class="field field--combo">
-                      <div class="mini-card" id="card-brand">
-                        <div class="mini-card__chip"></div>
-                      </div>
-                      <input
-                        type="text"
-                        id="cardNumberInput"
-                        maxlength="19"
-                        placeholder="Card number"
-                        class="field__input"
-                        autocomplete="cc-number"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div class="field">
-                      <input
-                        type="text"
-                        id="expiryInput"
-                        inputmode="numeric"
-                        maxlength="5"
-                        placeholder="MM/YY"
-                        class="field__input"
-                        autocomplete="cc-exp"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div class="field">
-                      <input
-                        type="text"
-                        id="cvvInput"
-                        inputmode="numeric"
-                        maxlength="3"
-                        placeholder="CVC"
-                        class="field__input"
-                        autocomplete="cc-csc"
-                      />
-                    </div>
-                  </div>
+              <div class="stripe-security-badges">
+                <div class="security-badge">
+                  <svg class="security-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span>256-bit SSL Encrypted</span>
                 </div>
-
-                <div class="grid grid--2">
-                  <div>
-                    <label class="label" for="firstName">First name</label>
-                    <div class="field">
-                      <input
-                        id="firstName"
-                        type="text"
-                        class="field__input"
-                        autocomplete="given-name"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="label" for="lastName">Last name</label>
-                    <div class="field">
-                      <input
-                        id="lastName"
-                        type="text"
-                        class="field__input"
-                        autocomplete="family-name"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="grid grid--2">
-                  <div>
-                    <label class="label" for="postal">Postal code</label>
-                    <div class="field">
-                      <input
-                        id="postal"
-                        type="text"
-                        class="field__input"
-                        autocomplete="postal-code"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div class="labelrow">
-                    <label class="label" for="phone"
-                      >Phone number (optional)</label
-                    >
-                    <svg
-                      class="info"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      ></circle>
-                      <path
-                        d="M12 16v-4M12 8h.01"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      ></path>
-                    </svg>
-                  </div>
-                  <div class="field">
-                    <input
-                      id="phone"
-                      type="tel"
-                      class="field__input"
-                      value="+1 (236) 508-2965"
-                      autocomplete="tel"
-                    />
-                  </div>
-                </div>
-
-                <div class="actions">
-                  <button id="completePaymentBtn" type="button" class="btn btn--primary">
-                    Complete Payment
-                  </button>
-                </div>
-              </form>
-
-              <!-- PayPal Section -->
-              <div id="paypalBox" class="paypal-box hidden">
-                <div class="paypal-container">
-                  <img
-                    src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
-                    alt="PayPal"
-                    class="paypal-logo"
-                  />
-                  <p class="paypal-text">
-                    You'll be redirected to PayPal to complete your payment
-                    securely.
-                  </p>
-                  <button id="paypalBtn" class="paypal-btn" type="button">
-                    Continue with PayPal
-                  </button>
+                <div class="security-badge">
+                  <svg class="security-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                  </svg>
+                  <span>PCI DSS Compliant</span>
                 </div>
               </div>
+
+              <div class="actions">
+                <button id="completePaymentBtn" type="button" class="btn btn--primary btn--stripe">
+                  <span>Continue to Secure Checkout</span>
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </div>
+
+              <p class="stripe-footnote">
+                <svg class="info-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Your payment details are never stored on our servers. All transactions are processed securely by Stripe.
+              </p>
             </div>
           </section>
         </section>
