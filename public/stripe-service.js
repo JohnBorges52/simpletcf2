@@ -1,26 +1,36 @@
+// ============================================================================
 // Stripe Payment Service
-// Handles Stripe Checkout sessions and payment processing
+// SECURITY: Frontend Integration with Best Practices
+// ============================================================================
+// This service handles Stripe Checkout integration for the frontend
+// Security features:
+// - Uses publishable key only (never secret key)
+// - Sends authentication token with requests
+// - Delegates all pricing logic to backend
+// - Validates user authentication before payment
+// ============================================================================
 
 class StripeService {
   constructor() {
     this.stripe = null;
     this.initialized = false;
-    
-    // REPLACE WITH YOUR PUBLISHABLE KEY FROM STRIPE DASHBOARD
+
+    // SECURITY: Only publishable key is safe to expose in frontend
     // Get from: https://dashboard.stripe.com/test/apikeys
-    this.publishableKey = 'pk_test_51SymiRCwya11CpgZM80uSO1NdGsTCQNO7J6W7bJZKsDYdjOMQBzMcR6ERbrUiW7HLnseg5AdcpcvU8RmKtNLQfER00hkpc0AVo';
-    
-    // REPLACE WITH YOUR PRICE IDs FROM STRIPE PRODUCTS
-    // Create products first, then copy the price IDs
+    this.publishableKey = "pk_test_51SymiRCwya11CpgZM80uSO1NdGsTCQNO7J6W7bJZKsDYdjOMQBzMcR6ERbrUiW7HLnseg5AdcpcvU8RmKtNLQfER00hkpc0AVo";
+
+    // SECURITY: Map tier names to Stripe Price IDs
+    // These are used for display purposes only
+    // Backend validates against its own whitelist
     this.priceIds = {
-      'quick-study': 'price_1SymwrCwya11CpgZ3eFENT6r',
-      '30-day': 'price_1SymymCwya11CpgZCe0uZNIc',
-      'full-prep': 'price_1SymzZCwya11CpgZSf5VpJdy'
+      "quick-study": "price_1SymwrCwya11CpgZ3eFENT6r",
+      "30-day": "price_1SymymCwya11CpgZCe0uZNIc",
+      "full-prep": "price_1SymzZCwya11CpgZSf5VpJdy",
     };
-    
-    // REPLACE WITH YOUR CLOUD FUNCTION URL AFTER DEPLOYMENT
-    // Will be: https://us-central1-simpletcf.cloudfunctions.net/createCheckoutSession
-    this.cloudFunctionUrl = 'https://us-central1-simpletcf.cloudfunctions.net/createCheckoutSession';
+
+    // Cloud Function endpoint (deployed URL)
+    this.cloudFunctionUrl =
+      "https://us-central1-simpletcf.cloudfunctions.net/createCheckoutSession";
   }
 
   /**
@@ -28,106 +38,124 @@ class StripeService {
    */
   async init() {
     if (this.initialized) return;
-    
+
     try {
-      if (this.publishableKey.includes('YOUR_PUBLISHABLE_KEY')) {
-        console.error('⚠️ Please set your Stripe publishable key in stripe-service.js');
-        return;
+      // Verify Stripe.js is loaded from CDN
+      if (typeof Stripe === "undefined") {
+        throw new Error(
+            "Stripe.js not loaded. Add script tag to HTML head.",
+        );
       }
-      
-      // Stripe is loaded from CDN script in checkout.html
-      if (typeof Stripe === 'undefined') {
-        console.error('Stripe.js not loaded. Add <script src="https://js.stripe.com/v3/"></script> to HTML');
-        return;
-      }
-      
+
       this.stripe = Stripe(this.publishableKey);
       this.initialized = true;
-      console.log('✅ Stripe initialized');
+      console.log("✅ Stripe initialized");
     } catch (error) {
-      console.error('Failed to initialize Stripe:', error);
+      console.error("❌ Failed to initialize Stripe:", error);
+      throw error;
     }
   }
 
   /**
    * Create Checkout Session and redirect to Stripe
+   * SECURITY FEATURES:
+   * - Validates user authentication
+   * - Sends Firebase Auth token to backend
+   * - Backend validates price (prevents frontend manipulation)
+   * - Only sends priceId (not price amount)
    */
-  async createCheckoutSession(tier, price) {
+  async createCheckoutSession(tier) {
     if (!this.stripe) {
-      console.error('Stripe not initialized. Call init() first.');
-      return;
+      throw new Error("Stripe not initialized. Call init() first.");
     }
 
     try {
+      // SECURITY: Verify user is authenticated
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
-        alert('Please log in to purchase a plan');
-        window.location.href = '/login.html';
+        alert("Please log in to purchase a plan");
+        window.location.href = "/login.html";
         return;
       }
 
+      // SECURITY: Get Firebase Auth token for backend validation
+      const idToken = await user.getIdToken();
+
+      // Get Price ID for the selected tier
       const priceId = this.getPriceId(tier);
-      
-      if (!priceId || priceId.includes('YOUR_')) {
-        console.error('⚠️ Please set your Stripe Price IDs in stripe-service.js');
-        alert('Payment system not configured. Please contact support.');
-        return;
+
+      if (!priceId) {
+        throw new Error("Invalid plan selected");
       }
 
-      if (this.cloudFunctionUrl.includes('YOUR_CLOUD_FUNCTION')) {
-        console.error('⚠️ Please set your Cloud Function URL in stripe-service.js');
-        alert('Payment system not configured. Please contact support.');
-        return;
-      }
+      console.log("Creating checkout session for:", {tier, priceId});
 
-      console.log('Creating checkout session for:', { tier, priceId, userId: user.uid });
-
-      // Call Firebase Cloud Function to create Checkout Session
+      // SECURITY: Call Cloud Function with authentication
       const response = await fetch(this.cloudFunctionUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          // SECURITY: Send auth token in Authorization header
+          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify({
+          // SECURITY: Only send priceId, not price amount
+          // Backend controls all pricing logic
           priceId: priceId,
-          userId: user.uid,
-          userEmail: user.email,
-          tier: tier,
-          price: price,
-          successUrl: window.location.origin + '/profile.html?payment=success',
-          cancelUrl: window.location.origin + '/checkout.html?payment=cancelled'
-        })
+          successUrl:
+            window.location.origin + "/profile.html?payment=success",
+          cancelUrl:
+            window.location.origin + "/checkout.html?payment=cancelled",
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          throw new Error("Please log in again");
+        }
+        throw new Error("Failed to create checkout session");
       }
 
       const session = await response.json();
 
       if (!session.id) {
-        throw new Error('No session ID returned from server');
+        throw new Error("Invalid session response");
       }
 
-      console.log('Redirecting to Stripe Checkout...');
+      console.log("✅ Session created, redirecting to Stripe...");
 
       // Redirect to Stripe Checkout
       const result = await this.stripe.redirectToCheckout({
-        sessionId: session.id
+        sessionId: session.id,
       });
 
       if (result.error) {
-        alert(result.error.message);
+        throw new Error(result.error.message);
       }
     } catch (error) {
-      console.error('Checkout error:', error);
-      alert('Payment failed. Please try again or contact support.');
+      console.error("❌ Checkout error:", error);
+      alert(`Payment failed: ${error.message}. Please try again.`);
+      throw error;
     }
   }
 
   /**
    * Get Stripe Price ID for a tier
    */
+  getPriceId(tier) {
+    return this.priceIds[tier] || null;
+  }
+
+  /**
+   * Check if Stripe is initialized
+   */
+  isInitialized() {
+    return this.initialized;
+  }
+}
+
+// Create global instance
+window.StripeService = new StripeService();
   getPriceId(tier) {
     return this.priceIds[tier];
   }

@@ -307,39 +307,41 @@
     } else {
       wirePaidPaymentToggle();
       
-      // ✅ Payment button - Stripe integration
+      // ✅ Payment button - Stripe integration with security
       const completePaymentBtn = $("#completePaymentBtn");
       if (completePaymentBtn) {
         completePaymentBtn.addEventListener("click", async () => {
           try {
-            console.log('💳 Payment button clicked');
+            console.log("💳 Payment button clicked");
+
             const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
-            console.log('Tier config:', tierConfig);
-            
-            // Initialize Stripe if not already done
+            console.log("Selected tier:", tierConfig);
+
+            // Validate Stripe service is loaded
             if (!window.StripeService) {
-              alert('Payment system not loaded. Please refresh the page.');
+              alert("Payment system not loaded. Please refresh the page.");
               return;
             }
-            
-            if (!window.StripeService.initialized) {
-              console.log('Initializing Stripe...');
+
+            // Initialize Stripe if not already done
+            if (!window.StripeService.isInitialized()) {
+              console.log("Initializing Stripe...");
               await window.StripeService.init();
             }
-            
-            console.log('Creating checkout session...');
-            // Create checkout session and redirect to Stripe
+
+            console.log("Creating checkout session...");
+
+            // SECURITY: Only send tier name, backend controls pricing
             await window.StripeService.createCheckoutSession(
-              tierConfig.tier, 
-              sel.priceNum
+                tierConfig.tier,
             );
           } catch (error) {
-            console.error('Payment error:', error);
-            alert('Payment failed: ' + error.message);
+            console.error("❌ Payment error:", error);
+            alert("Payment failed: " + error.message);
           }
         });
       } else {
-        console.error('Complete payment button not found!');
+        console.error("Complete payment button not found!");
       }
     }
   });

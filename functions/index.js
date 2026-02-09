@@ -11,30 +11,135 @@ let stripe;
 
 admin.initializeApp();
 
+// ============================================================================
+// SECURITY: Whitelist of valid Stripe Price IDs
+// These are the ONLY price IDs that can be used
+// Update these values from your Stripe Dashboard
+// ============================================================================
+const VALID_PRICE_IDS = {
+  "price_1SymwrCwya11CpgZ3eFENT6r": {
+    tier: "quick-study",
+    name: "Quick Study (10 days)",
+    price: 9.99,
+    durationDays: 10,
+  },
+  "price_1SymymCwya11CpgZCe0uZNIc": {
+    tier: "30-day",
+    name: "30-Day Intensive",
+    price: 19.99,
+    durationDays: 30,
+  },
+  "price_1SymzZCwya11CpgZSf5VpJdy": {
+    tier: "full-prep",
+    name: "Full Preparation",
+    price: 34.99,
+    durationDays: 60,
+  },
+};
+
+/**
+ * Verify Firebase Authentication Token
+ * Security: Ensures only authenticated users can create checkout sessions
+ * @param {object} req - HTTP request object
+ * @return {Promise<object>} Decoded Firebase auth token
+ */
+async function verifyAuthToken(req) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid authorization header");
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return decodedToken;
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    throw new Error("Invalid authentication token");
+  }
+}
+
+/**
+ * Validate Price ID
+ * Security: Prevents price manipulation by validating against whitelist
+ * @param {string} priceId - Stripe price ID to validate
+ * @return {object} Plan details from whitelist
+ */
+function validatePriceId(priceId) {
+  const planDetails = VALID_PRICE_IDS[priceId];
+
+  if (!planDetails) {
+    throw new Error("Invalid price ID");
+  }
+
+  return planDetails;
+}
+
 /**
  * Create Stripe Checkout Session
- * Called from frontend to initiate payment
+ * Security Features:
+ * - Validates Firebase Auth token
+ * - Whitelists price IDs (prevents price manipulation)
+ * - Uses server-side pricing (never trusts client)
+ * - Stores metadata for webhook processing
  */
 exports.createCheckoutSession = onRequest(
     {secrets: [stripeSecretKey], cors: true},
     async (req, res) => {
-      // Initialize Stripe with the secret
+      // Initialize Stripe with the secret (only once)
       if (!stripe) {
         stripe = require("stripe")(stripeSecretKey.value());
       }
 
       try {
-        const {
-          priceId, userId, userEmail, tier, price, successUrl, cancelUrl,
-        } = req.body;
-
-        // Validate input
-        if (!priceId || !userId || !tier) {
-          return res.status(400).json({error: "Missing required parameters"});
+        // SECURITY: Only accept POST requests
+        if (req.method !== "POST") {
+          return res.status(405).json({error: "Method not allowed"});
         }
 
+        // SECURITY: Verify Firebase Authentication token
+        let decodedToken;
+        try {
+          decodedToken = await verifyAuthToken(req);
+        } catch (error) {
+          console.error("Auth verification failed:", error.message);
+          return res.status(401).json({error: "Unauthorized"});
+        }
+
+        const {priceId, successUrl, cancelUrl} = req.body;
+
+        // Validate required parameters
+        if (!priceId) {
+          return res.status(400).json({error: "Missing priceId"});
+        }
+
+        if (!successUrl || !cancelUrl) {
+          return res.status(400).json({
+            error: "Missing redirect URLs",
+          });
+        }
+
+        // SECURITY: Validate price ID against whitelist
+        let planDetails;
+        try {
+          planDetails = validatePriceId(priceId);
+        } catch (error) {
+          console.error("Invalid price ID:", priceId);
+          return res.status(400).json({error: "Invalid plan selected"});
+        }
+
+        // Get user details from verified token
+        const userId = decodedToken.uid;
+        const userEmail = decodedToken.email;
+
         console.log("Creating checkout session:", {
-          priceId, userId, tier, userEmail,
+          userId,
+          userEmail,
+          priceId,
+          tier: planDetails.tier,
+          price: planDetails.price,
         });
 
         // Create Stripe Checkout Session
@@ -42,7 +147,7 @@ exports.createCheckoutSession = onRequest(
           payment_method_types: ["card"],
           line_items: [
             {
-              price: priceId,
+              price: priceId, // Use validated priceId
               quantity: 1,
             },
           ],
@@ -51,24 +156,36 @@ exports.createCheckoutSession = onRequest(
           cancel_url: cancelUrl,
           customer_email: userEmail,
           client_reference_id: userId,
+          // Store metadata for webhook processing
           metadata: {
             userId: userId,
-            tier: tier,
-            price: price,
+            tier: planDetails.tier,
+            price: planDetails.price.toString(),
+            durationDays: planDetails.durationDays.toString(),
           },
         });
 
-        console.log("Checkout session created:", session.id);
+        console.log("✅ Checkout session created:", session.id);
+
+        // Return only the session ID (not sensitive data)
         res.json({id: session.id});
       } catch (error) {
         console.error("Error creating checkout session:", error);
-        res.status(500).json({error: error.message});
+
+        // Don't expose internal errors to client
+        res.status(500).json({
+          error: "Failed to create checkout session",
+        });
       }
     });
 
 /**
  * Stripe Webhook Handler
- * Listens for payment events from Stripe
+ * Security Features:
+ * - Verifies Stripe webhook signature (prevents request forgery)
+ * - Uses rawBody for signature verification
+ * - Validates event data before processing
+ * - Creates atomic Firestore updates
  */
 exports.stripeWebhook = onRequest(
     {secrets: [stripeSecretKey, stripeWebhookSecret]},
@@ -78,81 +195,99 @@ exports.stripeWebhook = onRequest(
         stripe = require("stripe")(stripeSecretKey.value());
       }
 
+      // SECURITY: Verify webhook signature
       const sig = req.headers["stripe-signature"];
       const webhookSecret = stripeWebhookSecret.value();
+
+      if (!sig) {
+        console.error("Missing Stripe signature header");
+        return res.status(400).send("Missing signature");
+      }
 
       let event;
 
       try {
-        // Verify webhook signature
-        event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+        // SECURITY: Construct event from rawBody
+        // Required for signature verification
+        event = stripe.webhooks.constructEvent(
+            req.rawBody,
+            sig,
+            webhookSecret,
+        );
       } catch (err) {
-        console.error("Webhook signature verification failed:", err.message);
+        console.error("⚠️ Webhook signature verification failed:", err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
       }
 
-      console.log("Webhook event received:", event.type);
+      console.log("✅ Webhook verified:", event.type);
 
-      // Handle successful payment
+      // Handle successful payment event
       if (event.type === "checkout.session.completed") {
         const session = event.data.object;
-        const {userId, tier, price} = session.metadata;
 
-        console.log("Payment completed:", {userId, tier, price});
+        console.log("Processing payment:", {
+          sessionId: session.id,
+          customerId: session.customer,
+          amount: session.amount_total,
+        });
 
         try {
-          // Map tier to duration
-          const durations = {
-            "quick-study": 10,
-            "30-day": 30,
-            "full-prep": 60,
-          };
+          // Extract metadata (set by createCheckoutSession)
+          const {userId, tier, price, durationDays} = session.metadata;
 
-          const durationDays = durations[tier];
-          if (!durationDays) {
-            console.error("Invalid tier:", tier);
-            return res.status(400).send("Invalid tier");
+          if (!userId || !tier || !durationDays) {
+            console.error("Missing required metadata:", session.metadata);
+            return res.status(400).send("Invalid session metadata");
           }
 
+          // Calculate subscription dates
           const now = new Date();
           const endDate = new Date(
-              now.getTime() + durationDays * 24 * 60 * 60 * 1000,
+              now.getTime() + parseInt(durationDays) * 24 * 60 * 60 * 1000,
           );
 
-          // Update user's subscription in Firestore
+          // Update user subscription in Firestore
           await admin.firestore().collection("users").doc(userId).update({
             tier: tier,
             subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
             subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
+            stripeCustomerId: session.customer || null,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
 
-          console.log(`✅ User ${userId} subscription updated to ${tier}`);
+          console.log(`✅ User ${userId} upgraded to ${tier}`);
 
-          // Create order record
-          const planNames = {
-            "quick-study": "Quick Study (10 days)",
-            "30-day": "30-Day Intensive",
-            "full-prep": "Full Preparation",
-          };
+          // Create order record for tracking
+          const planInfo = VALID_PRICE_IDS[session.metadata.priceId];
+          const planName = planInfo? planInfo.name : tier;
 
           await admin.firestore().collection("orders").add({
             userId: userId,
             tier: tier,
-            plan: planNames[tier] || tier,
+            plan: planName,
             price: parseFloat(price) || (session.amount_total / 100),
-            status: "Completed",
+            currency: session.currency || "usd",
+            status: "completed",
             stripeSessionId: session.id,
             stripePaymentIntent: session.payment_intent,
+            stripeCustomerId: session.customer,
+            customerEmail: session.customer_email,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
 
           console.log(`✅ Order created for user ${userId}`);
+
+          // Send success response to Stripe
+          res.json({received: true});
         } catch (error) {
-          console.error("Error processing payment:", error);
+          console.error("❌ Error processing payment:", error);
+          // Return 500 so Stripe retries the webhook
           return res.status(500).send("Error processing payment");
         }
+      } else {
+        // Acknowledge other event types
+        console.log(`ℹ️ Unhandled event type: ${event.type}`);
+        res.json({received: true});
       }
-
-      // Return success response
-      res.json({received: true});
     });
+

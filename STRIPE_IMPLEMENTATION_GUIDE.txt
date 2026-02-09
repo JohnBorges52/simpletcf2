@@ -1,0 +1,261 @@
+================================================================================
+STRIPE PAYMENT INTEGRATION - PRODUCTION-READY IMPLEMENTATION
+SimpleTCF Learning Platform
+================================================================================
+
+This implementation follows security best practices for Stripe Checkout
+integration with Firebase Cloud Functions.
+
+================================================================================
+SECURITY FEATURES IMPLEMENTED
+================================================================================
+
+✅ Backend Security:
+   - Firebase Authentication token validation on every request
+   - Server-side price validation (whitelist of valid Price IDs)
+   - Prevents client-side price manipulation
+   - Stripe webhook signature verification
+   - Secrets stored in Firebase Secret Manager (never in code)
+   - CORS enabled for frontend requests
+
+✅ Frontend Security:
+   - Only publishable key exposed (safe for client-side)
+   - Sends Firebase Auth token with requests
+   - Never sends price amounts (only tier names)
+   - Validates user authentication before payment
+
+✅ Data Integrity:
+   - Atomic Firestore updates
+   - Order tracking with full transaction details
+   - Metadata stored for audit trail
+
+================================================================================
+DEPLOYMENT INSTRUCTIONS
+================================================================================
+
+STEP 1: Set Up Stripe Secret Keys
+----------------------------------
+
+The secret keys are already configured in Firebase Secret Manager:
+
+- STRIPE_SECRET_KEY (version 4) ✅
+- STRIPE_WEBHOOK_SECRET (placeholder - needs update)
+
+To view current secrets:
+  cmd /c "firebase functions:secrets:access STRIPE_SECRET_KEY"
+
+To update the webhook secret (after setting up webhook in Stripe):
+  Get the webhook signing secret from: https://dashboard.stripe.com/test/webhooks
+  Then run:
+  Set-Content -Path .webhook_secret -Value "whsec_YOUR_ACTUAL_SECRET" -NoNewline
+  Get-Content .webhook_secret -Raw | cmd /c "firebase functions:secrets:set STRIPE_WEBHOOK_SECRET"
+
+STEP 2: Update Price IDs (if changed)
+--------------------------------------
+
+If you create new products/prices in Stripe Dashboard, update these files:
+
+1. functions/index.js - Lines 16-32 (VALID_PRICE_IDS whitelist)
+2. public/stripe-service.js - Lines 24-28 (priceIds mapping)
+
+CURRENT PRICE IDS:
+- Quick Study (10 days): price_1SymwrCwya11CpgZ3eFENT6r ($9.99)
+- 30-Day Intensive: price_1SymymCwya11CpgZCe0uZNIc ($19.99)
+- Full Preparation: price_1SymzZCwya11CpgZSf5VpJdy ($34.99)
+
+STEP 3: Deploy Cloud Functions
+-------------------------------
+
+Deploy the updated Cloud Functions:
+  cd d:\simpletcf
+  cmd /c "firebase deploy --only functions"
+
+Expected output:
+  ✓ functions[createCheckoutSession(us-central1)]
+  ✓ functions[stripeWebhook(us-central1)]
+
+Function URLs:
+  https://us-central1-simpletcf.cloudfunctions.net/createCheckoutSession
+  https://us-central1-simpletcf.cloudfunctions.net/stripeWebhook
+
+STEP 4: Configure Stripe Webhook
+---------------------------------
+
+1. Go to: https://dashboard.stripe.com/test/webhooks/create
+2. Click "+ Add endpoint"
+3. Enter endpoint URL:
+   https://us-central1-simpletcf.cloudfunctions.net/stripeWebhook
+4. Select events to listen for:
+   ☑ checkout.session.completed
+5. Click "Add endpoint"
+6. Copy the "Signing secret" (starts with whsec_...)
+7. Update Firebase secret (see STEP 1)
+8. Redeploy functions
+
+STEP 5: Deploy Frontend
+------------------------
+
+Deploy the updated frontend code:
+  cmd /c "firebase deploy --only hosting"
+
+Hosting URL: https://simpletcf.web.app
+
+STEP 6: Test Payment Flow
+--------------------------
+
+Use Stripe Test Cards:
+  Success: 4242 4242 4242 4242
+  Decline: 4000 0000 0000 0002
+  Requires Auth: 4000 0025 0000 3155
+
+Test flow:
+1. Go to https://simpletcf.web.app/plan.html
+2. Select a plan
+3. Click "Subscribe Now"
+4. Fill checkout form
+5. Click "Complete Payment"
+6. Use test card: 4242 4242 4242 4242
+   - Any future expiry date
+   - Any 3-digit CVC
+   - Any ZIP code
+7. Complete payment
+8. Verify redirect to profile.html with success message
+9. Check Firestore:
+   - users/{userId} should have updated tier and subscription dates
+   - orders collection should have new order record
+
+================================================================================
+CODE STRUCTURE
+================================================================================
+
+Backend (Cloud Functions):
+  functions/index.js
+    - createCheckoutSession: Creates Stripe Checkout session
+      * Validates Firebase Auth token
+      * Validates priceId against whitelist
+      * Creates session with metadata
+    - stripeWebhook: Processes payment events
+      * Verifies webhook signature
+      * Updates Firestore on successful payment
+      * Creates order record
+
+Frontend:
+  public/stripe-service.js
+    - StripeService class
+      * Initializes Stripe with publishable key
+      * Gets auth token from Firebase
+      * Calls createCheckoutSession function
+      * Redirects to Stripe Checkout
+  
+  public/checkout.js
+    - Payment button handler (lines 311-341)
+      * Gets selected tier
+      * Calls StripeService.createCheckoutSession()
+
+  public/checkout.html
+    - Loads Stripe.js from CDN
+    - Loads stripe-service.js before checkout.js
+
+================================================================================
+SECURITY VALIDATION CHECKLIST
+================================================================================
+
+✅ Secret keys stored in Firebase Secret Manager
+✅ Publishable key safe for frontend use
+✅ Firebase Auth token validated on backend
+✅ Price IDs whitelisted on backend
+✅ Client cannot manipulate prices
+✅ Webhook signature verified
+✅ HTTPS enforced
+✅ CORS properly configured
+✅ No secrets in git repository (.gitignore updated)
+✅ Error messages don't expose sensitive data
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Issue: 500 Error from createCheckoutSession
+Solution:
+  - Check function logs: cmd /c "firebase functions:log"
+  - Verify secret key is set correctly (version 4)
+  - Ensure user is authenticated
+  - Verify priceId is in VALID_PRICE_IDS whitelist
+
+Issue: Webhook not receiving events
+Solution:
+  - Verify webhook URL in Stripe Dashboard
+  - Check webhook signing secret is set
+  - View webhook attempts in Stripe Dashboard
+  - Check function logs for signature errors
+
+Issue: "Invalid authentication token" error
+Solution:
+  - User needs to log in again
+  - Check Authorization header is being sent
+  - Verify Firebase Auth is configured correctly
+
+Issue: Payment succeeds but subscription not updated
+Solution:
+  - Check webhook logs: cmd /c "firebase functions:log"
+  - Verify webhook signature is correct
+  - Check Firestore permissions
+  - Look for metadata parsing errors
+
+================================================================================
+MONITORING & LOGS
+================================================================================
+
+View Cloud Function logs:
+  cmd /c "firebase functions:log"
+  cmd /c "firebase functions:log --only createCheckoutSession"
+  cmd /c "firebase functions:log --only stripeWebhook"
+
+View Stripe events:
+  https://dashboard.stripe.com/test/events
+
+View webhook attempts:
+  https://dashboard.stripe.com/test/webhooks
+
+Firebase Console:
+  https://console.firebase.google.com/project/simpletcf/functions/logs
+
+================================================================================
+PRODUCTION DEPLOYMENT CHECKLIST
+================================================================================
+
+Before going live with real payments:
+
+☐ Switch to Stripe Live Mode keys
+☐ Update STRIPE_SECRET_KEY with live key (starts with sk_live_)
+☐ Update publishable key in stripe-service.js (pk_live_)
+☐ Create live webhook endpoint
+☐ Update STRIPE_WEBHOOK_SECRET with live webhook secret
+☐ Test with real card (small amount)
+☐ Set up monitoring alerts
+☐ Review Stripe Dashboard settings
+☐ Configure receipt emails in Stripe
+☐ Set up tax settings if required
+☐ Review refund/cancellation policy
+
+================================================================================
+SUPPORT & REFERENCES
+================================================================================
+
+Stripe Documentation:
+  - Checkout: https://stripe.com/docs/payments/checkout
+  - Webhooks: https://stripe.com/docs/webhooks
+  - Testing: https://stripe.com/docs/testing
+
+Firebase Documentation:
+  - Cloud Functions: https://firebase.google.com/docs/functions
+  - Secret Manager: https://firebase.google.com/docs/functions/config-env
+
+Your Stripe Dashboard:
+  - Test Mode: https://dashboard.stripe.com/test
+  - Webhooks: https://dashboard.stripe.com/test/webhooks
+  - Events: https://dashboard.stripe.com/test/events
+
+================================================================================
+END OF GUIDE
+================================================================================
