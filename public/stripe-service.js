@@ -88,7 +88,9 @@ class StripeService {
         throw new Error("Invalid plan selected");
       }
 
-      console.log("Creating checkout session for:", {tier, priceId});
+      console.log("🔍 DEBUG: Creating checkout session for:", {tier, priceId});
+      console.log("🔍 DEBUG: User ID:", user.uid);
+      console.log("🔍 DEBUG: User Email:", user.email);
 
       // SECURITY: Call Cloud Function with authentication
       const response = await fetch(this.cloudFunctionUrl, {
@@ -109,11 +111,23 @@ class StripeService {
         }),
       });
 
+      console.log("🔍 DEBUG: Response status:", response.status);
+
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Please log in again");
+        // Try to get error details from response
+        let errorMessage = "Failed to create checkout session";
+        try {
+          const errorData = await response.json();
+          console.error("🔍 DEBUG: Backend error:", errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.error("🔍 DEBUG: Could not parse error response");
         }
-        throw new Error("Failed to create checkout session");
+
+        if (response.status === 401) {
+          throw new Error("Authentication failed. Please log in again.");
+        }
+        throw new Error(`Backend error (${response.status}): ${errorMessage}`);
       }
 
       const session = await response.json();

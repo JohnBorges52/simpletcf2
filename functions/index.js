@@ -96,26 +96,41 @@ exports.createCheckoutSession = onRequest(
       try {
         // SECURITY: Only accept POST requests
         if (req.method !== "POST") {
+          console.error("🔍 DEBUG: Invalid method:", req.method);
           return res.status(405).json({error: "Method not allowed"});
         }
+
+        console.log("🔍 DEBUG: Request received");
 
         // SECURITY: Verify Firebase Authentication token
         let decodedToken;
         try {
           decodedToken = await verifyAuthToken(req);
+          console.log(
+              "🔍 DEBUG: Auth token verified for user:",
+              decodedToken.uid,
+          );
         } catch (error) {
-          console.error("Auth verification failed:", error.message);
-          return res.status(401).json({error: "Unauthorized"});
+          console.error(
+              "🔍 DEBUG: Auth verification failed:",
+              error.message,
+          );
+          return res.status(401).json({
+            error: "Unauthorized: " + error.message,
+          });
         }
 
         const {priceId, successUrl, cancelUrl} = req.body;
+        console.log("🔍 DEBUG: Request body:", {priceId, successUrl, cancelUrl});
 
         // Validate required parameters
         if (!priceId) {
+          console.error("🔍 DEBUG: Missing priceId");
           return res.status(400).json({error: "Missing priceId"});
         }
 
         if (!successUrl || !cancelUrl) {
+          console.error("🔍 DEBUG: Missing redirect URLs");
           return res.status(400).json({
             error: "Missing redirect URLs",
           });
@@ -125,8 +140,9 @@ exports.createCheckoutSession = onRequest(
         let planDetails;
         try {
           planDetails = validatePriceId(priceId);
+          console.log("🔍 DEBUG: Price ID validated:", planDetails);
         } catch (error) {
-          console.error("Invalid price ID:", priceId);
+          console.error("🔍 DEBUG: Invalid price ID:", priceId);
           return res.status(400).json({error: "Invalid plan selected"});
         }
 
@@ -134,7 +150,7 @@ exports.createCheckoutSession = onRequest(
         const userId = decodedToken.uid;
         const userEmail = decodedToken.email;
 
-        console.log("Creating checkout session:", {
+        console.log("🔍 DEBUG: Creating Stripe session for:", {
           userId,
           userEmail,
           priceId,
@@ -170,11 +186,19 @@ exports.createCheckoutSession = onRequest(
         // Return only the session ID (not sensitive data)
         res.json({id: session.id});
       } catch (error) {
-        console.error("Error creating checkout session:", error);
+        console.error("❌ ERROR creating checkout session:", {
+          message: error.message,
+          type: error.type,
+          code: error.code,
+          statusCode: error.statusCode,
+          stack: error.stack,
+        });
 
-        // Don't expose internal errors to client
+        // Return more detailed error for debugging
         res.status(500).json({
           error: "Failed to create checkout session",
+          details: error.message,
+          type: error.type,
         });
       }
     });
