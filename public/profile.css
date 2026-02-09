@@ -160,7 +160,7 @@
 
 .profile-kpi .big {
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .profile-kpi .lbl {
@@ -221,7 +221,7 @@
 }
 
 .account-label {
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .account-field {
@@ -626,7 +626,7 @@
   border: 1px solid var(--border);
   background: #fff;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-  font-weight: 900;
+  font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
   z-index: 100;
