@@ -716,7 +716,10 @@ function fmtPct(n) {
       return;
     }
 
-    console.log("✅ User authenticated:", user.email);
+    console.log("✅ User authenticated and email verified:", user.email);
+    
+    // Show page content only after verification passes
+    document.body.style.visibility = "visible";
     
     // Check for payment success redirect
     const urlParams = new URLSearchParams(window.location.search);
