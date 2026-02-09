@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Verify Your Email | SimpleTCF</title>
+
+    <!-- Tailwind (utility classes only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Your site CSS -->
+    <link rel="stylesheet" href="styles.css" />
+    
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+      
+      .animate-fadeIn {
+        animation: fadeIn 0.8s ease-out;
+      }
+      
+      .animate-pulse-once {
+        animation: pulse 2s ease-in-out;
+      }
+    </style>
+  </head>
+
+  <body
+    class="verify-email-page min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-indigo-100 flex items-center justify-center p-4"
+  >
+    <section class="w-full max-w-2xl animate-fadeIn">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full text-center">
+        <!-- Email Icon -->
+        <div class="mb-6">
+          <div
+            class="w-20 h-20 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center animate-pulse-once"
+          >
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            Check Your Email!
+          </h1>
+
+          <!-- User Info -->
+          <div class="mb-6">
+            <p id="verify-email" class="text-xl font-semibold text-gray-700 mb-2">
+              <!-- Email will be inserted here -->
+            </p>
+          </div>
+
+          <!-- Verification Message -->
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-blue-800 mb-2">
+              📧 We've sent you a verification email
+            </h2>
+            <p class="text-blue-700 mb-4">
+              Please click the verification link in the email to activate your account and access SimpleTCF.
+            </p>
+            <p class="text-sm text-blue-600">
+              <strong>Note:</strong> The email might take a few minutes to arrive. Don't forget to check your spam folder!
+            </p>
+          </div>
+
+          <!-- Instructions -->
+          <div class="text-left mb-8 space-y-3">
+            <h3 class="text-center text-lg font-semibold text-gray-800 mb-4">
+              What to do next:
+            </h3>
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span class="text-blue-600 font-bold">1</span>
+              </div>
+              <div>
+                <p class="text-gray-700">
+                  <strong>Open your email inbox</strong> and look for an email from SimpleTCF
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span class="text-blue-600 font-bold">2</span>
+              </div>
+              <div>
+                <p class="text-gray-700">
+                  <strong>Click the verification link</strong> in the email to activate your account
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span class="text-blue-600 font-bold">3</span>
+              </div>
+              <div>
+                <p class="text-gray-700">
+                  <strong>Start learning!</strong> Once verified, you'll be redirected to your welcome page
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resend Email Button -->
+          <button
+            id="resend-email-btn"
+            class="inline-block w-full bg-gradient-to-r from-[#6366f1] to-[#C1C6F8] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg mb-4"
+          >
+            Resend Verification Email
+          </button>
+
+          <!-- Status Message -->
+          <p id="resend-status" class="text-sm text-gray-600 mb-4 hidden"></p>
+
+          <!-- Secondary Link -->
+          <p class="text-center text-gray-600 text-sm">
+            Already verified?
+            <a
+              href="/login.html"
+              class="text-purple-600 hover:text-purple-700 font-semibold transition-colors"
+              >Log in here</a
+            >
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Firebase initialization -->
+    <script type="module" src="config.js"></script>
+    <script type="module" src="auth-service.js"></script>
+    <script type="module">
+      // Display user email and handle resend
+      import * as AuthService from './auth-service.js';
+      
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          // Wait for auth to be ready
+          const user = await AuthService.waitForAuth();
+          
+          if (user) {
+            // Check if email is already verified
+            if (user.emailVerified) {
+              // Already verified, redirect to welcome page
+              console.log('Email already verified, redirecting to welcome page');
+              window.location.href = '/welcome.html';
+              return;
+            }
+
+            // Update UI with user email
+            const email = user.email || '';
+            const emailEl = document.getElementById('verify-email');
+            if (emailEl) emailEl.textContent = email;
+
+            // Handle resend button
+            const resendBtn = document.getElementById('resend-email-btn');
+            const statusEl = document.getElementById('resend-status');
+
+            resendBtn?.addEventListener('click', async () => {
+              try {
+                resendBtn.disabled = true;
+                resendBtn.textContent = 'Sending...';
+                
+                await AuthService.resendVerificationEmail();
+                
+                // Show success message
+                if (statusEl) {
+                  statusEl.textContent = '✅ Verification email sent! Please check your inbox.';
+                  statusEl.className = 'text-sm text-green-600 mb-4';
+                  statusEl.classList.remove('hidden');
+                }
+                
+                // Re-enable button after 60 seconds
+                setTimeout(() => {
+                  resendBtn.disabled = false;
+                  resendBtn.textContent = 'Resend Verification Email';
+                }, 60000);
+                
+                // Update button text
+                resendBtn.textContent = 'Email Sent!';
+                
+              } catch (error) {
+                console.error('Error resending verification email:', error);
+                
+                // Show error message
+                if (statusEl) {
+                  statusEl.textContent = '❌ ' + (error.message || 'Failed to send email. Please try again later.');
+                  statusEl.className = 'text-sm text-red-600 mb-4';
+                  statusEl.classList.remove('hidden');
+                }
+                
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Resend Verification Email';
+              }
+            });
+
+          } else {
+            // No user logged in, redirect to registration
+            console.log('No user found, redirecting to registration');
+            window.location.href = '/register.html';
+          }
+        } catch (error) {
+          console.error('Error loading user info:', error);
+          window.location.href = '/register.html';
+        }
+      });
+    </script>
+  </body>
+</html>

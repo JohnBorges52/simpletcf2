@@ -154,6 +154,14 @@
           const user = await AuthService.waitForAuth();
           
           if (user) {
+            // Check if email is verified
+            if (!user.emailVerified) {
+              // Email not verified, redirect to verification page
+              console.log('Email not verified, redirecting to verify-email page');
+              window.location.href = '/verify-email.html';
+              return;
+            }
+
             // Update UI with user info
             const displayName = user.displayName || user.email?.split('@')[0] || 'User';
             const email = user.email || '';
