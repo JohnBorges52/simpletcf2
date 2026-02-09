@@ -830,6 +830,51 @@ function fmtPct(n) {
       acctPlan.classList.add(badgeClass);
     }
 
+    // Update plan expiration date
+    const acctExpiration = $("acctExpiration");
+    if (acctExpiration) {
+      if (tier === "free" || !userDoc?.subscriptionEndDate) {
+        acctExpiration.textContent = "—";
+        acctExpiration.classList.remove("warning", "critical");
+      } else {
+        // Calculate time remaining
+        const endDate = userDoc.subscriptionEndDate.toDate ? 
+          userDoc.subscriptionEndDate.toDate() : 
+          new Date(userDoc.subscriptionEndDate);
+        const now = new Date();
+        const diffMs = endDate - now;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+        
+        let expirationText = "";
+        let className = "";
+        
+        if (diffDays > 1) {
+          expirationText = `${diffDays} days left`;
+          if (diffDays <= 3) {
+            className = "critical";
+          } else if (diffDays <= 9) {
+            className = "warning";
+          }
+        } else if (diffDays === 1) {
+          expirationText = "1 day left";
+          className = "warning";
+        } else if (diffHours > 0) {
+          expirationText = `${diffHours} hours left`;
+          className = "critical";
+        } else {
+          expirationText = "Expired";
+          className = "critical";
+        }
+        
+        acctExpiration.textContent = expirationText;
+        acctExpiration.classList.remove("warning", "critical");
+        if (className) {
+          acctExpiration.classList.add(className);
+        }
+      }
+    }
+
     // Load overview stats (all categories combined)
     await loadOverview(user.uid);
     
