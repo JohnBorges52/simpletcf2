@@ -308,7 +308,7 @@
       wirePaidPaymentToggle();
       
       // ✅ Payment button - Stripe integration
-      const completePaymentBtn = $("#completePayment");
+      const completePaymentBtn = $("#completePaymentBtn");
       if (completePaymentBtn) {
         completePaymentBtn.addEventListener("click", async () => {
           try {
