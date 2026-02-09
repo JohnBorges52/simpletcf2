@@ -452,9 +452,28 @@ function fmtPct(n) {
 
           if (closestPoint) {
             tooltip.hidden = false;
-            // Position relative to canvas
-            tooltip.style.left = `${mouseX}px`;
-            tooltip.style.top = `${mouseY}px`;
+            
+            // Smart positioning to avoid going off-screen
+            let tooltipX = mouseX;
+            let tooltipY = mouseY;
+            
+            // If near right edge, shift tooltip to the left
+            const canvasRect = canvas.getBoundingClientRect();
+            if (mouseX > canvas.width - 80) {
+              // Position tooltip to the left of the point instead
+              tooltipX = mouseX - 10;
+              tooltip.style.transform = 'translate(-100%, -115%)';
+            } else if (mouseX < 80) {
+              // Near left edge, position to the right
+              tooltipX = mouseX + 10;
+              tooltip.style.transform = 'translate(0%, -115%)';
+            } else {
+              // Normal centering
+              tooltip.style.transform = 'translate(-50%, -115%)';
+            }
+            
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${tooltipY}px`;
             
             // Show overall stats for last point, individual stats for others
             if (closestIndex === dataPoints.length - 1) {

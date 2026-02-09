@@ -647,6 +647,8 @@
 
 .chart-wrap {
   position: relative;
+  overflow: visible;
+  padding: 15px 0;
 }
 
 .chart-tooltip {
