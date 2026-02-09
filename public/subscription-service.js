@@ -128,7 +128,47 @@ class SubscriptionService {
       };
       
       await this.updateUserSubscriptionData(userId, defaultData);
+      
+      // Create initial free tier order
+      await this.createOrder(userId, TIERS.FREE, 0);
+      
       return defaultData;
+    }
+  }
+
+  /**
+   * Create an order record
+   */
+  async createOrder(userId, tier, price = 0) {
+    try {
+      const db = await window.__firestoreReady;
+      if (!db || !window.firestoreExports) {
+        throw new Error('Firestore not available');
+      }
+
+      const { collection, addDoc, serverTimestamp } = window.firestoreExports;
+      
+      // Map tier to friendly plan names
+      const planNames = {
+        'free': 'Free Tier',
+        'quick-study': 'Quick Study (10 days)',
+        '30-day': '30-Day Intensive',
+        'full-prep': 'Full Preparation'
+      };
+      
+      const orderData = {
+        userId: userId,
+        tier: tier,
+        plan: planNames[tier] || tier,
+        price: price,
+        status: price === 0 ? 'Free' : 'Completed',
+        createdAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'orders'), orderData);
+      console.log(`✅ Order created: ${tier} - $${price}`);
+    } catch (error) {
+      console.error('Failed to create order:', error);
     }
   }
 
@@ -169,13 +209,16 @@ class SubscriptionService {
         subscriptionStartDate: null,
         subscriptionEndDate: null
       });
+      
+      // Create order record for downgrade to free
+      await this.createOrder(userId, TIERS.FREE, 0);
     }
   }
 
   /**
    * Set user subscription tier (called after purchase)
    */
-  async setUserTier(userId, tier, duration) {
+  async setUserTier(userId, tier, duration, price = 0) {
     const now = new Date();
     const endDate = new Date(now.getTime() + duration * 24 * 60 * 60 * 1000);
 
@@ -184,6 +227,9 @@ class SubscriptionService {
       subscriptionStartDate: now,
       subscriptionEndDate: endDate
     });
+    
+    // Create order record for purchase
+    await this.createOrder(userId, tier, price);
   }
 
   /**

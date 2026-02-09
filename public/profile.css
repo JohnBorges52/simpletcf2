@@ -439,6 +439,37 @@
   color: #991b1b;
 }
 
+/* Status badges for orders table */
+.status-badge {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 12px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.status-completed {
+  background: rgba(16, 185, 129, 0.18);
+  color: #065f46;
+}
+
+.status-badge.status-free {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1e40af;
+}
+
+.status-badge.status-pending {
+  background: rgba(251, 191, 36, 0.18);
+  color: #92400e;
+}
+
+.status-badge.status-cancelled {
+  background: rgba(239, 68, 68, 0.18);
+  color: #991b1b;
+}
+
 .orders-actions {
   margin-top: 24px;
   /* ⬅ mais espaço da tabela */

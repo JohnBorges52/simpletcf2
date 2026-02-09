@@ -78,7 +78,7 @@ function fmtPct(n) {
   /**
    * Setup tab navigation
    */
-  function setupTabs() {
+  function setupTabs(userId) {
     const btns = Array.from(document.querySelectorAll(".profile-sidebtn[data-tab]"));
     const tabs = {
       overview: $("tab-overview"),
@@ -98,6 +98,11 @@ function fmtPct(n) {
         b.setAttribute("aria-current", active ? "true" : "false");
         b.classList.toggle("is-active", active);
       });
+      
+      // Load data when switching to orders tab
+      if (tabKey === 'orders' && userId) {
+        loadOrders(userId);
+      }
     }
 
     btns.forEach((b) =>
@@ -181,6 +186,86 @@ function fmtPct(n) {
       
     } catch (error) {
       console.error("Failed to load progress stats:", error);
+    }
+  }
+
+  /**
+   * Load and display order history
+   */
+  async function loadOrders(userId) {
+    console.log("📦 Loading orders for user:", userId);
+    
+    const ordersTableBody = document.querySelector('.orders-table tbody');
+    if (!ordersTableBody) {
+      console.warn("Orders table tbody not found");
+      return;
+    }
+
+    try {
+      const db = await window.__firestoreReady;
+      if (!db || !window.firestoreExports) {
+        throw new Error('Firestore not available');
+      }
+
+      const { collection, query, where, orderBy, getDocs } = window.firestoreExports;
+      
+      // Query orders for this user, sorted by date descending
+      const ordersQuery = query(
+        collection(db, 'orders'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(ordersQuery);
+      
+      if (querySnapshot.empty) {
+        ordersTableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: #999; padding: 2rem;">
+              No orders yet
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      const rows = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const orderId = doc.id.substring(0, 8).toUpperCase();
+        const date = data.createdAt?.toDate?.() || new Date();
+        const formattedDate = date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const plan = data.plan || data.tier || '-';
+        const price = data.price === 0 ? 'Free' : `$${data.price.toFixed(2)}`;
+        const status = data.status || 'Completed';
+        
+        rows.push(`
+          <tr>
+            <td>${orderId}</td>
+            <td>${formattedDate}</td>
+            <td>${plan}</td>
+            <td>${price}</td>
+            <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+          </tr>
+        `);
+      });
+      
+      ordersTableBody.innerHTML = rows.join('');
+      console.log(`✅ Loaded ${rows.length} orders`);
+      
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      ordersTableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: #f44336; padding: 2rem;">
+            Failed to load orders
+          </td>
+        </tr>
+      `;
     }
   }
 
@@ -595,7 +680,6 @@ function fmtPct(n) {
     console.log("🔍 Profile page loading...");
     console.log("AuthService available:", !!window.AuthService);
     
-    setupTabs();
     await bindLogout();
 
     console.log("⏳ Waiting for auth user...");
@@ -610,6 +694,9 @@ function fmtPct(n) {
     }
 
     console.log("✅ User authenticated:", user.email);
+    
+    // Setup tabs with userId for orders loading
+    setupTabs(user.uid);
 
     // Initialize subscription service (creates user document if needed)
     try {

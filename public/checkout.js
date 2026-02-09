@@ -226,7 +226,7 @@
   /**
    * Activate paid tier after successful payment
    */
-  async function activatePaidTier(tierName, durationDays) {
+  async function activatePaidTier(tierName, durationDays, price = 0) {
     try {
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
@@ -239,8 +239,8 @@
         return;
       }
 
-      await window.SubscriptionService.setUserTier(user.uid, tierName, durationDays);
-      console.log(`✅ ${tierName} tier activated for ${durationDays} days`);
+      await window.SubscriptionService.setUserTier(user.uid, tierName, durationDays, price);
+      console.log(`✅ ${tierName} tier activated for ${durationDays} days at $${price}`);
     } catch (error) {
       console.error('Error activating paid tier:', error);
     }
@@ -314,7 +314,7 @@
         completePaymentBtn.addEventListener("click", async () => {
           // TODO: Replace with actual Stripe payment processing
           const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
-          await activatePaidTier(tierConfig.tier, tierConfig.days);
+          await activatePaidTier(tierConfig.tier, tierConfig.days, sel.priceNum);
           
           alert(`Payment successful! Your ${sel.badgeStr} plan is now active.`);
           window.location.href = "profile.html";
