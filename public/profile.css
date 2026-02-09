@@ -648,22 +648,21 @@
 .chart-wrap {
   position: relative;
   overflow: visible;
-  padding: 15px 0;
+  padding: 0;
 }
 
-.chart-tooltip {
+.chart-stats {
   position: absolute;
-  pointer-events: none;
-  transform: translate(-50%, -115%);
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #fff;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  top: 0;
+  right: 0;
+  font-size: 11px;
   font-weight: 600;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 100;
+  color: #64748b;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  z-index: 10;
 }
 
 .weight-fill {

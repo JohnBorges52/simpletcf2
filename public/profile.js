@@ -329,6 +329,17 @@ function fmtPct(n) {
 
       console.log(`Chart data (${mode}):`, data);
 
+      // Calculate overall stats
+      const totalQuestions = data.reduce((sum, d) => sum + d.total, 0);
+      const totalCorrect = data.reduce((sum, d) => sum + (d.total * d.accuracy / 100), 0);
+      const overallAverage = totalQuestions > 0 ? Math.round(totalCorrect / totalQuestions * 100) : 0;
+
+      // Update stats display
+      const statsDisplay = $("chartStats");
+      if (statsDisplay) {
+        statsDisplay.textContent = `${totalQuestions} questions / ${overallAverage}% avg`;
+      }
+
       // Update pill text
       const pill = $("pRangePill");
       if (pill) {
@@ -417,82 +428,8 @@ function fmtPct(n) {
         }
       });
 
-      // Add hover tooltip functionality
-      const tooltip = $("chartTooltip");
-      if (tooltip) {
-        // Calculate overall average and total questions
-        const totalQuestions = data.reduce((sum, d) => sum + d.total, 0);
-        const totalCorrect = data.reduce((sum, d) => sum + (d.total * d.accuracy / 100), 0);
-        const overallAverage = totalQuestions > 0 ? Math.round(totalCorrect / totalQuestions * 100) : 0;
-        
-        // Remove old listeners if they exist
-        canvas.onmousemove = null;
-        canvas.onmouseout = null;
-
-        canvas.onmousemove = (e) => {
-          const rect = canvas.getBoundingClientRect();
-          const mouseX = e.clientX - rect.left;
-          const mouseY = e.clientY - rect.top;
-
-          // Find closest data point
-          let closestPoint = null;
-          let closestIndex = -1;
-          let minDistance = Infinity;
-
-          dataPoints.forEach((point, index) => {
-            const distance = Math.sqrt(
-              Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2)
-            );
-            if (distance < minDistance && distance < 15) {
-              minDistance = distance;
-              closestPoint = point;
-              closestIndex = index;
-            }
-          });
-
-          if (closestPoint) {
-            tooltip.hidden = false;
-            
-            // Smart positioning to avoid going off-screen
-            let tooltipX = mouseX;
-            let tooltipY = mouseY;
-            
-            // If near right edge, shift tooltip to the left
-            const canvasRect = canvas.getBoundingClientRect();
-            if (mouseX > canvas.width - 80) {
-              // Position tooltip to the left of the point instead
-              tooltipX = mouseX - 10;
-              tooltip.style.transform = 'translate(-100%, -115%)';
-            } else if (mouseX < 80) {
-              // Near left edge, position to the right
-              tooltipX = mouseX + 10;
-              tooltip.style.transform = 'translate(0%, -115%)';
-            } else {
-              // Normal centering
-              tooltip.style.transform = 'translate(-50%, -115%)';
-            }
-            
-            tooltip.style.left = `${tooltipX}px`;
-            tooltip.style.top = `${tooltipY}px`;
-            
-            // Show overall stats for last point, individual stats for others
-            if (closestIndex === dataPoints.length - 1) {
-              tooltip.textContent = `Overall: ${overallAverage}% avg (${totalQuestions} questions)`;
-            } else {
-              tooltip.textContent = `${closestPoint.accuracy}% (${closestPoint.total} questions)`;
-            }
-            canvas.style.cursor = "pointer";
-          } else {
-            tooltip.hidden = true;
-            canvas.style.cursor = "default";
-          }
-        };
-
-        canvas.onmouseout = () => {
-          tooltip.hidden = true;
-          canvas.style.cursor = "default";
-        };
-      }
+      // Stats are now always visible above the chart
+      // No hover functionality needed
 
     } catch (error) {
       console.error("Failed to render chart:", error);
