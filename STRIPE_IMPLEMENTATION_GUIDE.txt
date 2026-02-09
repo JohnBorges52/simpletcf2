@@ -66,6 +66,11 @@ CURRENT PRICE IDS:
 STEP 3: Deploy Cloud Functions
 -------------------------------
 
+**IMPORTANT: Recent Fix Applied**
+The webhook function has been updated to properly handle rawBody for Stripe
+signature verification. This fix ensures that webhook events are properly
+verified and orders are created in Firestore.
+
 Deploy the updated Cloud Functions:
   cd d:\simpletcf
   cmd /c "firebase deploy --only functions"
@@ -197,10 +202,22 @@ Solution:
 
 Issue: Payment succeeds but subscription not updated
 Solution:
-  - Check webhook logs: cmd /c "firebase functions:log"
+  - Check webhook logs: cmd /c "firebase functions:log --only stripeWebhook"
   - Verify webhook signature is correct
   - Check Firestore permissions
   - Look for metadata parsing errors
+  - **NEW FIX APPLIED**: Webhook now properly handles rawBody for signature
+    verification. If you see "Webhook signature verification failed" errors,
+    redeploy the functions with: firebase deploy --only functions
+
+Issue: Orders not being created in Firestore
+Solution:
+  - Verify webhook is receiving events (check Stripe Dashboard)
+  - Check webhook function logs for errors
+  - Ensure Firestore rules allow writing to orders collection
+  - Verify user document exists in Firestore users collection
+  - **NEW FIX APPLIED**: Enhanced logging now shows each step of order creation
+    Check logs for "🔍 Creating order record in Firestore..." message
 
 ================================================================================
 MONITORING & LOGS
