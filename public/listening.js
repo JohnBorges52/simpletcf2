@@ -45,7 +45,11 @@ import {
     return;
   }
   
-  console.log("✅ User authenticated:", user.email);
+  console.log("✅ User authenticated and email verified:", user.email);
+  
+  // Show page content only after verification passes
+  document.body.style.visibility = "visible";
+  
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
 

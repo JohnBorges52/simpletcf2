@@ -26,7 +26,11 @@
     return;
   }
   
-  console.log("✅ User authenticated:", user.email);
+  console.log("✅ User authenticated and email verified:", user.email);
+  
+  // Show page content only after verification passes
+  document.body.style.visibility = "visible";
+  
   // =====================
   // Helpers
   // =====================
