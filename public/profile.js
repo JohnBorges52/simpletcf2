@@ -709,6 +709,13 @@ function fmtPct(n) {
       return;
     }
 
+    // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to login
+    if (!user.emailVerified) {
+      console.log("❌ User email not verified, redirecting to login");
+      window.location.href = "/login.html";
+      return;
+    }
+
     console.log("✅ User authenticated:", user.email);
     
     // Check for payment success redirect

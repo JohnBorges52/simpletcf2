@@ -38,6 +38,13 @@ import {
     return;
   }
   
+  // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to login
+  if (!user.emailVerified) {
+    console.log("🔒 User email not verified, redirecting to login page...");
+    window.location.href = "/login.html";
+    return;
+  }
+  
   console.log("✅ User authenticated:", user.email);
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
