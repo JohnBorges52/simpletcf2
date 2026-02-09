@@ -329,17 +329,6 @@ function fmtPct(n) {
 
       console.log(`Chart data (${mode}):`, data);
 
-      // Calculate overall stats
-      const totalQuestions = data.reduce((sum, d) => sum + d.total, 0);
-      const totalCorrect = data.reduce((sum, d) => sum + (d.total * d.accuracy / 100), 0);
-      const overallAverage = totalQuestions > 0 ? Math.round(totalCorrect / totalQuestions * 100) : 0;
-
-      // Update stats display
-      const statsDisplay = $("chartStats");
-      if (statsDisplay) {
-        statsDisplay.textContent = `${totalQuestions} questions / ${overallAverage}% avg`;
-      }
-
       // Update pill text
       const pill = $("pRangePill");
       if (pill) {
@@ -414,6 +403,15 @@ function fmtPct(n) {
         ctx.fill();
       });
 
+      // Draw question count labels on each point
+      ctx.fillStyle = "#475569";
+      ctx.font = "10px Montserrat";
+      ctx.textAlign = "center";
+      dataPoints.forEach(point => {
+        // Position label above the point
+        ctx.fillText(point.total, point.x, point.y - 10);
+      });
+
       // Draw X-axis labels (show every nth label to avoid crowding)
       ctx.fillStyle = "#64748b";
       ctx.font = "11px Montserrat";
@@ -428,8 +426,7 @@ function fmtPct(n) {
         }
       });
 
-      // Stats are now always visible above the chart
-      // No hover functionality needed
+      // Question counts are now always visible on each point
 
     } catch (error) {
       console.error("Failed to render chart:", error);
