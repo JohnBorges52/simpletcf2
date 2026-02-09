@@ -642,11 +642,17 @@ function fmtPct(n) {
   /**
    * Wait for tier update after successful payment
    * Polls Firestore for tier change (webhook may take a few seconds)
+   * @param {string} userId - The user ID to poll for
+   * @param {number} maxAttempts - Maximum number of poll attempts
+   * @param {number} intervalMs - Milliseconds between each poll
+   * @returns {Promise<Object|null>} Updated user data object or null if timeout
    */
   async function waitForTierUpdate(userId, maxAttempts = 10, intervalMs = 1000) {
     console.log("⏳ Waiting for tier update from webhook...");
     
-    for (let i = 0; i < maxAttempts; i++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`Polling attempt ${attempt + 1}/${maxAttempts}...`);
+      
       try {
         // Fetch fresh user data from Firestore
         const db = await window.__firestoreReady;
@@ -670,9 +676,8 @@ function fmtPct(n) {
           }
         }
         
-        // Wait before next poll
-        if (i < maxAttempts - 1) {
-          console.log(`Polling attempt ${i + 1}/${maxAttempts}...`);
+        // Wait before next poll (except on last attempt)
+        if (attempt < maxAttempts - 1) {
           await new Promise(resolve => setTimeout(resolve, intervalMs));
         }
       } catch (error) {
