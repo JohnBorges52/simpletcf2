@@ -661,6 +661,17 @@ function fmtPct(n) {
 
     console.log("✅ User authenticated:", user.email);
     
+    // Check for payment success redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      alert('🎉 Payment successful! Your subscription is now active.');
+      // Remove query param from URL
+      window.history.replaceState({}, document.title, '/profile.html');
+    } else if (urlParams.get('payment') === 'cancelled') {
+      alert('Payment was cancelled. You can try again anytime.');
+      window.history.replaceState({}, document.title, '/profile.html');
+    }
+    
     // Setup tabs with userId for orders loading
     setupTabs(user.uid);
 

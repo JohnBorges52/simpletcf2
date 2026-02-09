@@ -307,18 +307,39 @@
     } else {
       wirePaidPaymentToggle();
       
-      // ✅ Add event listener for payment completion
-      // This is a placeholder - you'll integrate with Stripe later
+      // ✅ Payment button - Stripe integration
       const completePaymentBtn = $("#completePayment");
       if (completePaymentBtn) {
         completePaymentBtn.addEventListener("click", async () => {
-          // TODO: Replace with actual Stripe payment processing
-          const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
-          await activatePaidTier(tierConfig.tier, tierConfig.days, sel.priceNum);
-          
-          alert(`Payment successful! Your ${sel.badgeStr} plan is now active.`);
-          window.location.href = "profile.html";
+          try {
+            console.log('💳 Payment button clicked');
+            const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
+            console.log('Tier config:', tierConfig);
+            
+            // Initialize Stripe if not already done
+            if (!window.StripeService) {
+              alert('Payment system not loaded. Please refresh the page.');
+              return;
+            }
+            
+            if (!window.StripeService.initialized) {
+              console.log('Initializing Stripe...');
+              await window.StripeService.init();
+            }
+            
+            console.log('Creating checkout session...');
+            // Create checkout session and redirect to Stripe
+            await window.StripeService.createCheckoutSession(
+              tierConfig.tier, 
+              sel.priceNum
+            );
+          } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed: ' + error.message);
+          }
         });
+      } else {
+        console.error('Complete payment button not found!');
       }
     }
   });

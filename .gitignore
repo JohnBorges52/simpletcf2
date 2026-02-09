@@ -10,6 +10,7 @@ node_modules/
 public/audios/
 public/pdfs/
 public/pictures/
+STRIPE_QUICKSTART.md
 
 # OS files
 .DS_Store

@@ -6,6 +6,8 @@
     <title>Secure Checkout</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="checkout.css" />
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
   </head>
 
   <body class="checkout-page">
@@ -409,6 +411,8 @@
     <script type="module" src="config.js"></script>
     <script type="module" src="db-service.js"></script>
     <script src="subscription-service.js"></script>
+    <!-- Stripe payment service -->
+    <script src="stripe-service.js"></script>
     <!-- Then app scripts -->
     <script type="module" src="script.js"></script>
     <script type="module" src="checkout.js"></script>

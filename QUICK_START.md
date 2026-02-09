@@ -82,7 +82,7 @@ Visit: **https://simpletcf.web.app**
 Open DevTools (F12 → Console) and look for:
 - ✅ `✅ Firebase initialized + persistence set`
 - ✅ `✅ Got Firebase Storage URL for: ...`
-- ❌ Should NOT see any red errors
+- ❌ Should NOT see any red errorss
 
 ---
 
