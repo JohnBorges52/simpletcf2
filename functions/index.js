@@ -224,12 +224,12 @@ exports.stripeWebhook = onRequest(
 
       // Initialize Stripe with the secret
       if (!stripe) {
-        stripe = require("stripe")(stripeSecretKey.value());
+        stripe = require("stripe")((stripeSecretKey.value() || "").trim());
       }
 
       // SECURITY: Verify webhook signature
       const sig = req.headers["stripe-signature"];
-      const webhookSecret = stripeWebhookSecret.value();
+      const webhookSecret = (stripeWebhookSecret.value() || "").trim();
 
       console.log("🔍 Webhook request received");
       console.log("🔍 Has signature:", !!sig);
