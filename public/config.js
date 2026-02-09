@@ -510,7 +510,109 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================
-// Password Reset Logic
+// Forgot Password Link Handler (Login Page)
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const forgotLink = document.getElementById("forgotLink");
+  
+  forgotLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/forgotPassword.html";
+  });
+});
+
+// ===============================
+// Forgot Password Page Logic
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const sendResetBtn = document.getElementById("send-reset-btn");
+  const forgotEmailInput = document.getElementById("forgot-email");
+  const forgotForm = document.getElementById("forgot-form");
+  const successScreen = document.getElementById("success-screen");
+  const resendLink = document.getElementById("resend-link");
+
+  if (!sendResetBtn) return;
+
+  console.log("🔑 Forgot password page detected");
+
+  const sendResetEmail = async () => {
+    const email = forgotEmailInput?.value.trim() || "";
+
+    // Clear previous errors
+    const errEl = document.getElementById("err-forgot-email");
+    if (errEl) {
+      errEl.textContent = "";
+      errEl.classList.add("hidden");
+    }
+
+    if (!email) {
+      if (errEl) {
+        errEl.textContent = "Email is required.";
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+      return;
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (errEl) {
+        errEl.textContent = "Please enter a valid email address.";
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+      return;
+    }
+
+    try {
+      sendResetBtn.disabled = true;
+      sendResetBtn.textContent = "Sending...";
+
+      await AuthService.resetPassword(email);
+
+      // Show success animation
+      if (forgotForm) forgotForm.classList.add("hidden");
+      if (successScreen) {
+        successScreen.classList.remove("hidden");
+        const successEmailEl = document.getElementById("success-email");
+        if (successEmailEl) successEmailEl.textContent = email;
+      }
+
+    } catch (error) {
+      console.error("Password reset error:", error);
+      const msg = AuthService.formatAuthError(error);
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+    } finally {
+      sendResetBtn.disabled = false;
+      sendResetBtn.textContent = "Send Email";
+    }
+  };
+
+  sendResetBtn.addEventListener("click", sendResetEmail);
+
+  // Handle Enter key
+  forgotEmailInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendResetEmail();
+    }
+  });
+
+  // Resend link
+  resendLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (successScreen) successScreen.classList.add("hidden");
+    if (forgotForm) forgotForm.classList.remove("hidden");
+    if (forgotEmailInput) forgotEmailInput.focus();
+  });
+});
+
+// ===============================
+// Password Reset Logic (Old - keeping for backward compatibility)
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const resetForm = document.getElementById("resetForm");

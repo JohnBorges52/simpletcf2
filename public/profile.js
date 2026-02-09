@@ -875,6 +875,38 @@ function fmtPct(n) {
       }
     }
 
+    // Setup password reset button
+    const profileResetBtn = $("profileResetBtn");
+    if (profileResetBtn) {
+      profileResetBtn.addEventListener("click", async () => {
+        const userEmail = user.email;
+        
+        if (!userEmail) {
+          alert("No email found for this account.");
+          return;
+        }
+
+        const confirmed = confirm(`Send password reset email to ${userEmail}?`);
+        if (!confirmed) return;
+
+        try {
+          profileResetBtn.disabled = true;
+          profileResetBtn.textContent = "Sending...";
+
+          await window.AuthService.resetPassword(userEmail);
+
+          alert(`✅ Password reset email sent to ${userEmail}. Check your inbox!`);
+        } catch (error) {
+          console.error("Password reset error:", error);
+          const msg = window.AuthService.formatAuthError(error);
+          alert(`Failed to send password reset email: ${msg}`);
+        } finally {
+          profileResetBtn.disabled = false;
+          profileResetBtn.textContent = "Send Password Reset Email";
+        }
+      });
+    }
+
     // Load overview stats (all categories combined)
     await loadOverview(user.uid);
     
