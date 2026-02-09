@@ -3,6 +3,10 @@
 .env
 .env.local
 
+# Stripe secret keys (never commit!)
+.stripe_key
+.stripe_key_clean
+
 # Node modules
 node_modules/
 
