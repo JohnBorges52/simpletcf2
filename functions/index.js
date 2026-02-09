@@ -44,7 +44,12 @@ const VALID_PRICE_IDS = {
  * @param {string} planName - Plan name
  * @param {number} durationDays - Plan duration in days
  */
-async function sendPurchaseConfirmationEmail(email, userName, planName, durationDays) {
+async function sendPurchaseConfirmationEmail(
+    email,
+    userName,
+    planName,
+    durationDays,
+) {
   try {
     // Create email HTML template
     const emailHTML = `
@@ -55,7 +60,8 @@ async function sendPurchaseConfirmationEmail(email, userName, planName, duration
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
       line-height: 1.6;
       color: #333;
       max-width: 600px;
@@ -174,9 +180,12 @@ async function sendPurchaseConfirmationEmail(email, userName, planName, duration
       <p class="subtitle">Your account has been approved</p>
     </div>
 
-    <p>Hi ${userName || 'there'},</p>
-    
-    <p>Great news! Your payment has been successfully processed, and your SimpleTCF subscription is now active.</p>
+    <p>Hi ${userName || "there"},</p>
+
+    <p>
+      Great news! Your payment has been successfully processed,
+      and your SimpleTCF subscription is now active.
+    </p>
 
     <div class="plan-details">
       <p class="plan-name">${planName}</p>
@@ -186,43 +195,68 @@ async function sendPurchaseConfirmationEmail(email, userName, planName, duration
     <div class="features">
       <div class="feature-item">
         <span class="feature-icon">✓</span>
-        <span class="feature-text"><strong>Full Access:</strong> All listening and reading practice questions</span>
+        <span class="feature-text">
+          <strong>Full Access:</strong>
+          All listening and reading practice questions
+        </span>
       </div>
       <div class="feature-item">
         <span class="feature-icon">✓</span>
-        <span class="feature-text"><strong>Real Test Simulations:</strong> Practice with actual exam-style tests</span>
+        <span class="feature-text">
+          <strong>Real Test Simulations:</strong>
+          Practice with actual exam-style tests
+        </span>
       </div>
       <div class="feature-item">
         <span class="feature-icon">✓</span>
-        <span class="feature-text"><strong>Progress Tracking:</strong> Monitor your improvement over time</span>
+        <span class="feature-text">
+          <strong>Progress Tracking:</strong>
+          Monitor your improvement over time
+        </span>
       </div>
       <div class="feature-item">
         <span class="feature-icon">✓</span>
-        <span class="feature-text"><strong>Weight-Based Strategy:</strong> Focus on high-impact questions</span>
+        <span class="feature-text">
+          <strong>Weight-Based Strategy:</strong>
+          Focus on high-impact questions
+        </span>
       </div>
     </div>
 
-    <p>You can now access all features of SimpleTCF and start preparing for your TCF Canada exam.</p>
+    <p>
+      You can now access all features of SimpleTCF and
+      start preparing for your TCF Canada exam.
+    </p>
 
     <center>
-      <a href="https://simpletcf.web.app" class="cta-button">Start Practicing Now</a>
+      <a href="https://simpletcf.web.app" class="cta-button">
+        Start Practicing Now
+      </a>
     </center>
 
     <div class="footer">
-      <p>Questions? Contact us at <a href="mailto:support@simpletcf.com" class="support-link">support@simpletcf.com</a></p>
-      <p style="margin-top: 10px;">© ${new Date().getFullYear()} SimpleTCF. All rights reserved.</p>
+      <p>
+        Questions? Contact us at
+        <a href="mailto:support@simpletcf.com" class="support-link">
+          support@simpletcf.com
+        </a>
+      </p>
+      <p style="margin-top: 10px;">
+        © ${new Date().getFullYear()} SimpleTCF. All rights reserved.
+      </p>
     </div>
   </div>
 </body>
 </html>
     `;
 
-    // For now, log the email (Firebase Functions would need email service setup)
+    // For now, log the email
+    // (Firebase Functions would need email service setup)
     // You would typically use SendGrid, AWS SES, or another email service
     console.log("📧 Would send email to:", email);
     console.log("📧 Email subject: Your SimpleTCF Account is Active!");
     console.log("📧 Plan:", planName, "for", durationDays, "days");
-    
+
     // TODO: Integrate with an email service provider
     // Example with SendGrid:
     // const sgMail = require('@sendgrid/mail');
@@ -233,7 +267,7 @@ async function sendPurchaseConfirmationEmail(email, userName, planName, duration
     //   subject: 'Your SimpleTCF Account is Active!',
     //   html: emailHTML
     // });
-    
+
     // For now, we'll use Firebase Admin to create an email document
     // that can be picked up by a mail service extension
     await admin.firestore().collection("mail").add({
@@ -244,7 +278,7 @@ async function sendPurchaseConfirmationEmail(email, userName, planName, duration
       },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    
+
     console.log("✅ Email queued for sending");
   } catch (error) {
     console.error("❌ Error sending email:", error);
@@ -455,7 +489,6 @@ exports.stripeWebhook = onRequest(
       }
 
       try {
-
         let rawBody = req.rawBody;
         if (!rawBody && req.body) {
           if (Buffer.isBuffer(req.body)) {
@@ -466,9 +499,9 @@ exports.stripeWebhook = onRequest(
             rawBody = Buffer.from(JSON.stringify(req.body), "utf8");
           }
         }
-       
 
-          if (!rawBody || rawBody.length === 0) {
+
+        if (!rawBody || rawBody.length === 0) {
           console.error("❌ Missing raw body for webhook signature check");
           return res.status(400).send("Missing webhook payload");
         }
@@ -561,9 +594,11 @@ exports.stripeWebhook = onRequest(
             console.log(`✅ Order created for user ${userId}`);
 
             // Send purchase confirmation email
+            const customerEmail = session.customer_email || "";
+            const userName = customerEmail.split("@")[0] || "User";
             await sendPurchaseConfirmationEmail(
-                session.customer_email,
-                session.customer_email?.split("@")[0], // Extract name from email as fallback
+                customerEmail,
+                userName,
                 planName,
                 parseInt(durationDays),
             );
