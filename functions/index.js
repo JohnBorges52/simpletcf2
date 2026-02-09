@@ -217,7 +217,7 @@ exports.createCheckoutSession = onRequest(
  */
 exports.stripeWebhook = onRequest(
     {secrets: [stripeSecretKey, stripeWebhookSecret]},
-    (req, res) => {
+    async (req, res) => {
       // Initialize Stripe with the secret
       if (!stripe) {
         stripe = require("stripe")(stripeSecretKey.value());
@@ -235,15 +235,21 @@ exports.stripeWebhook = onRequest(
         return res.status(400).send("Missing signature");
       }
 
-      // Collect raw body for signature verification
-      const chunks = [];
+      try {
+        // Collect raw body for signature verification
+        const rawBody = await new Promise((resolve, reject) => {
+          const chunks = [];
 
-      req.on("data", (chunk) => {
-        chunks.push(chunk);
-      });
+          req.on("error", reject);
 
-      req.on("end", async () => {
-        const rawBody = Buffer.concat(chunks);
+          req.on("data", (chunk) => {
+            chunks.push(chunk);
+          });
+
+          req.on("end", () => {
+            resolve(Buffer.concat(chunks));
+          });
+        });
 
         let event;
 
@@ -275,13 +281,15 @@ exports.stripeWebhook = onRequest(
 
           try {
             // Extract metadata (set by createCheckoutSession)
-            const {userId, tier, price, durationDays} = session.metadata;
+            const {userId, tier, price, durationDays, priceId} =
+              session.metadata;
 
             console.log("🔍 Extracted metadata:", {
               userId,
               tier,
               price,
               durationDays,
+              priceId,
             });
 
             if (!userId || !tier || !durationDays) {
@@ -309,7 +317,8 @@ exports.stripeWebhook = onRequest(
             console.log(`✅ User ${userId} upgraded to ${tier}`);
 
             // Create order record for tracking
-            const planInfo = VALID_PRICE_IDS[session.metadata.priceId];
+            // Use priceId to get plan name, fallback to tier name
+            const planInfo = priceId ? VALID_PRICE_IDS[priceId] : null;
             const planName = planInfo? planInfo.name : tier;
 
             console.log("🔍 Creating order record in Firestore...");
@@ -341,11 +350,10 @@ exports.stripeWebhook = onRequest(
           console.log(`ℹ️ Unhandled event type: ${event.type}`);
           res.json({received: true});
         }
-      });
-
-      req.on("error", (err) => {
-        console.error("❌ Error reading request body:", err);
-        res.status(400).send("Bad request");
-      });
+      } catch (error) {
+        // Handle errors in reading request body or webhook processing
+        console.error("❌ Error in webhook handler:", error);
+        return res.status(400).send("Bad request");
+      }
     });
 
