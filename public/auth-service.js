@@ -202,7 +202,11 @@ export async function signInWithGoogle() {
 export async function resetPassword(email) {
   if (!authInstance) throw new Error("Auth not initialized");
   
-  return await sendPasswordResetEmail(authInstance, email);
+  const actionCodeSettings = {
+    url: `${window.location.origin}/passwordReset.html`
+  };
+  
+  return await sendPasswordResetEmail(authInstance, email, actionCodeSettings);
 }
 
 /**
