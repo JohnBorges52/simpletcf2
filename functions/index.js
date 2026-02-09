@@ -211,6 +211,9 @@ exports.createCheckoutSession = onRequest(
  * - Uses rawBody for signature verification
  * - Validates event data before processing
  * - Creates atomic Firestore updates
+ *
+ * Note: For Firebase Functions v2, we collect the raw body from the
+ * request stream before processing to enable Stripe signature verification
  */
 exports.stripeWebhook = onRequest(
     {secrets: [stripeSecretKey, stripeWebhookSecret]},
@@ -224,96 +227,133 @@ exports.stripeWebhook = onRequest(
       const sig = req.headers["stripe-signature"];
       const webhookSecret = stripeWebhookSecret.value();
 
+      console.log("🔍 Webhook request received");
+      console.log("🔍 Has signature:", !!sig);
+
       if (!sig) {
-        console.error("Missing Stripe signature header");
+        console.error("❌ Missing Stripe signature header");
         return res.status(400).send("Missing signature");
       }
 
-      let event;
-
       try {
-        // SECURITY: Construct event from rawBody
-        // Required for signature verification
-        event = stripe.webhooks.constructEvent(
-            req.rawBody,
-            sig,
-            webhookSecret,
-        );
-      } catch (err) {
-        console.error("⚠️ Webhook signature verification failed:", err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-      }
+        // Collect raw body for signature verification
+        const rawBody = await new Promise((resolve, reject) => {
+          const chunks = [];
 
-      console.log("✅ Webhook verified:", event.type);
+          req.on("error", reject);
 
-      // Handle successful payment event
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-
-        console.log("Processing payment:", {
-          sessionId: session.id,
-          customerId: session.customer,
-          amount: session.amount_total,
-        });
-
-        try {
-          // Extract metadata (set by createCheckoutSession)
-          const {userId, tier, price, durationDays} = session.metadata;
-
-          if (!userId || !tier || !durationDays) {
-            console.error("Missing required metadata:", session.metadata);
-            return res.status(400).send("Invalid session metadata");
-          }
-
-          // Calculate subscription dates
-          const now = new Date();
-          const endDate = new Date(
-              now.getTime() + parseInt(durationDays) * 24 * 60 * 60 * 1000,
-          );
-
-          // Update user subscription in Firestore
-          // Use set with merge to create document if it doesn't exist
-          await admin.firestore().collection("users").doc(userId).set({
-            tier: tier,
-            subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
-            subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
-            stripeCustomerId: session.customer || null,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          }, {merge: true});
-
-          console.log(`✅ User ${userId} upgraded to ${tier}`);
-
-          // Create order record for tracking
-          const planInfo = VALID_PRICE_IDS[session.metadata.priceId];
-          const planName = planInfo? planInfo.name : tier;
-
-          await admin.firestore().collection("orders").add({
-            userId: userId,
-            tier: tier,
-            plan: planName,
-            price: parseFloat(price) || (session.amount_total / 100),
-            currency: session.currency || "usd",
-            status: "completed",
-            stripeSessionId: session.id,
-            stripePaymentIntent: session.payment_intent,
-            stripeCustomerId: session.customer,
-            customerEmail: session.customer_email,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          req.on("data", (chunk) => {
+            chunks.push(chunk);
           });
 
-          console.log(`✅ Order created for user ${userId}`);
+          req.on("end", () => {
+            resolve(Buffer.concat(chunks));
+          });
+        });
 
-          // Send success response to Stripe
-          res.json({received: true});
-        } catch (error) {
-          console.error("❌ Error processing payment:", error);
-          // Return 500 so Stripe retries the webhook
-          return res.status(500).send("Error processing payment");
+        let event;
+
+        try {
+          // SECURITY: Construct event from raw body buffer
+          event = stripe.webhooks.constructEvent(
+              rawBody,
+              sig,
+              webhookSecret,
+          );
+        } catch (err) {
+          console.error(
+              "⚠️ Webhook signature verification failed:", err.message,
+          );
+          return res.status(400).send(`Webhook Error: ${err.message}`);
         }
-      } else {
-        // Acknowledge other event types
-        console.log(`ℹ️ Unhandled event type: ${event.type}`);
-        res.json({received: true});
+
+        console.log("✅ Webhook verified:", event.type);
+
+        // Handle successful payment event
+        if (event.type === "checkout.session.completed") {
+          const session = event.data.object;
+
+          console.log("Processing payment:", {
+            sessionId: session.id,
+            customerId: session.customer,
+            amount: session.amount_total,
+          });
+
+          try {
+            // Extract metadata (set by createCheckoutSession)
+            const {userId, tier, price, durationDays, priceId} =
+              session.metadata;
+
+            console.log("🔍 Extracted metadata:", {
+              userId,
+              tier,
+              price,
+              durationDays,
+              priceId,
+            });
+
+            if (!userId || !tier || !durationDays) {
+              console.error("❌ Missing required metadata:", session.metadata);
+              return res.status(400).send("Invalid session metadata");
+            }
+
+            // Calculate subscription dates
+            const now = new Date();
+            const endDate = new Date(
+                now.getTime() + parseInt(durationDays) * 24 * 60 * 60 * 1000,
+            );
+
+            // Update user subscription in Firestore
+            // Use set with merge to create document if it doesn't exist
+            console.log("🔍 Updating user document in Firestore...");
+            await admin.firestore().collection("users").doc(userId).set({
+              tier: tier,
+              subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
+              subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
+              stripeCustomerId: session.customer || null,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, {merge: true});
+
+            console.log(`✅ User ${userId} upgraded to ${tier}`);
+
+            // Create order record for tracking
+            // Use priceId to get plan name, fallback to tier name
+            const planInfo = priceId ? VALID_PRICE_IDS[priceId] : null;
+            const planName = planInfo? planInfo.name : tier;
+
+            console.log("🔍 Creating order record in Firestore...");
+            await admin.firestore().collection("orders").add({
+              userId: userId,
+              tier: tier,
+              plan: planName,
+              price: parseFloat(price) || (session.amount_total / 100),
+              currency: session.currency || "usd",
+              status: "completed",
+              stripeSessionId: session.id,
+              stripePaymentIntent: session.payment_intent,
+              stripeCustomerId: session.customer,
+              customerEmail: session.customer_email,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            console.log(`✅ Order created for user ${userId}`);
+
+            // Send success response to Stripe
+            res.json({received: true});
+          } catch (error) {
+            console.error("❌ Error processing payment:", error);
+            // Return 500 so Stripe retries the webhook
+            return res.status(500).send("Error processing payment");
+          }
+        } else {
+          // Acknowledge other event types
+          console.log(`ℹ️ Unhandled event type: ${event.type}`);
+          res.json({received: true});
+        }
+      } catch (error) {
+        // Handle errors in reading request body or webhook processing
+        console.error("❌ Error in webhook handler:", error);
+        return res.status(400).send("Bad request");
       }
     });
 
