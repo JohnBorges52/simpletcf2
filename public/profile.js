@@ -647,7 +647,7 @@ function fmtPct(n) {
    * @param {number} intervalMs - Milliseconds between each poll
    * @returns {Promise<Object|null>} Updated user data object or null if timeout
    */
-  async function waitForTierUpdate(userId, maxAttempts = 10, intervalMs = 1000) {
+  async function waitForTierUpdate(userId, maxAttempts = 20, intervalMs = 1500) {
     console.log("⏳ Waiting for tier update from webhook...");
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -772,18 +772,24 @@ function fmtPct(n) {
       userDoc?.email || user.email || "—"
     );
 
-    // Get tier from user document
-    const tier = userDoc?.tier || "free";
-    
     // If payment was successful, also refresh subscription service data
     if (isPaymentSuccess && window.SubscriptionService) {
       try {
         await window.SubscriptionService.init();
         console.log("✅ Subscription service refreshed after payment");
+        
+        // Get the refreshed user data from SubscriptionService
+        if (window.SubscriptionService.currentUserData) {
+          userDoc = window.SubscriptionService.currentUserData;
+          console.log("✅ Using refreshed user data from SubscriptionService");
+        }
       } catch (error) {
         console.warn("Failed to refresh subscription service:", error);
       }
     }
+    
+    // Get tier from user document (using potentially refreshed data)
+    const tier = userDoc?.tier || "free";
     
     // Map tier to friendly names
     const tierNames = {
