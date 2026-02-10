@@ -304,13 +304,7 @@ function fmtPct(n) {
             );
           }
 
-          const isActiveTier = currentSub?.tier && currentSub.tier !== "free";
-          if (
-            isLatestPaid &&
-            isActiveTier &&
-            endDate &&
-            Date.now() < endDate.getTime()
-          ) {
+          if (isLatestPaid && endDate && Date.now() < endDate.getTime()) {
             statusLabel = "Ongoing";
             statusClass = "ongoing";
           } else {
