@@ -578,6 +578,9 @@ import {
   }
 
   async function countDeservesAttentionForCurrentScope() {
+    // ✅ Return 0 when no weight selected (same as reading.js)
+    if (state.currentWeight == null) return 0;
+
     let pool = state.allData;
     if (state.currentWeight != null) {
       pool = pool.filter(
@@ -625,6 +628,12 @@ import {
   }
 
   async function recomputeFiltered() {
+    // ✅ Show empty state when no weight is selected (same as reading.js)
+    if (!state.realTestMode && state.currentWeight == null) {
+      state.filtered = [];
+      return;
+    }
+
     let items = state.allData.slice();
 
     if (state.currentWeight != null) {

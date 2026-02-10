@@ -619,35 +619,42 @@ function isLoggedIn() {
 // Pricing click -> checkout (with optional auth gate)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Clear the checkout navigation flag when page loads
+  sessionStorage.removeItem('navigating_to_checkout');
+  
   document.querySelectorAll(".price__cta").forEach((button) => {
     button.addEventListener("click", async (e) => {
       e.preventDefault();
 
-      const price = parseFloat(button.dataset.price || "0");
-      const duration = button.dataset.duration || "";
-      const badge = button.dataset.badge || "Free";
+      // 🔒 Prevent double clicks
+      if (button.disabled) return;
+      button.disabled = true;
 
-      const checkoutUrl = new URL("/checkout", window.location.origin);
-      checkoutUrl.searchParams.set("price", String(price));
-      checkoutUrl.searchParams.set("duration", duration);
-      checkoutUrl.searchParams.set("badge", badge);
-
-      // fallback for checkout.js
-      localStorage.setItem(
-        "checkout_selection",
-        JSON.stringify({ price, duration, badge })
-      );
-
-      // 🔒 ALWAYS auth-gate (for ALL plans)
-      if (!isLoggedIn()) {
-        const loginUrl = new URL("/login", window.location.origin);
-        loginUrl.searchParams.set("next", checkoutUrl.pathname + checkoutUrl.search);
-        window.location.href = loginUrl.toString();
-        return;
-      }
-
-      // ✅ Check if user already has a paid plan
       try {
+        const price = parseFloat(button.dataset.price || "0");
+        const duration = button.dataset.duration || "";
+        const badge = button.dataset.badge || "Free";
+
+        const checkoutUrl = new URL("/checkout", window.location.origin);
+        checkoutUrl.searchParams.set("price", String(price));
+        checkoutUrl.searchParams.set("duration", duration);
+        checkoutUrl.searchParams.set("badge", badge);
+
+        // fallback for checkout.js
+        localStorage.setItem(
+          "checkout_selection",
+          JSON.stringify({ price, duration, badge })
+        );
+
+        // 🔒 ALWAYS auth-gate (for ALL plans)
+        if (!isLoggedIn()) {
+          const loginUrl = new URL("/login", window.location.origin);
+          loginUrl.searchParams.set("next", checkoutUrl.pathname + checkoutUrl.search);
+          window.location.href = loginUrl.toString();
+          return;
+        }
+
+        // ✅ Check if user already has a paid plan
         if (window.SubscriptionService) {
           console.log('🔍 Checking user subscription status...');
           await window.SubscriptionService.init();
@@ -655,18 +662,24 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log('🎫 Current tier:', currentTier);
           
           if (currentTier && currentTier !== 'free') {
+            // Remove the disabled state so they can try again later
+            button.disabled = false;
             alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
             return;
           }
         } else {
           console.warn('⚠️ SubscriptionService not available');
         }
-      } catch (error) {
-        console.error("❌ Error checking user plan status:", error);
-        // Don't redirect on error - let it fall through to prevent users from being blocked
-      }
 
-      window.location.href = checkoutUrl.toString();
+        // ✅ Set flag before redirecting to prevent alerts on back navigation
+        sessionStorage.setItem('navigating_to_checkout', 'true');
+        
+        // ✅ If we get here, proceed with redirect
+        window.location.href = checkoutUrl.toString();
+      } catch (error) {
+        console.error("❌ Error in pricing button handler:", error);
+        button.disabled = false; // Re-enable on error
+      }
     });
   });
 
