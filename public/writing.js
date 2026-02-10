@@ -26,7 +26,7 @@
     } else {
       console.log("🔒 User not logged in, redirecting to login...");
     }
-    window.location.href = "/login.html";
+    window.location.href = "/login";
     return;
   }
   

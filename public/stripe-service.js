@@ -74,7 +74,7 @@ class StripeService {
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
         alert("Please log in to purchase a plan");
-        window.location.href = "/login.html";
+        window.location.href = "/login";
         return;
       }
 

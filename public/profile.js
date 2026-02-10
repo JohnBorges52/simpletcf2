@@ -635,7 +635,7 @@ function fmtPct(n) {
       }
 
       // Redirect to login
-      window.location.href = "/login.html";
+      window.location.href = "/login";
     });
   }
 
@@ -716,7 +716,7 @@ function fmtPct(n) {
       } else {
         console.log("❌ No user found, redirecting to login");
       }
-      window.location.href = "/login.html";
+      window.location.href = "/login";
       return;
     }
 
@@ -734,7 +734,7 @@ function fmtPct(n) {
       console.log("💳 Payment success detected, waiting for tier update...");
     } else if (urlParams.get('payment') === 'cancelled') {
       alert('Payment was cancelled. You can try again anytime.');
-      window.history.replaceState({}, document.title, '/profile.html');
+      window.history.replaceState({}, document.title, '/profile');
     }
     
     // Setup tabs with userId for orders loading

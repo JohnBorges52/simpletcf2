@@ -381,10 +381,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // New user - check if email is verified (Google users are usually verified)
         if (user.emailVerified) {
           // Email verified - redirect to welcome page
-          window.location.href = '/welcome.html';
+          window.location.href = '/welcome';
         } else {
           // Email not verified - redirect to verification page
-          window.location.href = '/verify-email.html';
+          window.location.href = '/verify-email';
         }
       } else {
         // Returning user - show welcome message and redirect to home
@@ -569,7 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   forgotLink?.addEventListener("click", (e) => {
     e.preventDefault();
-    window.location.href = "/forgotPassword.html";
+    window.location.href = "/forgotPassword";
   });
 });
 
@@ -708,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       setTimeout(() => {
-        window.location.href = "/login.html";
+        window.location.href = "/login";
       }, 2000);
 
     } catch (error) {
@@ -754,7 +754,7 @@ function showWelcomeMessage(name, email) {
   }
 
   setTimeout(() => {
-    window.location.href = "/index.html";
+    window.location.href = "/";
   }, 1500);
 }
 
@@ -813,12 +813,12 @@ function showVerificationMessage(email, name) {
       // If user is logged in, they'll see "Complete Setup" button
       // If user is logged out, they'll see sign-in form with pre-filled email
       const redirectUrl = verifiedEmail 
-        ? `/welcome.html?verified_email=${encodeURIComponent(verifiedEmail)}`
-        : '/welcome.html';
+        ? `/welcome?verified_email=${encodeURIComponent(verifiedEmail)}`
+        : '/welcome';
       window.location.replace(redirectUrl);
     } catch (error) {
       console.error("Email verification error:", error);
-      window.location.replace("/login.html?verify_error=1");
+      window.location.replace("/login?verify_error=1");
     }
   }
 })();

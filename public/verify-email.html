@@ -127,7 +127,7 @@
           <p class="text-center text-gray-600 text-sm">
             Already verified?
             <a
-              href="/login.html"
+              href="/login"
               class="text-purple-600 hover:text-purple-700 font-semibold transition-colors"
               >Log in here</a
             >
@@ -156,7 +156,7 @@
             if (user.emailVerified) {
               // Already verified, redirect to welcome page
               console.log('Email already verified, redirecting to welcome page');
-              window.location.href = '/welcome.html';
+              window.location.href = '/welcome';
               return;
             }
 
@@ -210,11 +210,11 @@
           } else {
             // No user logged in, redirect to registration
             console.log('No user found, redirecting to registration');
-            window.location.href = '/register.html';
+            window.location.href = '/register';
           }
         } catch (error) {
           console.error('Error loading user info:', error);
-          window.location.href = '/register.html';
+          window.location.href = '/register';
         }
       });
     </script>

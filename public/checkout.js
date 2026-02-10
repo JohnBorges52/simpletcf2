@@ -183,7 +183,7 @@
     cta.addEventListener("click", async () => {
       // ✅ Set user to free tier in Firestore
       await activateFreeTier();
-      window.location.href = "profile.html";
+      window.location.href = "profile";
     });
 
     row.appendChild(cta);

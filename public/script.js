@@ -590,7 +590,7 @@ run("pricing-to-checkout", () => {
         ...(strike ? { strike: String(strike) } : {}),
       });
 
-      window.location.href = `/checkout.html?${qp.toString()}`;
+      window.location.href = `/checkout?${qp.toString()}`;
     });
   });
 });
@@ -627,7 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const duration = button.dataset.duration || "";
       const badge = button.dataset.badge || "Free";
 
-      const checkoutUrl = new URL("/checkout.html", window.location.origin);
+      const checkoutUrl = new URL("/checkout", window.location.origin);
       checkoutUrl.searchParams.set("price", String(price));
       checkoutUrl.searchParams.set("duration", duration);
       checkoutUrl.searchParams.set("badge", badge);
@@ -640,7 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔒 ALWAYS auth-gate (for ALL plans)
       if (!isLoggedIn()) {
-        const loginUrl = new URL("/login.html", window.location.origin);
+        const loginUrl = new URL("/login", window.location.origin);
         loginUrl.searchParams.set("next", checkoutUrl.pathname + checkoutUrl.search);
         window.location.href = loginUrl.toString();
         return;

@@ -30,7 +30,7 @@
 
   function goToLoginThenReturn(checkoutUrl) {
     sessionStorage.setItem("postLoginRedirect", checkoutUrl.toString());
-    const loginUrl = new URL("/login.html", window.location.origin);
+    const loginUrl = new URL("/login", window.location.origin);
     loginUrl.searchParams.set(
       "next",
       checkoutUrl.pathname + checkoutUrl.search,
@@ -45,10 +45,10 @@
 
     if (isLoggedIn()) {
       authLink.textContent = "Profile";
-      authLink.href = "/profile.html";
+      authLink.href = "/profile";
     } else {
       authLink.textContent = "Sign In";
-      authLink.href = "/login.html";
+      authLink.href = "/login";
     }
   }
 
@@ -95,7 +95,7 @@
           JSON.stringify({ price, duration, badge }),
         );
 
-        const checkoutUrl = new URL("/checkout.html", window.location.origin);
+        const checkoutUrl = new URL("/checkout", window.location.origin);
         checkoutUrl.searchParams.set("price", String(price));
         checkoutUrl.searchParams.set("duration", duration);
         checkoutUrl.searchParams.set("badge", badge);
@@ -125,7 +125,7 @@
   function initStartFreeButton() {
     document.querySelectorAll(".start-free-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const checkoutUrl = new URL("/checkout.html", window.location.origin);
+        const checkoutUrl = new URL("/checkout", window.location.origin);
         checkoutUrl.searchParams.set("price", "0");
         checkoutUrl.searchParams.set("duration", "Free");
         checkoutUrl.searchParams.set("badge", "Free");

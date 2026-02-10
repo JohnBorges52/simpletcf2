@@ -203,7 +203,7 @@ export async function resetPassword(email) {
   if (!authInstance) throw new Error("Auth not initialized");
   
   const actionCodeSettings = {
-    url: `${window.location.origin}/passwordReset.html`
+    url: `${window.location.origin}/passwordReset`
   };
   
   return await sendPasswordResetEmail(authInstance, email, actionCodeSettings);
