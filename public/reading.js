@@ -809,11 +809,16 @@ import {
       });
     }
 
-    // ✅ Show UI feedback immediately (non-blocking)
+    // ✅ Show UI feedback immediately
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     renderOptions(q, true, correctIndex);
+
+    // ✅ MUST await bumpLifetime before updateQuestionStats so stats are current
+    await bumpLifetime(q, isCorrect).catch(err => {
+      console.error("Failed to save answer to database:", err);
+    });
 
     updateScore();
     updateQuestionStats(q);
@@ -839,11 +844,6 @@ import {
     }
     
     updateKpiVisibility();
-    
-    // ✅ Run database writes in background without blocking UI
-    bumpLifetime(q, isCorrect).catch(err => {
-      console.error("Failed to save answer to database:", err);
-    });
     
     // ✅ Log to Firestore (non-blocking)
     if (window.dbService && window.dbService.logQuestionResponse) {

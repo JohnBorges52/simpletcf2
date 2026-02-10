@@ -1003,14 +1003,14 @@ import {
       });
     }
 
-    // ✅ Show UI feedback immediately, then run database writes in background (non-blocking)
+    // ✅ Show UI feedback immediately, then run database writes
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     refreshWeightButtonsLabels();
     
-    // ✅ Run database writes in background without blocking UI
-    trackAnswerLocally(q, isCorrect).catch(err => {
+    // ✅ MUST await trackAnswerLocally so stats are updated before renderQuestion reads them
+    await trackAnswerLocally(q, isCorrect).catch(err => {
       console.error("Failed to save answer to database:", err);
     });
     
@@ -1032,7 +1032,7 @@ import {
 
     // ✅ PRACTICE MODE: re-render so correct/wrong colors + transcript become available
     if (!state.realTestMode) {
-      await renderQuestion(); // <-- this is the missing piece
+      await renderQuestion(); // <-- now stats will be updated because we awaited trackAnswerLocally
       return;
     }
 

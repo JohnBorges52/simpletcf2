@@ -620,7 +620,7 @@ function isLoggedIn() {
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".price__cta").forEach((button) => {
-    button.addEventListener("click", (e) => {
+    button.addEventListener("click", async (e) => {
       e.preventDefault();
 
       const price = parseFloat(button.dataset.price || "0");
@@ -644,6 +644,20 @@ document.addEventListener("DOMContentLoaded", () => {
         loginUrl.searchParams.set("next", checkoutUrl.pathname + checkoutUrl.search);
         window.location.href = loginUrl.toString();
         return;
+      }
+
+      // ✅ Check if user already has a paid plan
+      try {
+        if (window.SubscriptionService) {
+          await window.SubscriptionService.init();
+          const currentTier = window.SubscriptionService.getCurrentTier();
+          if (currentTier && currentTier !== 'free') {
+            alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user plan status:", error);
       }
 
       window.location.href = checkoutUrl.toString();
