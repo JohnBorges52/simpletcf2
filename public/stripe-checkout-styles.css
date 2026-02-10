@@ -110,6 +110,42 @@
   line-height: 1.5;
 }
 
+.checkout-legal-note {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.checkout-legal-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.checkout-legal-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: #64748b;
+  display: grid;
+  gap: 4px;
+  line-height: 1.4;
+}
+
+.checkout-legal-link {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.checkout-legal-link:hover {
+  text-decoration: underline;
+}
+
 .info-icon {
   flex-shrink: 0;
   margin-top: 2px;
