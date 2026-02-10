@@ -196,6 +196,8 @@ function fmtPct(n) {
     console.log("📦 Loading orders for user:", userId);
     
     const ordersTableBody = document.querySelector('.orders-table tbody');
+    const ordersCountPill = document.getElementById('ordersCountPill');
+    const loadMoreBtn = document.getElementById('loadMoreOrdersBtn');
     if (!ordersTableBody) {
       console.warn("Orders table tbody not found");
       return;
@@ -325,8 +327,33 @@ function fmtPct(n) {
           </tr>
         `);
       });
-      
-      ordersTableBody.innerHTML = rows.join('');
+
+      const initialCount = 5;
+      const loadMoreCount = 3;
+      let visibleCount = Math.min(initialCount, rows.length);
+
+      const renderRows = () => {
+        ordersTableBody.innerHTML = rows.slice(0, visibleCount).join('');
+
+        if (ordersCountPill) {
+          ordersCountPill.textContent = `Showing ${Math.min(visibleCount, rows.length)} of ${rows.length}`;
+        }
+
+        if (loadMoreBtn) {
+          const remaining = rows.length - visibleCount;
+          loadMoreBtn.style.display = remaining > 0 ? '' : 'none';
+          loadMoreBtn.textContent = `Show older (+${Math.min(loadMoreCount, remaining)})`;
+        }
+      };
+
+      if (loadMoreBtn) {
+        loadMoreBtn.onclick = () => {
+          visibleCount = Math.min(visibleCount + loadMoreCount, rows.length);
+          renderRows();
+        };
+      }
+
+      renderRows();
       console.log(`✅ Loaded ${rows.length} orders`);
       
     } catch (error) {
