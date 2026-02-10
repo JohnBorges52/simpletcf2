@@ -16,8 +16,8 @@ class StripeService {
     this.initialized = false;
 
     // SECURITY: Only publishable key is safe to expose in frontend
-    // Get from: https://dashboard.stripe.com/test/apikeys
-    this.publishableKey = "pk_test_51SymiRCwya11CpgZM80uSO1NdGsTCQNO7J6W7bJZKsDYdjOMQBzMcR6ERbrUiW7HLnseg5AdcpcvU8RmKtNLQfER00hkpc0AVo";
+    // Get from: https://dashboard.stripe.com/apikeys (Live mode)
+    this.publishableKey = "pk_live_51LPvkVCjnElzxNngyE3orsGbMc4G8W3qXqyC0hj0HPtSupDNj5B5TcX9QzZOsUX5x39psHalzUL94AvjXjpzlsGj00IGft9mbl";
 
     // SECURITY: Map tier names to Stripe Price IDs
     // These are used for display purposes only
