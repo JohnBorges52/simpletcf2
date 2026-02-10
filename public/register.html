@@ -18,41 +18,53 @@
   <body
     class="register-page min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-indigo-100 flex items-center justify-center p-4"
   >
-    <!-- ===================== VERIFY/WELCOME OVERLAY ===================== -->
-    <section id="welcome-screen" class="hidden w-full max-w-md">
-      <div class="bg-white rounded-3xl shadow-2xl p-8 w-full text-center">
+    <!-- ===================== EMAIL SENT NOTIFICATION ===================== -->
+    <div id="email-sent-notification" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center animate-fadeIn">
+        <!-- Success Icon -->
         <div class="mb-6">
-          <div
-            id="avatar"
-            class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center"
+          <div class="w-20 h-20 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+
+          <h2 class="text-3xl font-bold text-gray-800 mb-4">
+            Check Your Email!
+          </h2>
+
+          <p id="notification-email" class="text-lg text-gray-700 mb-4">
+            <!-- Email will be inserted here -->
+          </p>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <p class="text-blue-800 font-semibold mb-2">
+              📧 Verification email sent!
+            </p>
+            <p class="text-blue-700 text-sm">
+              Please click the link in your email to verify your account and complete registration.
+            </p>
+          </div>
+
+          <button
+            id="close-notification-btn"
+            class="w-full bg-gradient-to-r from-[#6366f1] to-[#C1C6F8] text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            <span id="avatar-initial" class="text-white text-2xl font-bold"
-              >U</span
-            >
-          </div>
-
-          <!-- Title for verify OR welcome text will be set by JS -->
-          <h1
-            id="verify-title"
-            class="text-2xl font-bold text-gray-800 mb-2"
-          ></h1>
-
-          <!-- Line for email address (verify flow) -->
-          <p id="welcome-email" class="text-sm text-gray-500 mb-1"></p>
-
-          <!-- Line for extra copy (verify: 'Then log in...' | welcome: 'Welcome back, ...') -->
-          <p id="welcome-name" class="text-gray-600"></p>
-
-          <div class="flex justify-center mt-6">
-            <div
-              class="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"
-              role="status"
-              aria-label="Loading"
-            ></div>
-          </div>
+            Got it!
+          </button>
         </div>
       </div>
-    </section>
+    </div>
+    
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+      }
+    </style>
 
     <!-- ===================== REGISTER FORM ===================== -->
     <section id="register-form" class="w-full max-w-md">

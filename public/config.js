@@ -713,9 +713,24 @@ function showWelcomeMessage(name, email) {
 }
 
 function showVerificationMessage(email, name) {
-  // Redirect to verify-email page for registered users
-  // They will stay logged in (persistence is set to LOCAL)
-  window.location.href = '/verify-email.html';
+  // Show pop-up notification instead of redirecting
+  const notification = document.getElementById('email-sent-notification');
+  const emailEl = document.getElementById('notification-email');
+  const closeBtn = document.getElementById('close-notification-btn');
+  
+  if (notification && emailEl) {
+    emailEl.textContent = `We sent a verification email to ${email}`;
+    notification.classList.remove('hidden');
+    
+    // Close button handler
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        notification.classList.add('hidden');
+        // Sign out the user so they're not logged in until they verify
+        AuthService.signOutUser().catch(err => console.error('Sign out error:', err));
+      });
+    }
+  }
 }
 
 // Handle email verification from link
