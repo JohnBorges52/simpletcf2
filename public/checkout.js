@@ -241,18 +241,18 @@
     const badge = (badgeStr || '').toLowerCase();
     const duration = (durationStr || '').toLowerCase();
 
-    // Quick Study: 10 days
-    if (badge.includes('quick') || badge.includes('study')) {
+    // Quick Study: Bronze badge, 10 days
+    if (badge.includes('bronze') || duration.includes('10')) {
       return { tier: 'quick-study', days: 10 };
     }
 
-    // 30-day Intensive
-    if (badge.includes('30') || badge.includes('intensive') || duration.includes('30')) {
+    // 30-day Intensive: Silver badge, 30 days
+    if (badge.includes('silver') || duration.includes('30')) {
       return { tier: '30-day', days: 30 };
     }
 
-    // Full Preparation: 60 days
-    if (badge.includes('full') || badge.includes('prep') || duration.includes('60')) {
+    // Full Preparation: Gold badge, 60 days
+    if (badge.includes('gold') || duration.includes('60')) {
       return { tier: 'full-prep', days: 60 };
     }
 
