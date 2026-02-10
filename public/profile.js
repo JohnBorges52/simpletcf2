@@ -237,10 +237,11 @@ function fmtPct(n) {
         "full-prep": 60,
       };
 
-      // Fetch current subscription to determine status for the latest paid order
+      // Fetch current subscription (and refresh expiration) to determine status
       let currentSub = null;
       try {
         if (window.SubscriptionService) {
+          await window.SubscriptionService.init();
           currentSub = await window.SubscriptionService.getUserSubscriptionData(userId);
         }
       } catch (error) {
