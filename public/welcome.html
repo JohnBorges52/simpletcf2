@@ -100,17 +100,23 @@
           const user = await AuthService.waitForAuth();
           
           if (!user) {
-            // No user logged in, redirect to registration
-            console.log('No user found, redirecting to registration');
-            window.location.href = '/register.html';
+            // No user logged in, redirect to login
+            console.log('No user found, redirecting to login');
+            window.location.href = '/login.html';
             return;
           }
 
           // Check if email is verified
           if (!user.emailVerified) {
-            // Email not verified, redirect to verification page
-            console.log('Email not verified, redirecting to verify-email page');
-            window.location.href = '/verify-email.html';
+            // Email not verified - this shouldn't happen on welcome page
+            // Sign out and redirect to login
+            console.log('Email not verified, signing out and redirecting to login');
+            try {
+              await AuthService.signOutUser();
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+            window.location.href = '/login.html';
             return;
           }
 

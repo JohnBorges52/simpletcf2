@@ -303,9 +303,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
       console.error("Registration error:", error);
-      const msg = AuthService.formatAuthError(error);
-      showFieldError(emailInput, "err-email", msg);
-      shakeElement("#register-form");
+      
+      // Special handling for email already in use
+      if (error.code === "auth/email-already-in-use") {
+        try {
+          startBtn.textContent = "Checking account...";
+          
+          // Try to sign in to check if account is unverified
+          const credential = await AuthService.signInWithEmail(email, password);
+          const user = credential.user;
+          
+          if (!user.emailVerified) {
+            // Account exists but unverified - resend verification email
+            await sendEmailVerification(user);
+            
+            // Sign out the user immediately (can't use app until verified)
+            await AuthService.signOutUser();
+            
+            // Show verification message
+            showVerificationMessage(email, name);
+          } else {
+            // Account exists and is verified - tell them to sign in
+            await AuthService.signOutUser();
+            showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
+            shakeElement("#register-form");
+          }
+        } catch (signInError) {
+          // Sign-in failed - email exists with different password
+          console.error("Sign-in check failed:", signInError);
+          showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
+          shakeElement("#register-form");
+        }
+      } else {
+        // Other errors
+        const msg = AuthService.formatAuthError(error);
+        showFieldError(emailInput, "err-email", msg);
+        shakeElement("#register-form");
+      }
     } finally {
       startBtn.disabled = false;
       startBtn.textContent = "Get Started";
@@ -722,12 +756,19 @@ function showVerificationMessage(email, name) {
     emailEl.textContent = `We sent a verification email to ${email}`;
     notification.classList.remove('hidden');
     
-    // Close button handler - user stays logged in
+    // Close button handler - sign out user and redirect to login
     // Use { once: true } to ensure listener is only added once
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        notification.classList.add('hidden');
-        // User stays logged in, can check verify-email page if they want
+      closeBtn.addEventListener('click', async () => {
+        try {
+          // Sign out the user (they can't access app until verified)
+          await AuthService.signOutUser();
+        } catch (error) {
+          console.error("Error signing out:", error);
+        }
+        
+        // Redirect to login page
+        window.location.href = '/login.html';
       }, { once: true });
     }
   }

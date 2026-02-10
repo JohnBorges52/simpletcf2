@@ -702,17 +702,21 @@ function fmtPct(n) {
     const user = await waitForAuthUser();
     console.log("Auth user result:", user);
 
-    // Require authentication
-    if (!user) {
-      console.log("❌ No user found, redirecting to login");
+    // Require authentication AND email verification
+    // Treat unverified users the same as logged-out users
+    if (!user || !user.emailVerified) {
+      if (user && !user.emailVerified) {
+        console.log("❌ User email not verified, signing out and redirecting to login");
+        // Sign out unverified user
+        try {
+          await window.AuthService.signOutUser();
+        } catch (error) {
+          console.error("Error signing out:", error);
+        }
+      } else {
+        console.log("❌ No user found, redirecting to login");
+      }
       window.location.href = "/login.html";
-      return;
-    }
-
-    // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to verification page
-    if (!user.emailVerified) {
-      console.log("❌ User email not verified, redirecting to verify-email page");
-      window.location.href = "/verify-email.html";
       return;
     }
 
