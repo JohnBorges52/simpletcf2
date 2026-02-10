@@ -302,12 +302,31 @@ async function createAndSendInvoice(
     amount,
     currency = "cad",
 ) {
+  console.log("📧 ================== INVOICE CREATION START ==================");
+  console.log("📧 Input parameters:", {
+    customerId,
+    email,
+    planName,
+    amount,
+    currency,
+  });
+
+  // Check if Stripe is initialized
+  if (!stripe) {
+    console.error("❌ CRITICAL: Stripe is not initialized!");
+    return null;
+  }
+  console.log("✅ Stripe is initialized");
+
   try {
     if (!customerId || !email) {
-      console.error("❌ Missing customer ID or email for invoice");
+      console.error("❌ INVOICE ERROR: Missing customer ID or email");
+      console.error("❌ Customer ID:", customerId);
+      console.error("❌ Email:", email);
       return null;
     }
 
+    console.log("📧 Step 1: Creating invoice object...");
     // Create invoice with line items
     const invoice = await stripe.invoices.create({
       customer: customerId,
@@ -318,36 +337,63 @@ async function createAndSendInvoice(
         planName: planName,
       },
     });
+    console.log("✅ Invoice object created:", {
+      id: invoice.id,
+      customer: invoice.customer,
+      status: invoice.status,
+      currency: invoice.currency,
+    });
 
+    console.log("📧 Step 2: Adding line item to invoice...");
     // Add line item to invoice
-    await stripe.invoiceItems.create({
+    const invoiceItem = await stripe.invoiceItems.create({
       customer: customerId,
       invoice: invoice.id,
       amount: Math.round(amount), // Ensure amount is in cents
       currency: currency.toLowerCase(),
       description: `${planName} subscription`,
     });
+    console.log("✅ Invoice item added:", {
+      id: invoiceItem.id,
+      amount: invoiceItem.amount,
+      description: invoiceItem.description,
+    });
 
+    console.log("📧 Step 3: Finalizing invoice...");
     // Finalize the invoice (makes it ready to send)
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(
         invoice.id,
     );
+    console.log("✅ Invoice finalized:", {
+      id: finalizedInvoice.id,
+      status: finalizedInvoice.status,
+      invoice_pdf: finalizedInvoice.invoice_pdf,
+      hosted_invoice_url: finalizedInvoice.hosted_invoice_url,
+    });
 
+    console.log("📧 Step 4: Sending invoice via email...");
     // Send invoice via email to customer
     const sentInvoice = await stripe.invoices.sendInvoice(
         finalizedInvoice.id,
     );
-
-    console.log("✅ Invoice created and sent:", {
+    console.log("✅ Invoice sent successfully:", {
       invoiceId: sentInvoice.id,
-      customerId: customerId,
-      email: email,
+      customerId: sentInvoice.customer,
+      customerEmail: email,
       status: sentInvoice.status,
+      invoice_pdf: sentInvoice.invoice_pdf,
+      hosted_invoice_url: sentInvoice.hosted_invoice_url,
     });
+    console.log("📧 ================== INVOICE CREATION SUCCESS ==================");
 
     return sentInvoice.id;
   } catch (error) {
-    console.error("❌ Error creating/sending invoice:", error);
+    console.error("❌ ================== INVOICE CREATION FAILED ==================");
+    console.error("❌ Error type:", error.type);
+    console.error("❌ Error message:", error.message);
+    console.error("❌ Error code:", error.code);
+    console.error("❌ Full error:", JSON.stringify(error, null, 2));
+    console.error("❌ ===============================================================");
     // Don't throw - we don't want invoice failure to break the payment process
     return null;
   }
@@ -590,16 +636,23 @@ exports.stripeWebhook = onRequest(
         }
 
         console.log("✅ Webhook verified:", event.type);
+        console.log("🔍 Full event data:", JSON.stringify(event, null, 2));
 
         // Handle successful payment event
         if (event.type === "checkout.session.completed") {
           const session = event.data.object;
 
-          console.log("Processing payment:", {
+          console.log("💳 ========== CHECKOUT SESSION COMPLETED ==========");
+          console.log("💳 Processing payment:", {
             sessionId: session.id,
             customerId: session.customer,
-            amount: session.amount_total,
+            customerEmail: session.customer_email,
+            amountTotal: session.amount_total,
+            currency: session.currency,
+            paymentStatus: session.payment_status,
+            paymentIntent: session.payment_intent,
           });
+          console.log("💳 Full session object:", JSON.stringify(session, null, 2));
 
           try {
             // Extract metadata (set by createCheckoutSession)
@@ -658,10 +711,31 @@ exports.stripeWebhook = onRequest(
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            console.log(`✅ Order created for user ${userId}`);
+            console.log(`✅ Order created for user ${userId}`, {
+              orderId: orderRef.id,
+            });
 
             // Create and send invoice
-            console.log("🔍 Creating Stripe invoice...");
+            console.log("💰 ========== STARTING INVOICE CREATION PROCESS ==========");
+            console.log("💰 Session data for invoice:", {
+              customerId: session.customer,
+              customerEmail: session.customer_email,
+              planName: planName,
+              amountTotal: session.amount_total,
+              currency: session.currency,
+              paymentIntent: session.payment_intent,
+              paymentStatus: session.payment_status,
+            });
+
+            if (!session.customer) {
+              console.error("❌ CRITICAL: No customer ID in session object!");
+              console.error("❌ Full session object:", JSON.stringify(session, null, 2));
+            }
+
+            if (!session.customer_email) {
+              console.error("❌ WARNING: No customer email in session object!");
+            }
+
             const invoiceId = await createAndSendInvoice(
                 session.customer,
                 session.customer_email,
@@ -670,15 +744,27 @@ exports.stripeWebhook = onRequest(
                 session.currency || "cad",
             );
 
+            console.log("💰 Invoice creation result:", {
+              invoiceId: invoiceId,
+              success: !!invoiceId,
+            });
+
             // Update order with invoice ID if created successfully
             if (invoiceId) {
               await orderRef.update({
                 stripeInvoiceId: invoiceId,
               });
-              console.log("✅ Invoice created and linked to order");
+              console.log("✅ Invoice created and linked to order:", {
+                orderId: orderRef.id,
+                invoiceId: invoiceId,
+              });
+            } else {
+              console.error("❌ Invoice creation returned null - check logs above for errors");
             }
+            console.log("💰 ========== INVOICE CREATION PROCESS COMPLETE ==========");
 
             // Send purchase confirmation email
+            console.log("📨 Sending purchase confirmation email...");
             const customerEmail = session.customer_email || "";
             const userName = customerEmail.split("@")[0] || "User";
             await sendPurchaseConfirmationEmail(
@@ -687,6 +773,17 @@ exports.stripeWebhook = onRequest(
                 planName,
                 parseInt(durationDays),
             );
+
+            console.log("🎉 ========== WEBHOOK PROCESSING COMPLETE ==========");
+            console.log("🎉 Summary:", {
+              userId: userId,
+              tier: tier,
+              planName: planName,
+              orderCreated: !!orderRef.id,
+              invoiceCreated: !!invoiceId,
+              invoiceId: invoiceId,
+              confirmationEmailQueued: true,
+            });
 
             // Send success response to Stripe
             res.json({received: true});
