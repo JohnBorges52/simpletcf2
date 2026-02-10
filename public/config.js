@@ -790,7 +790,13 @@ function showVerificationMessage(email, name) {
       await AuthService.initAuth(app);
       const auth = AuthService.getAuthInstance();
       
+      let verifiedEmail = '';
+      
       if (auth) {
+        // Check the action code to get the email before applying it
+        const info = await checkActionCode(auth, code);
+        verifiedEmail = info.data.email || '';
+        
         // Apply the verification code
         await applyActionCode(auth, code);
         
@@ -803,8 +809,13 @@ function showVerificationMessage(email, name) {
         }
       }
       
-      // Redirect to welcome page (user should be logged in with verified email)
-      window.location.replace("/welcome.html");
+      // Redirect to welcome page with verified email parameter
+      // If user is logged in, they'll see "Complete Setup" button
+      // If user is logged out, they'll see sign-in form with pre-filled email
+      const redirectUrl = verifiedEmail 
+        ? `/welcome.html?verified_email=${encodeURIComponent(verifiedEmail)}`
+        : '/welcome.html';
+      window.location.replace(redirectUrl);
     } catch (error) {
       console.error("Email verification error:", error);
       window.location.replace("/login.html?verify_error=1");
