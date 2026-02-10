@@ -649,15 +649,21 @@ document.addEventListener("DOMContentLoaded", () => {
       // ✅ Check if user already has a paid plan
       try {
         if (window.SubscriptionService) {
+          console.log('🔍 Checking user subscription status...');
           await window.SubscriptionService.init();
           const currentTier = window.SubscriptionService.getCurrentTier();
+          console.log('🎫 Current tier:', currentTier);
+          
           if (currentTier && currentTier !== 'free') {
             alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
             return;
           }
+        } else {
+          console.warn('⚠️ SubscriptionService not available');
         }
       } catch (error) {
-        console.error("Error checking user plan status:", error);
+        console.error("❌ Error checking user plan status:", error);
+        // Don't redirect on error - let it fall through to prevent users from being blocked
       }
 
       window.location.href = checkoutUrl.toString();
