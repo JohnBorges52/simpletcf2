@@ -965,6 +965,9 @@ function fmtPct(n) {
         if (diffMs <= 0) {
           expirationText = "Expired";
           className = "critical";
+        } else if (diffMs < 60 * 60 * 1000) {
+          expirationText = "< 1 hour left";
+          className = "critical";
         } else if (diffMs < 24 * 60 * 60 * 1000) {
           expirationText = `${diffHours} hour${diffHours === 1 ? "" : "s"} left`;
           className = "critical";
