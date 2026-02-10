@@ -287,6 +287,73 @@ async function sendPurchaseConfirmationEmail(
 }
 
 /**
+ * Create and send invoice for successful purchase
+ * @param {string} customerId - Stripe customer ID
+ * @param {string} email - Customer email
+ * @param {string} planName - Plan name
+ * @param {number} amount - Amount in cents
+ * @param {string} currency - Currency code (e.g., 'cad')
+ * @return {Promise<string>} Invoice ID
+ */
+async function createAndSendInvoice(
+    customerId,
+    email,
+    planName,
+    amount,
+    currency = "cad",
+) {
+  try {
+    if (!customerId || !email) {
+      console.error("❌ Missing customer ID or email for invoice");
+      return null;
+    }
+
+    // Create invoice with line items
+    const invoice = await stripe.invoices.create({
+      customer: customerId,
+      currency: currency.toLowerCase(),
+      description: `SimpleTCF - ${planName}`,
+      auto_advance: false, // Don't auto-finalize, we'll do it manually
+      metadata: {
+        planName: planName,
+      },
+    });
+
+    // Add line item to invoice
+    await stripe.invoiceItems.create({
+      customer: customerId,
+      invoice: invoice.id,
+      amount: Math.round(amount), // Ensure amount is in cents
+      currency: currency.toLowerCase(),
+      description: `${planName} subscription`,
+    });
+
+    // Finalize the invoice (makes it ready to send)
+    const finalizedInvoice = await stripe.invoices.finalizeInvoice(
+        invoice.id,
+    );
+
+    // Send invoice via email to customer
+    const sentInvoice = await stripe.invoices.sendInvoice(
+        finalizedInvoice.id,
+    );
+
+    console.log("✅ Invoice created and sent:", {
+      invoiceId: sentInvoice.id,
+      customerId: customerId,
+      email: email,
+      status: sentInvoice.status,
+    });
+
+    return sentInvoice.id;
+  } catch (error) {
+    console.error("❌ Error creating/sending invoice:", error);
+    // Don't throw - we don't want invoice failure to break the payment process
+    return null;
+  }
+}
+
+/**
  * Verify Firebase Authentication Token
  * Security: Ensures only authenticated users can create checkout sessions
  * @param {object} req - HTTP request object
@@ -577,12 +644,12 @@ exports.stripeWebhook = onRequest(
             const planName = planInfo? planInfo.name : tier;
 
             console.log("🔍 Creating order record in Firestore...");
-            await admin.firestore().collection("orders").add({
+            const orderRef = await admin.firestore().collection("orders").add({
               userId: userId,
               tier: tier,
               plan: planName,
               price: parseFloat(price) || (session.amount_total / 100),
-              currency: session.currency || "usd",
+              currency: session.currency || "cad",
               status: "completed",
               stripeSessionId: session.id,
               stripePaymentIntent: session.payment_intent,
@@ -592,6 +659,24 @@ exports.stripeWebhook = onRequest(
             });
 
             console.log(`✅ Order created for user ${userId}`);
+
+            // Create and send invoice
+            console.log("🔍 Creating Stripe invoice...");
+            const invoiceId = await createAndSendInvoice(
+                session.customer,
+                session.customer_email,
+                planName,
+                session.amount_total,
+                session.currency || "cad",
+            );
+
+            // Update order with invoice ID if created successfully
+            if (invoiceId) {
+              await orderRef.update({
+                stripeInvoiceId: invoiceId,
+              });
+              console.log("✅ Invoice created and linked to order");
+            }
 
             // Send purchase confirmation email
             const customerEmail = session.customer_email || "";
