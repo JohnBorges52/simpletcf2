@@ -276,14 +276,6 @@
     // Wait for auth to be ready
     if (window.AuthService) {
       await window.AuthService.waitForAuth();
-      
-      // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to verification page
-      const user = window.AuthService.getCurrentUser();
-      if (user && !user.emailVerified) {
-        console.log("🔒 User email not verified, redirecting to verify-email page...");
-        window.location.href = "/verify-email.html";
-        return;
-      }
     }
 
     const sel = readSelection();
