@@ -304,7 +304,13 @@ function fmtPct(n) {
             );
           }
 
-          if (endDate && isLatestPaid && Date.now() <= endDate.getTime()) {
+          const isActiveTier = currentSub?.tier && currentSub.tier !== "free";
+          if (
+            isLatestPaid &&
+            isActiveTier &&
+            endDate &&
+            Date.now() < endDate.getTime()
+          ) {
             statusLabel = "Ongoing";
             statusClass = "ongoing";
           } else {
@@ -935,22 +941,19 @@ function fmtPct(n) {
         let expirationText = "";
         let className = "";
         
-        if (diffDays > 1) {
-          expirationText = `${diffDays} days left`;
+        if (diffMs <= 0) {
+          expirationText = "Expired";
+          className = "critical";
+        } else if (diffMs < 24 * 60 * 60 * 1000) {
+          expirationText = `${diffHours} hour${diffHours === 1 ? "" : "s"} left`;
+          className = "critical";
+        } else {
+          expirationText = `${diffDays} day${diffDays === 1 ? "" : "s"} left`;
           if (diffDays <= 3) {
             className = "critical";
           } else if (diffDays <= 9) {
             className = "warning";
           }
-        } else if (diffDays === 1) {
-          expirationText = "1 day left";
-          className = "warning";
-        } else if (diffHours > 0) {
-          expirationText = `${diffHours} hours left`;
-          className = "critical";
-        } else {
-          expirationText = "Expired";
-          className = "critical";
         }
         
         acctExpiration.textContent = expirationText;
