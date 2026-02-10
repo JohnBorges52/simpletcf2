@@ -282,6 +282,8 @@ function fmtPct(n) {
           statusLabel = "Free";
           statusClass = "free";
         } else {
+          const isLatestPaid =
+            docSnap.id === latestPaidOrderId && latestPaidOrderTier === tierKey;
           let endDate = null;
           if (data.subscriptionEndDate) {
             endDate = data.subscriptionEndDate.toDate
@@ -301,9 +303,12 @@ function fmtPct(n) {
             );
           }
 
-          if (endDate) {
-            statusLabel = Date.now() <= endDate.getTime() ? "Ongoing" : "Expired";
-            statusClass = statusLabel.toLowerCase();
+          if (endDate && isLatestPaid && Date.now() <= endDate.getTime()) {
+            statusLabel = "Ongoing";
+            statusClass = "ongoing";
+          } else {
+            statusLabel = "Expired";
+            statusClass = "expired";
           }
         }
 

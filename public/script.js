@@ -527,6 +527,8 @@ run("contact-button", () => {
    (homepage; safe to run everywhere)
 ---------------------------------------------------*/
 run("pricing-to-checkout", () => {
+  // If SubscriptionService is available, use the guarded handler below.
+  if (window.SubscriptionService) return;
   const ctas = document.querySelectorAll(".price__cta");
   if (!ctas.length) return;
 
