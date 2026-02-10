@@ -23,9 +23,9 @@ class StripeService {
     // These are used for display purposes only
     // Backend validates against its own whitelist
     this.priceIds = {
-      "quick-study": "price_1SymwrCwya11CpgZ3eFENT6r",
-      "30-day": "price_1SymymCwya11CpgZCe0uZNIc",
-      "full-prep": "price_1SymzZCwya11CpgZSf5VpJdy",
+      "quick-study": "price_1SzMjMCwya11CpgZcBhEiHFB",
+      "30-day": "price_1SzMk5Cwya11CpgZzWSCLQwM",
+      "full-prep": "price_1SzMm0Cwya11CpgZSRwNAt31",
     };
 
     // Cloud Function endpoint (deployed URL)

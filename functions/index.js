@@ -17,22 +17,22 @@ admin.initializeApp();
 // Update these values from your Stripe Dashboard
 // ============================================================================
 const VALID_PRICE_IDS = {
-  "price_1SymwrCwya11CpgZ3eFENT6r": {
+  "price_1SzMjMCwya11CpgZcBhEiHFB": {
     tier: "quick-study",
     name: "Quick Study (10 days)",
-    price: 9.99,
+    price: 10.28,
     durationDays: 10,
   },
-  "price_1SymymCwya11CpgZCe0uZNIc": {
+  "price_1SzMk5Cwya11CpgZzWSCLQwM": {
     tier: "30-day",
     name: "30-Day Intensive",
-    price: 19.99,
+    price: 20.58,
     durationDays: 30,
   },
-  "price_1SymzZCwya11CpgZSf5VpJdy": {
+  "price_1SzMm0Cwya11CpgZSRwNAt31": {
     tier: "full-prep",
     name: "Full Preparation",
-    price: 34.99,
+    price: 36.02,
     durationDays: 60,
   },
 };
