@@ -124,162 +124,166 @@
 
         <!-- âœ… Pricing carousel (plan.html style: 3 cards visible on desktop) -->
         <!-- âœ… Pricing carousel (plan.html style: 3 cards visible on desktop) -->
-        <div class="plan-carousel" aria-label="Plans carousel">
+        <div class="plan-carousel" aria-roledescription="carousel">
+          <div class="plan-carousel__viewport" id="planCarouselViewport">
+            <!-- Card 0 (FREE) -->
+            <article class="price">
+              <div class="price__img price__img--1" aria-hidden="true"></div>
+              <h4 class="price__title">Free Tier</h4>
+              <p class="price__people">Try SimpleTCF for free</p>
+
+              <p class="price__discount">
+                <span class="price__dollar">CAD $</span>0<span class="price__unit"
+                  >/free</span
+                >
+              </p>
+              <p class="price__strike" style="display: none;">CAD $0.00</p>
+
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li>15 Listening questions</li>
+                <li>15 Reading questions</li>
+                <li>3 Writing prompts (templates only)</li>
+              </ul>
+
+              <a
+                class="btn btn--blue price__cta"
+                href="/checkout"
+                data-duration="Free"
+                data-price="0"
+                data-badge="Free"
+                data-requires-auth="true"
+                >Start free</a
+              >
+            </article>
+
+            <!-- Card 1 -->
+            <article class="price">
+              <!-- Quick Study (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--1" aria-hidden="true"></div>
+              <h4 class="price__title">Quick Study</h4>
+              <p class="price__people">Last-minute preparation</p>
+              <p class="price__discount">
+                <span class="price__dollar">CAD $</span>9<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">CAD $15.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>10 days access</strong></li>
+                <li style="text-decoration: line-through">
+                  Full Real Test simulations
+                </li>
+                <li style="text-decoration: line-through">
+                  â€œDeserves Attentionâ€ mode
+                </li>
+                <li style="text-decoration: line-through">
+                  Progress tracking over time
+                </li>
+              </ul>
+              <a
+                class="btn btn--purple price__cta"
+                href="/checkout"
+                data-duration="10 Days"
+                data-price="9.99"
+                data-badge="Bronze"
+                >Start now</a
+              >
+            </article>
+
+            <!-- Card 2 -->
+            <article class="price gradient-border">
+              <!-- 30 days (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--2" aria-hidden="true"></div>
+              <h4 class="price__title">30-Day Intensive</h4>
+              <p class="price__people">Best for CLB 7â€“8</p>
+              <p class="price__discount">
+                <span class="price__dollar">CAD $</span>19<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">CAD $30.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>30 days access</strong></li>
+                <li><strong>Full Real Test simulations</strong></li>
+                <li><strong>â€œDeserves Attentionâ€ mode</strong></li>
+                <li><strong>Progress tracking over time</strong></li>
+              </ul>
+              <a
+                class="btn btn--violet price__cta"
+                href="/checkout"
+                data-duration="30 Days"
+                data-price="19.99"
+                data-badge="Silver"
+                >Start now</a
+              >
+              <p class="price__tagline">â­ Most Popular!</p>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="price">
+              <!-- 60 days (keep exactly your existing card HTML) -->
+              <div class="price__img price__img--3" aria-hidden="true"></div>
+              <h4 class="price__title">Full Preparation</h4>
+              <p class="price__people">Maximum confidence</p>
+              <p class="price__discount">
+                <span class="price__dollar">CAD $</span>34<span class="price__unit"
+                  >.99</span
+                >
+              </p>
+              <p class="price__strike">CAD $50.00</p>
+              <p class="price__feat">Features</p>
+              <ul class="price__list">
+                <li><strong>Listening & Reading practice</strong></li>
+                <li><strong>Weight-based questions</strong></li>
+                <li><strong>60 days access</strong></li>
+                <li><strong>Full Real Test simulations</strong></li>
+                <li><strong>â€œDeserves Attentionâ€ mode</strong></li>
+                <li><strong>Progress tracking over time</strong></li>
+              </ul>
+              <a
+                class="btn btn--blue price__cta"
+                href="/checkout"
+                data-duration="60 Days"
+                data-price="34.99"
+                data-badge="Gold"
+                >Start now</a
+              >
+            </article>
+          </div>
+
+          <div >
             <button
-              class="plan-carousel__btn plan-carousel__btn--prev"
+              class="carousel__btn"
               type="button"
-              aria-label="Previous plans"
-              data-dir="-1"
+              data-dir="prev"
+              aria-label="Previous"
             >
-              ‹
+              â€¹
             </button>
-
-            <div class="plan-carousel__viewport" id="planCarouselViewport">
-              <div class="plan-grid plan-grid--carousel" id="planCarouselTrack">
-                <!-- ✅ FREE TIER -->
-                <article class="plan" data-badge="Free">
-                  <h3>Free Tier</h3>
-                  <p class="plan__desc">Try SimpleTCF for free</p>
-
-                  <div class="plan__price">CAD $0<span>/free</span></div>
-
-                  <ul>
-                    <li>15 Listening questions</li>
-                    <li>15 Reading questions</li>
-                    <li>3 Writing prompts (templates only)</li>
-                  </ul>
-
-                  <button
-                    type="button"
-                    class="btn btn--ghost btn--full start-free-btn"
-                    data-plan="Free"
-                    data-price="0"
-                    data-duration="Free"
-                  >
-                    Start free
-                  </button>
-                </article>
-
-                <!-- Quick -->
-                <article class="plan" data-badge="Bronze">
-                  <h3>Quick Study</h3>
-                  <p class="plan__desc">Last-minute preparation</p>
-
-                  <div class="plan__price">CAD $9.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li><strong>10 days access</strong></li>
-                    <li style="text-decoration: line-through">
-                      Full Real Test simulations
-                    </li>
-                    <li style="text-decoration: line-through">
-                      “Deserves Attention” mode
-                    </li>
-                    <li style="text-decoration: line-through">
-                      Progress tracking over time
-                    </li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--ghost btn--full price__cta"
-                    data-price="9.99"
-                    data-duration="10 days"
-                    data-badge="Bronze"
-                  >
-                    Start Now
-                  </a>
-                </article>
-
-                <!-- 30-Day -->
-                <article class="plan plan--featured" data-badge="Silver">
-                  <svg
-                    class="plan-border"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      class="plan-border__rect"
-                      x="1"
-                      y="1"
-                      width="98"
-                      height="98"
-                      rx="6"
-                      ry="6"
-                    ></rect>
-                  </svg>
-
-                  <div class="badge__container">
-                    <div class="plan__badge">Most Popular</div>
-                  </div>
-
-                  <h3>30-Day Intensive</h3>
-                  <p class="plan__desc">Best for CLB 7–8</p>
-
-                  <div class="plan__price">CAD $19.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li><strong>30 days access</strong></li>
-                    <li><strong>Full Real Test simulations</strong></li>
-                    <li><strong>“Deserves Attention” mode</strong></li>
-                    <li><strong>Progress tracking over time</strong></li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--primary btn--full price__cta"
-                    data-price="19.99"
-                    data-duration="30 days"
-                    data-badge="Silver"
-                  >
-                    Start Now
-                  </a>
-                </article>
-
-                <!-- Full -->
-                <article class="plan" data-badge="Gold">
-                  <h3>Full Preparation</h3>
-                  <p class="plan__desc">Maximum confidence</p>
-
-                  <div class="plan__price">CAD $34.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li><strong>60 days access</strong></li>
-                    <li><strong>Full Real Test simulations</strong></li>
-                    <li><strong>“Deserves Attention” mode</strong></li>
-                    <li><strong>Progress tracking over time</strong></li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--ghost btn--full price__cta"
-                    data-price="34.99"
-                    data-duration="60 days"
-                    data-badge="Gold"
-                  >
-                    Start Now
-                  </a>
-                </article>
-              </div>
-            </div>
-
+            <div
+              class="carousel__dots"
+              
+              aria-label="Pricing slides"
+            ></div>
             <button
-              class="plan-carousel__btn plan-carousel__btn--next"
+              class="carousel__btn"
               type="button"
-              aria-label="Next plans"
-              data-dir="1"
+              data-dir="next"
+              aria-label="Next"
             >
-              ›
+              â€º
             </button>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
 
     <!-- Success stories (Carousel) -->
     <section id="success-section" class="sect sect--white sec03">
@@ -498,7 +502,5 @@
 
   </body>
 </html>
-
-
 
 
