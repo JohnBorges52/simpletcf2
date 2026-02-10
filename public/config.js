@@ -713,7 +713,7 @@ function showWelcomeMessage(name, email) {
 }
 
 function showVerificationMessage(email, name) {
-  // Show pop-up notification instead of redirecting
+  // Show pop-up notification
   const notification = document.getElementById('email-sent-notification');
   const emailEl = document.getElementById('notification-email');
   const closeBtn = document.getElementById('close-notification-btn');
@@ -722,12 +722,11 @@ function showVerificationMessage(email, name) {
     emailEl.textContent = `We sent a verification email to ${email}`;
     notification.classList.remove('hidden');
     
-    // Close button handler
+    // Close button handler - user stays logged in
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         notification.classList.add('hidden');
-        // Sign out the user so they're not logged in until they verify
-        AuthService.signOutUser().catch(err => console.error('Sign out error:', err));
+        // User stays logged in, can check verify-email page if they want
       });
     }
   }
@@ -741,12 +740,24 @@ function showVerificationMessage(email, name) {
 
   if (mode === "verifyEmail" && code) {
     try {
+      // Wait for auth to be initialized
+      await AuthService.initAuth(app);
       const auth = AuthService.getAuthInstance();
+      
       if (auth) {
+        // Apply the verification code
         await applyActionCode(auth, code);
-        await auth.currentUser?.reload();
-        console.log("✅ Email verified successfully");
+        
+        // If user is logged in, reload their data to update emailVerified status
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+          console.log("✅ Email verified successfully for logged-in user");
+        } else {
+          console.log("✅ Email verified successfully (user not logged in)");
+        }
       }
+      
+      // Redirect to welcome page
       window.location.replace("/welcome.html");
     } catch (error) {
       console.error("Email verification error:", error);
