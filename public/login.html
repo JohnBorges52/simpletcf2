@@ -23,6 +23,30 @@
     id="login-body"
     class="login-body min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-indigo-100 flex items-center justify-center p-4"
   >
+    <!-- Check if user is already logged in and redirect -->
+    <script>
+      (function() {
+        // Check if user is already authenticated via Firebase localStorage
+        const fbAuthKey = Object.keys(localStorage).find(k => k.startsWith('firebase:authUser'));
+        if (fbAuthKey) {
+          try {
+            const authData = JSON.parse(localStorage.getItem(fbAuthKey));
+            if (authData && authData.email) {
+              // User is logged in, redirect to home or profile
+              window.location.replace('/');
+              return;
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        // Also check legacy login flags
+        if (localStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('userEmail')) {
+          window.location.replace('/');
+          return;
+        }
+      })();
+    </script>
     <noscript>
       <div
         style="
