@@ -109,9 +109,6 @@
 
   function setTotals({ priceNum, isFree }) {
     const platformFeeEl = $("#platformFeeId");
-    const subtotalEl = $("#subtotalId");
-    const gstEl = $("#gstId");
-    const pstEl = $("#pstId");
     const totalEl = $("#totalId");
 
     // first line "Package Price" value span
@@ -122,25 +119,16 @@
     if (isFree) {
       if (pkgPriceEl) pkgPriceEl.textContent = money(0);
       if (platformFeeEl) platformFeeEl.textContent = money(0);
-      if (subtotalEl) subtotalEl.textContent = money(0);
-      if (gstEl) gstEl.textContent = money(0);
-      if (pstEl) pstEl.textContent = money(0);
       if (totalEl) totalEl.textContent = money(0);
       return;
     }
 
     const pkg = Number(priceNum || 0);
-    const platformFee = pkg * 0.025; // 2.5%
-    const subtotal = pkg + platformFee;
-    const gst = subtotal * 0.05; // 5%
-    const pst = subtotal * 0.07; // 7%
-    const total = subtotal + gst + pst;
+    const platformFee = pkg * 0.0295; // 2.95%
+    const total = pkg + platformFee;
 
     if (pkgPriceEl) pkgPriceEl.textContent = money(pkg);
     if (platformFeeEl) platformFeeEl.textContent = money(platformFee);
-    if (subtotalEl) subtotalEl.textContent = money(subtotal);
-    if (gstEl) gstEl.textContent = money(gst);
-    if (pstEl) pstEl.textContent = money(pst);
     if (totalEl) totalEl.textContent = money(total);
   }
 
