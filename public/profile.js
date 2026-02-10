@@ -230,26 +230,92 @@ function fmtPct(n) {
       }
       
       const rows = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const orderId = doc.id.substring(0, 8).toUpperCase();
-        const date = data.createdAt?.toDate?.() || new Date();
-        const formattedDate = date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
+      const docs = querySnapshot.docs;
+      const tierDurations = {
+        "quick-study": 10,
+        "30-day": 30,
+        "full-prep": 60,
+      };
+
+      // Fetch current subscription to determine status for the latest paid order
+      let currentSub = null;
+      try {
+        if (window.SubscriptionService) {
+          currentSub = await window.SubscriptionService.getUserSubscriptionData(userId);
+        }
+      } catch (error) {
+        console.warn("Failed to load current subscription for orders status", error);
+      }
+
+      let latestPaidOrderId = null;
+      let latestPaidOrderTier = null;
+      for (const docSnap of docs) {
+        const data = docSnap.data();
+        const tierKey = String(data.tier || "").toLowerCase();
+        const priceNum = Number(data.price || 0);
+        const isPaid = tierKey && tierKey !== "free" && priceNum > 0;
+        if (isPaid) {
+          latestPaidOrderId = docSnap.id;
+          latestPaidOrderTier = tierKey;
+          break;
+        }
+      }
+
+      docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        const orderId = docSnap.id.substring(0, 8).toUpperCase();
+        const createdAt = data.createdAt?.toDate?.() || new Date();
+        const formattedDate = createdAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
-        const plan = data.plan || data.tier || '-';
-        const price = data.price === 0 ? 'Free' : `$${data.price.toFixed(2)}`;
-        const status = data.status || 'Completed';
-        
+        const tierKey = String(data.tier || "").toLowerCase();
+        const plan = data.plan || data.tier || "-";
+        const priceNum = Number(data.price || 0);
+        const price = priceNum === 0 ? "Free" : `$${priceNum.toFixed(2)}`;
+
+        let statusLabel = data.status || "Completed";
+        let statusClass = String(statusLabel).toLowerCase();
+
+        if (priceNum === 0 || tierKey === "free") {
+          statusLabel = "Free";
+          statusClass = "free";
+        } else {
+          let endDate = null;
+          if (data.subscriptionEndDate) {
+            endDate = data.subscriptionEndDate.toDate
+              ? data.subscriptionEndDate.toDate()
+              : new Date(data.subscriptionEndDate);
+          } else if (
+            currentSub?.subscriptionEndDate &&
+            docSnap.id === latestPaidOrderId &&
+            latestPaidOrderTier === tierKey
+          ) {
+            endDate = currentSub.subscriptionEndDate.toDate
+              ? currentSub.subscriptionEndDate.toDate()
+              : new Date(currentSub.subscriptionEndDate);
+          } else if (tierDurations[tierKey]) {
+            endDate = new Date(
+              createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
+            );
+          }
+
+          if (endDate) {
+            statusLabel = Date.now() <= endDate.getTime() ? "Ongoing" : "Expired";
+            statusClass = statusLabel.toLowerCase();
+          }
+        }
+
+        statusClass = statusClass.replace(/\s+/g, "-");
+
         rows.push(`
           <tr>
             <td>${orderId}</td>
             <td>${formattedDate}</td>
             <td>${plan}</td>
             <td>${price}</td>
-            <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+            <td><span class="status-badge status-${statusClass}">${statusLabel}</span></td>
           </tr>
         `);
       });

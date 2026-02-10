@@ -456,6 +456,16 @@
   color: #065f46;
 }
 
+.status-badge.status-ongoing {
+  background: rgba(16, 185, 129, 0.18);
+  color: #065f46;
+}
+
+.status-badge.status-expired {
+  background: rgba(239, 68, 68, 0.18);
+  color: #991b1b;
+}
+
 .status-badge.status-free {
   background: rgba(59, 130, 246, 0.18);
   color: #1e40af;

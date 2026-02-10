@@ -68,10 +68,11 @@ class SubscriptionService {
       const userData = await this.getUserSubscriptionData(user.uid);
       this.currentUserData = userData;
       
-      // Check if subscription has expired
+      // Check if subscription has expired (this may update currentUserData)
       await this.checkAndUpdateExpiredSubscription(user.uid, userData);
       
-      return userData;
+      // ✅ Return currentUserData (may have been updated if subscription expired)
+      return this.currentUserData;
     } catch (error) {
       console.error('Error initializing subscription service:', error);
       return null;
@@ -203,7 +204,7 @@ class SubscriptionService {
     const endDate = userData.subscriptionEndDate.toDate ? userData.subscriptionEndDate.toDate() : new Date(userData.subscriptionEndDate);
 
     if (now > endDate) {
-      console.log('Subscription expired, downgrading to free tier');
+      console.log('⏰ Subscription expired, downgrading to free tier');
       await this.updateUserSubscriptionData(userId, {
         tier: TIERS.FREE,
         subscriptionStartDate: null,
@@ -212,6 +213,11 @@ class SubscriptionService {
       
       // Create order record for downgrade to free
       await this.createOrder(userId, TIERS.FREE, 0);
+      
+      // ✅ Refresh currentUserData after downgrade
+      const updatedUserData = await this.getUserSubscriptionData(userId);
+      this.currentUserData = updatedUserData;
+      console.log('✅ User downgraded to free tier, data refreshed');
     }
   }
 
