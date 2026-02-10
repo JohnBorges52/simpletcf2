@@ -121,21 +121,21 @@
             Select the option that best fits your needs?
           </p>
         </header>
+      </div>
 
-        <!-- âœ… Pricing carousel (plan.html style: 3 cards visible on desktop) -->
-        <!-- âœ… Pricing carousel (plan.html style: 3 cards visible on desktop) -->
-        <div class="plan-carousel" aria-label="Plans carousel">
-            <button
-              class="plan-carousel__btn plan-carousel__btn--prev"
-              type="button"
-              aria-label="Previous plans"
-              data-dir="-1"
-            >
-              ‹
-            </button>
+      <!-- ✅ Pricing carousel (outside container for proper spacing) -->
+      <div class="plan-carousel" aria-label="Plans carousel">
+        <button
+          class="plan-carousel__btn plan-carousel__btn--prev"
+          type="button"
+          aria-label="Previous plans"
+          data-dir="-1"
+        >
+          ‹
+        </button>
 
-            <div class="plan-carousel__viewport" id="planCarouselViewport">
-              <div class="plan-grid plan-grid--carousel" id="planCarouselTrack">
+        <div class="plan-carousel__viewport" id="planCarouselViewport">
+          <div class="plan-grid plan-grid--carousel" id="planCarouselTrack">
                 <!-- ✅ FREE TIER -->
                 <article class="plan" data-badge="Free">
                   <h3>Free Tier</h3>
@@ -270,16 +270,18 @@
               </div>
             </div>
 
-            <button
-              class="plan-carousel__btn plan-carousel__btn--next"
-              type="button"
-              aria-label="Next plans"
-              data-dir="1"
-            >
-              ›
-            </button>
+        <button
+          class="plan-carousel__btn plan-carousel__btn--next"
+          type="button"
+          aria-label="Next plans"
+          data-dir="1"
+        >
+          ›
+        </button>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
 
     <!-- Success stories (Carousel) -->
     <section id="success-section" class="sect sect--white sec03">
