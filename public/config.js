@@ -713,9 +713,24 @@ function showWelcomeMessage(name, email) {
 }
 
 function showVerificationMessage(email, name) {
-  // Redirect to verify-email page for registered users
-  // They will stay logged in (persistence is set to LOCAL)
-  window.location.href = '/verify-email.html';
+  // Show pop-up notification
+  const notification = document.getElementById('email-sent-notification');
+  const emailEl = document.getElementById('notification-email');
+  const closeBtn = document.getElementById('close-notification-btn');
+  
+  if (notification && emailEl) {
+    emailEl.textContent = `We sent a verification email to ${email}`;
+    notification.classList.remove('hidden');
+    
+    // Close button handler - user stays logged in
+    // Use { once: true } to ensure listener is only added once
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        notification.classList.add('hidden');
+        // User stays logged in, can check verify-email page if they want
+      }, { once: true });
+    }
+  }
 }
 
 // Handle email verification from link
@@ -726,12 +741,24 @@ function showVerificationMessage(email, name) {
 
   if (mode === "verifyEmail" && code) {
     try {
+      // Wait for auth to be initialized
+      await AuthService.initAuth(app);
       const auth = AuthService.getAuthInstance();
+      
       if (auth) {
+        // Apply the verification code
         await applyActionCode(auth, code);
-        await auth.currentUser?.reload();
-        console.log("✅ Email verified successfully");
+        
+        // If user is logged in, reload their data to update emailVerified status
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+          console.log("✅ Email verified successfully for logged-in user");
+        } else {
+          console.log("✅ Email verified successfully (user not logged in)");
+        }
       }
+      
+      // Redirect to welcome page
       window.location.replace("/welcome.html");
     } catch (error) {
       console.error("Email verification error:", error);

@@ -57,14 +57,6 @@
 
           <!-- User Info -->
           <div class="mb-6">
-            <div
-              id="avatar"
-              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center"
-            >
-              <span id="avatar-initial" class="text-white text-2xl font-bold"
-                >U</span
-              >
-            </div>
             <p id="welcome-name" class="text-xl font-semibold text-gray-700 mb-2">
               <!-- Name will be inserted here -->
             </p>
@@ -76,67 +68,20 @@
           <!-- Success Message -->
           <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
             <h2 class="text-lg font-semibold text-green-800 mb-2">
-              🎉 Your account has been created!
+              🎉 Your email has been verified!
             </h2>
             <p class="text-green-700">
-              You're all set to start preparing for your TCF Canada exam with SimpleTCF.
+              Click the button below to complete your registration and start your TCF preparation journey.
             </p>
           </div>
 
-          <!-- Features Preview -->
-          <div class="text-left mb-8 space-y-3">
-            <h3 class="text-center text-lg font-semibold text-gray-800 mb-4">
-              What's next?
-            </h3>
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span class="text-purple-600 font-bold">1</span>
-              </div>
-              <div>
-                <p class="text-gray-700">
-                  <strong>Explore practice questions</strong> - Start with 15 free listening and reading questions
-                </p>
-              </div>
-            </div>
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span class="text-purple-600 font-bold">2</span>
-              </div>
-              <div>
-                <p class="text-gray-700">
-                  <strong>Choose your plan</strong> - Upgrade anytime for full access to all features
-                </p>
-              </div>
-            </div>
-            <div class="flex items-start space-x-3">
-              <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span class="text-purple-600 font-bold">3</span>
-              </div>
-              <div>
-                <p class="text-gray-700">
-                  <strong>Track your progress</strong> - Monitor your improvement and target weak areas
-                </p>
-              </div>
-            </div>
-          </div>
-
           <!-- CTA Button -->
-          <a
-            href="/index.html"
+          <button
+            id="go-home-btn"
             class="inline-block w-full bg-gradient-to-r from-[#6366f1] to-[#C1C6F8] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
             Go to Home Page
-          </a>
-
-          <!-- Secondary Link -->
-          <p class="text-center text-gray-600 text-sm mt-6">
-            Want to upgrade?
-            <a
-              href="/plan.html"
-              class="text-purple-600 hover:text-purple-700 font-semibold transition-colors"
-              >View Plans</a
-            >
-          </p>
+          </button>
         </div>
       </div>
     </section>
@@ -144,8 +89,9 @@
     <!-- Firebase initialization -->
     <script type="module" src="config.js"></script>
     <script type="module" src="auth-service.js"></script>
+    <script type="module" src="db-service.js"></script>
     <script type="module">
-      // Get user info and display it
+      // Handle welcome page logic
       import * as AuthService from './auth-service.js';
       
       document.addEventListener('DOMContentLoaded', async () => {
@@ -153,34 +99,82 @@
           // Wait for auth to be ready
           const user = await AuthService.waitForAuth();
           
-          if (user) {
-            // Check if email is verified
-            if (!user.emailVerified) {
-              // Email not verified, redirect to verification page
-              console.log('Email not verified, redirecting to verify-email page');
-              window.location.href = '/verify-email.html';
-              return;
-            }
+          if (!user) {
+            // No user logged in, redirect to registration
+            console.log('No user found, redirecting to registration');
+            window.location.href = '/register.html';
+            return;
+          }
 
-            // Update UI with user info
-            const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-            const email = user.email || '';
-            const initial = (displayName[0] || email[0] || 'U').toUpperCase();
-            
-            const nameEl = document.getElementById('welcome-name');
-            const emailEl = document.getElementById('welcome-email');
-            const avatarEl = document.getElementById('avatar-initial');
-            
-            if (nameEl) nameEl.textContent = displayName;
-            if (emailEl) emailEl.textContent = email;
-            if (avatarEl) avatarEl.textContent = initial;
-          } else {
-            // No user logged in, redirect to login
-            console.log('No user found, redirecting to login');
-            window.location.href = '/login.html';
+          // Check if email is verified
+          if (!user.emailVerified) {
+            // Email not verified, redirect to verification page
+            console.log('Email not verified, redirecting to verify-email page');
+            window.location.href = '/verify-email.html';
+            return;
+          }
+
+          // Email is verified, update UI with user info
+          const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+          const email = user.email || '';
+          
+          const nameEl = document.getElementById('welcome-name');
+          const emailEl = document.getElementById('welcome-email');
+          
+          if (nameEl) nameEl.textContent = displayName;
+          if (emailEl) emailEl.textContent = email;
+
+          // Handle "Go to Home Page" button
+          const goHomeBtn = document.getElementById('go-home-btn');
+          if (goHomeBtn) {
+            goHomeBtn.addEventListener('click', async () => {
+              // Prevent multiple clicks
+              if (goHomeBtn.disabled) return;
+              
+              try {
+                goHomeBtn.disabled = true;
+                goHomeBtn.textContent = 'Setting up your account...';
+
+                // Create Firestore user document now
+                // Wait for Firestore to be ready
+                await window.__firestoreReady;
+                const firestore = window.__firestore;
+                const { doc, setDoc, serverTimestamp, getDoc } = window.firestoreExports;
+
+                if (firestore && user) {
+                  const userRef = doc(firestore, 'users', user.uid);
+                  
+                  // Check if document already exists to avoid overwriting
+                  const userDoc = await getDoc(userRef);
+                  if (!userDoc.exists()) {
+                    // Create new document only if it doesn't exist
+                    await setDoc(userRef, {
+                      email: user.email,
+                      displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                      createdAt: serverTimestamp(),
+                      emailVerified: true,
+                      tier: 'free',
+                      subscriptionStatus: 'free'
+                    });
+                    console.log('✅ User document created in Firestore');
+                  } else {
+                    console.log('✅ User document already exists');
+                  }
+                }
+
+                // Redirect to home page
+                window.location.href = '/index.html';
+              } catch (error) {
+                console.error('Error completing registration:', error);
+                goHomeBtn.disabled = false;
+                goHomeBtn.textContent = 'Go to Home Page';
+                alert('An error occurred. Please try again or contact support.');
+              }
+            });
           }
         } catch (error) {
-          console.error('Error loading user info:', error);
+          console.error('Error loading welcome page:', error);
+          window.location.href = '/register.html';
         }
       });
     </script>
