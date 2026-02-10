@@ -26,10 +26,10 @@ import {
     return;
   }
   
-  // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to login
+  // ✅ EMAIL VERIFICATION CHECK - Redirect unverified users to verification page
   if (!user.emailVerified) {
-    console.log("🔒 User email not verified, redirecting to login page...");
-    window.location.href = "/login.html";
+    console.log("🔒 User email not verified, redirecting to verify-email page...");
+    window.location.href = "/verify-email.html";
     return;
   }
   
