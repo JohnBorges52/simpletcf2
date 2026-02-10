@@ -723,11 +723,12 @@ function showVerificationMessage(email, name) {
     notification.classList.remove('hidden');
     
     // Close button handler - user stays logged in
+    // Use { once: true } to ensure listener is only added once
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         notification.classList.add('hidden');
         // User stays logged in, can check verify-email page if they want
-      });
+      }, { once: true });
     }
   }
 }

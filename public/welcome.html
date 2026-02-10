@@ -128,6 +128,9 @@
           const goHomeBtn = document.getElementById('go-home-btn');
           if (goHomeBtn) {
             goHomeBtn.addEventListener('click', async () => {
+              // Prevent multiple clicks
+              if (goHomeBtn.disabled) return;
+              
               try {
                 goHomeBtn.disabled = true;
                 goHomeBtn.textContent = 'Setting up your account...';
@@ -136,21 +139,27 @@
                 // Wait for Firestore to be ready
                 await window.__firestoreReady;
                 const firestore = window.__firestore;
-                const { doc, setDoc, serverTimestamp } = window.firestoreExports;
+                const { doc, setDoc, serverTimestamp, getDoc } = window.firestoreExports;
 
                 if (firestore && user) {
                   const userRef = doc(firestore, 'users', user.uid);
                   
-                  await setDoc(userRef, {
-                    email: user.email,
-                    displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                    createdAt: serverTimestamp(),
-                    emailVerified: true,
-                    tier: 'free',
-                    subscriptionStatus: 'free'
-                  });
-
-                  console.log('✅ User document created in Firestore');
+                  // Check if document already exists to avoid overwriting
+                  const userDoc = await getDoc(userRef);
+                  if (!userDoc.exists()) {
+                    // Create new document only if it doesn't exist
+                    await setDoc(userRef, {
+                      email: user.email,
+                      displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                      createdAt: serverTimestamp(),
+                      emailVerified: true,
+                      tier: 'free',
+                      subscriptionStatus: 'free'
+                    });
+                    console.log('✅ User document created in Firestore');
+                  } else {
+                    console.log('✅ User document already exists');
+                  }
                 }
 
                 // Redirect to home page
