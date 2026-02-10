@@ -260,6 +260,8 @@ function fmtPct(n) {
         if (isPaid) {
           latestPaidOrderId = docSnap.id;
           latestPaidOrderTier = tierKey;
+          const orderId = docSnap.id.substring(0, 8).toUpperCase();
+          console.log(`🎯 Latest paid order found: ${orderId} (${tierKey})`);
           break;
         }
       }
@@ -305,6 +307,8 @@ function fmtPct(n) {
               createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
             );
           }
+
+          console.log(`📋 Order ${orderId} (${tierKey}): isLatestPaid=${isLatestPaid}, endDate=${endDate?.toISOString()}, now=${new Date().toISOString()}, status=${statusLabel}`);
 
           if (isLatestPaid && endDate && Date.now() < endDate.getTime()) {
             statusLabel = "Ongoing";
