@@ -861,7 +861,7 @@ body.plans .hero__overlay {
 body.plans .hero__center {
   position: relative;
   z-index: 2;
-  max-width: 700px;
+  max-width: 80%;
   padding: 24px;
   margin: 0 auto;
   text-align: center;

@@ -2168,6 +2168,89 @@ img {
   }
 }
 
+/* =========================
+   Plan Carousel (index.html style)
+========================= */
+
+.plan-carousel {
+  position: relative;
+  margin-top: 32px;
+}
+
+.plan-carousel__viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.plan-grid--carousel {
+  --gap: 22px;
+  display: flex !important;
+  gap: var(--gap) !important;
+  margin-top: 0 !important;
+  transition: transform 320ms ease;
+  will-change: transform;
+}
+
+.plan-grid--carousel>.plan {
+  flex: 0 0 calc((100% - (var(--gap) * 2)) / 3);
+}
+
+.plan-carousel__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  background: rgba(233, 238, 252, 0.60);
+  color: rgba(20, 25, 50, 0.9);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  user-select: none;
+  transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+}
+
+.plan-carousel__btn:hover {
+  transform: translateY(-50%) translateY(-1px);
+  background: rgba(233, 238, 252, 0.8);
+}
+
+.plan-carousel__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.plan-carousel__btn--prev {
+  left: -56px;
+}
+
+.plan-carousel__btn--next {
+  right: -56px;
+}
+
+@media (max-width: 900px) {
+  .plan-grid--carousel>.plan {
+    flex-basis: 100%;
+  }
+
+  .plan-carousel__btn--prev {
+    left: 10px;
+  }
+
+  .plan-carousel__btn--next {
+    right: 10px;
+  }
+}
+
+.plan-grid--carousel>.plan--featured {
+  transform: none !important;
+}
+
 /* ============================================
    UPGRADE MODAL - Subscription Tier System
    ============================================ */
