@@ -378,7 +378,7 @@ img {
 
 .section-head__sub {
   font-size: 18px;
-  color: var(--muted);
+  color: #10182a;
   margin: 6px 0 0;
 }
 
@@ -787,7 +787,7 @@ img {
 }
 
 .card__text {
-  color: var(--muted);
+  color: #10182a;
   margin-top: 18px;
   font-size: 1.2rem;
 }
@@ -809,7 +809,7 @@ img {
 .card__role {
   margin: 0;
   text-align: center;
-  color: var(--muted);
+  color: #10182a;
   font-size: 14px;
 }
 
@@ -823,18 +823,18 @@ img {
 }
 
 .address {
-  color: var(--muted);
+  color: #10182a;
   font-style: normal;
   margin: 20px 0;
 }
 
 .contact-line {
-  color: var(--muted);
+  color: #10182a);
   margin: 4px 0;
 }
 
 .contact-line a {
-  color: var(--brand);
+  color: #10182a;
   text-decoration: none;
 }
 
@@ -853,7 +853,7 @@ img {
 .field__label {
   display: block;
   font-size: 17px;
-  color: var(--muted);
+  color: #10182a;
   margin-bottom: 6px;
 }
 
