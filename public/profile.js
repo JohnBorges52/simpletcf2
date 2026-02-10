@@ -239,16 +239,21 @@ function fmtPct(n) {
         "full-prep": 60,
       };
 
-      // Fetch current subscription (and refresh expiration) to determine status
-      let currentSub = null;
+      // Load user document to get actual subscription end date
+      let userDoc = null;
       try {
-        if (window.SubscriptionService) {
-          await window.SubscriptionService.init();
-          currentSub = await window.SubscriptionService.getUserSubscriptionData(userId);
-          console.log(`🔄 Current subscription loaded:`, currentSub);
+        const db = await window.__firestoreReady;
+        if (db && window.firestoreExports) {
+          const { doc, getDoc } = window.firestoreExports;
+          const userDocRef = doc(db, 'users', userId);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            userDoc = userDocSnap.data();
+            console.log(`📄 User document loaded:`, userDoc);
+          }
         }
       } catch (error) {
-        console.warn("Failed to load current subscription for orders status", error);
+        console.warn("Failed to load user document for orders status", error);
       }
 
       let latestPaidOrderId = null;
@@ -298,21 +303,21 @@ function fmtPct(n) {
               : new Date(data.subscriptionEndDate);
             console.log(`  📋 Order ${orderId}: Using order's own subscriptionEndDate: ${endDate.toISOString()}`);
           } else if (
-            currentSub?.subscriptionEndDate &&
-            docSnap.id === latestPaidOrderId &&
-            latestPaidOrderTier === tierKey
+            isLatestPaid &&
+            userDoc?.subscriptionEndDate
           ) {
-            endDate = currentSub.subscriptionEndDate.toDate
-              ? currentSub.subscriptionEndDate.toDate()
-              : new Date(currentSub.subscriptionEndDate);
-            console.log(`  📋 Order ${orderId}: Using currentSub.subscriptionEndDate: ${endDate.toISOString()}`);
+            // For the latest paid order, use the actual subscription end date from user document
+            endDate = userDoc.subscriptionEndDate.toDate
+              ? userDoc.subscriptionEndDate.toDate()
+              : new Date(userDoc.subscriptionEndDate);
+            console.log(`  📋 Order ${orderId}: Using userDoc.subscriptionEndDate (actual expiration): ${endDate.toISOString()}`);
           } else if (tierDurations[tierKey]) {
             endDate = new Date(
               createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
             );
             console.log(`  📋 Order ${orderId}: Calculated from tier duration (createdAt=${createdAt.toISOString()}, tier=${tierKey}): ${endDate.toISOString()}`);
             if (isLatestPaid) {
-              console.log(`    ⚠️  This is the LATEST PAID order but currentSub is ${!!currentSub}, has subscriptionEndDate=${!!currentSub?.subscriptionEndDate}`);
+              console.log(`    ⚠️  This is the LATEST PAID order but userDoc is ${!!userDoc}, has subscriptionEndDate=${!!userDoc?.subscriptionEndDate}`);
             }
           }
 
