@@ -245,6 +245,7 @@ function fmtPct(n) {
         if (window.SubscriptionService) {
           await window.SubscriptionService.init();
           currentSub = await window.SubscriptionService.getUserSubscriptionData(userId);
+          console.log(`🔄 Current subscription loaded:`, currentSub);
         }
       } catch (error) {
         console.warn("Failed to load current subscription for orders status", error);
@@ -290,10 +291,12 @@ function fmtPct(n) {
           const isLatestPaid =
             docSnap.id === latestPaidOrderId && latestPaidOrderTier === tierKey;
           let endDate = null;
+          
           if (data.subscriptionEndDate) {
             endDate = data.subscriptionEndDate.toDate
               ? data.subscriptionEndDate.toDate()
               : new Date(data.subscriptionEndDate);
+            console.log(`  📋 Order ${orderId}: Using order's own subscriptionEndDate: ${endDate.toISOString()}`);
           } else if (
             currentSub?.subscriptionEndDate &&
             docSnap.id === latestPaidOrderId &&
@@ -302,13 +305,18 @@ function fmtPct(n) {
             endDate = currentSub.subscriptionEndDate.toDate
               ? currentSub.subscriptionEndDate.toDate()
               : new Date(currentSub.subscriptionEndDate);
+            console.log(`  📋 Order ${orderId}: Using currentSub.subscriptionEndDate: ${endDate.toISOString()}`);
           } else if (tierDurations[tierKey]) {
             endDate = new Date(
               createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
             );
+            console.log(`  📋 Order ${orderId}: Calculated from tier duration (createdAt=${createdAt.toISOString()}, tier=${tierKey}): ${endDate.toISOString()}`);
+            if (isLatestPaid) {
+              console.log(`    ⚠️  This is the LATEST PAID order but currentSub is ${!!currentSub}, has subscriptionEndDate=${!!currentSub?.subscriptionEndDate}`);
+            }
           }
 
-          console.log(`📋 Order ${orderId} (${tierKey}): isLatestPaid=${isLatestPaid}, endDate=${endDate?.toISOString()}, now=${new Date().toISOString()}, status=${statusLabel}`);
+          console.log(`📋 Order ${orderId} (${tierKey}): isLatestPaid=${isLatestPaid}, docSnap.id=${docSnap.id.substring(0, 8)}, latestPaidOrderId=${latestPaidOrderId?.substring(0, 8)}, endDate=${endDate?.toISOString()}, now=${new Date().toISOString()}`);
 
           if (isLatestPaid && endDate && Date.now() < endDate.getTime()) {
             statusLabel = "Ongoing";
