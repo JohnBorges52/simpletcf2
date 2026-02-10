@@ -111,13 +111,10 @@
       <section aria-labelledby="filters-title" class="quiz--controls">
         <h2 id="filters-title" class="quiz--hidden">Filters</h2>
 
-        <label class="quiz--toggle" for="onlyUnansweredChk">
-          <input type="checkbox" id="onlyUnansweredChk" />
-          <span>Never responded questions only</span>
-        </label>
-
+        <!-- Weight Selection -->
+        <h3 class="quiz--section-header">Weight Selection</h3>
         <div
-          class="quiz--toolbar"
+          class="quiz--toolbar quiz--toolbar-weights"
           role="toolbar"
           aria-label="Question weight filters"
         >
@@ -173,21 +170,53 @@
           >
             Weight-03
           </button>
+        </div>
 
-          <button
-            type="button"
-            id="deservesBtn"
-            class="quiz--btn quiz--pill"
-            aria-pressed="false"
-          >
-            📚 Deserves Attention (0)
-          </button>
+        <hr class="quiz--divider" />
 
+        <!-- Filters -->
+        <h3 class="quiz--section-header">Filters</h3>
+        <div class="quiz--toolbar quiz--toolbar-filters">
+          <label class="quiz--toggle" for="onlyUnansweredChk">
+            <input type="checkbox" id="onlyUnansweredChk" />
+            <span>Never responded questions only</span>
+          </label>
+
+          <div class="quiz--deserves-wrapper">
+            <button
+              type="button"
+              id="deservesBtn"
+              class="quiz--btn quiz--pill"
+              aria-pressed="false"
+            >
+              📚 Deserves Attention (0)
+            </button>
+            <div class="quiz--deserves-tooltip">
+              <strong>Deserves Attention</strong><br>
+              Shows questions with:<br>
+              • Spread ≥ 50% (answered 2+ times)<br>
+              • Or 1 wrong, 0 correct
+            </div>
+          </div>
+        </div>
+
+        <hr class="quiz--divider" />
+
+        <!-- Real Test -->
+        <div class="quiz--toolbar quiz--toolbar-realtest">
           <button type="button" id="realTestBtn" class="quiz--btn quiz--pill">
             🧪 Real Test
           </button>
         </div>
       </section>
+
+      <div
+        id="emptyState"
+        class="quiz--empty-state quiz--hidden"
+        aria-live="polite"
+      >
+        📭 Select a weight to start.
+      </div>
 
       <div
         id="realTestLoading"

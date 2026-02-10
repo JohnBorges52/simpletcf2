@@ -136,6 +136,7 @@ import {
     transcriptText: () => $("#transcriptContainer #transcriptText"),
     onlyChk: () => $("#onlyUnansweredChk"),
     qStats: () => $("#questionStats"),
+    emptyState: () => $("#emptyState"),
   };
 
   const RT = {
@@ -846,12 +847,19 @@ import {
     const qNum = els.qNumber();
     const audioEl = els.audio();
     const transcriptWrap = els.transcriptWrap();
+    const emptyState = els.emptyState();
 
     if (!q) {
-      const container = els.options();
-      if (container)
-        container.textContent =
-          "📭 Select a weight to start, or no questions match the current filter.";
+      // Hide quiz, show empty state
+      els.quiz()?.classList.add(CLS.hidden);
+      if (emptyState) {
+        emptyState.classList.remove(CLS.hidden);
+        if (state.currentWeight == null && !state.realTestMode) {
+          emptyState.textContent = "📭 Select a weight to start.";
+        } else {
+          emptyState.textContent = "📭 No questions match the current filter.";
+        }
+      }
 
       safeText(qNum, "");
       try {
@@ -873,6 +881,10 @@ import {
       updateKpiVisibility();
       return;
     }
+
+    // Hide empty state, show quiz
+    if (emptyState) emptyState.classList.add(CLS.hidden);
+    els.quiz()?.classList.remove(CLS.hidden);
 
     const headerNum = getHeaderNumber(q);
     const qNumDisplayStr = fmt2or3(headerNum);
