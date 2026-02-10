@@ -294,7 +294,23 @@
 
     <!-- Firebase initialization (config hardcoded) -->
     <script type="module" src="config.js"></script>
+    <script type="module" src="auth-service.js"></script>
     <script src="subscription-service.js"></script>
+    
+    <!-- Check if user is logged in -->
+    <script>
+      window.addEventListener('DOMContentLoaded', async () => {
+        // Wait a moment for AuthService to initialize
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const user = window.AuthService?.getCurrentUser?.();
+        if (!user) {
+          alert('You need to be logged in to access the practice section.');
+          window.location.href = '/login';
+        }
+      });
+    </script>
+    
     <!-- App scripts -->
     <script src="script.js" defer></script>
     <script src="writing.js" defer></script>
