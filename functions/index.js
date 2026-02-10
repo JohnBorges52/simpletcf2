@@ -17,19 +17,19 @@ admin.initializeApp();
 // Update these values from your Stripe Dashboard
 // ============================================================================
 const VALID_PRICE_IDS = {
-  "price_1SzMjMCwya11CpgZcBhEiHFB": {
+  "price_1SzOPyCjnElzxNngxs0lvgQv": {
     tier: "quick-study",
     name: "Quick Study (10 days)",
     price: 10.28,
     durationDays: 10,
   },
-  "price_1SzMk5Cwya11CpgZzWSCLQwM": {
+  "price_1SzOQyCjnElzxNngf4vtCnTC": {
     tier: "30-day",
     name: "30-Day Intensive",
     price: 20.58,
     durationDays: 30,
   },
-  "price_1SzMm0Cwya11CpgZSRwNAt31": {
+  "price_1SzOSLCjnElzxNngwqqTwHal": {
     tier: "full-prep",
     name: "Full Preparation",
     price: 36.02,
@@ -250,26 +250,6 @@ async function sendPurchaseConfirmationEmail(
 </html>
     `;
 
-    // For now, log the email
-    // (Firebase Functions would need email service setup)
-    // You would typically use SendGrid, AWS SES, or another email service
-    console.log("📧 Would send email to:", email);
-    console.log("📧 Email subject: Your SimpleTCF Account is Active!");
-    console.log("📧 Plan:", planName, "for", durationDays, "days");
-
-    // TODO: Integrate with an email service provider
-    // Example with SendGrid:
-    // const sgMail = require('@sendgrid/mail');
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    // await sgMail.send({
-    //   to: email,
-    //   from: 'noreply@simpletcf.com',
-    //   subject: 'Your SimpleTCF Account is Active!',
-    //   html: emailHTML
-    // });
-
-    // For now, we'll use Firebase Admin to create an email document
-    // that can be picked up by a mail service extension
     await admin.firestore().collection("mail").add({
       to: email,
       message: {
@@ -278,11 +258,8 @@ async function sendPurchaseConfirmationEmail(
       },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-
-    console.log("✅ Email queued for sending");
   } catch (error) {
-    console.error("❌ Error sending email:", error);
-    // Don't throw - we don't want email failure to break the webhook
+    // Silent fail - don't want email failure to break the webhook
   }
 }
 
@@ -292,67 +269,24 @@ async function sendPurchaseConfirmationEmail(
  * @return {Promise<boolean>} Success status
  */
 async function sendStripeInvoice(invoiceId) {
-  console.log("📧 ================== SENDING STRIPE INVOICE ==================");
-  console.log("📧 Invoice ID:", invoiceId);
-
-  // Check if Stripe is initialized
   if (!stripe) {
-    console.error("❌ CRITICAL: Stripe is not initialized!");
     return false;
   }
 
   try {
     if (!invoiceId) {
-      console.error("❌ No invoice ID provided");
       return false;
     }
 
-    // Retrieve the invoice
-    console.log("📧 Step 1: Retrieving invoice from Stripe...");
     const invoice = await stripe.invoices.retrieve(invoiceId);
-    console.log("✅ Invoice retrieved:", {
-      id: invoice.id,
-      status: invoice.status,
-      customer: invoice.customer,
-      customer_email: invoice.customer_email,
-      amount_paid: invoice.amount_paid,
-      invoice_pdf: invoice.invoice_pdf,
-      hosted_invoice_url: invoice.hosted_invoice_url,
-    });
 
-    // If invoice isn't finalized, finalize it
     if (invoice.status === "draft") {
-      console.log("📧 Step 2: Finalizing invoice...");
-      const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoiceId);
-      console.log("✅ Invoice finalized:", finalizedInvoice.id);
+      await stripe.invoices.finalizeInvoice(invoiceId);
     }
 
-    // Send the invoice via email
-    console.log("📧 Step 3: Sending invoice email...");
-    const sentInvoice = await stripe.invoices.sendInvoice(invoiceId);
-    console.log("✅ Invoice email sent successfully:", {
-      id: sentInvoice.id,
-      status: sentInvoice.status,
-      customer_email: sentInvoice.customer_email,
-      invoice_pdf: sentInvoice.invoice_pdf,
-      hosted_invoice_url: sentInvoice.hosted_invoice_url,
-    });
-    console.log(
-        "📧 ============ INVOICE SENT SUCCESSFULLY ============",
-    );
-
+    await stripe.invoices.sendInvoice(invoiceId);
     return true;
   } catch (error) {
-    console.error(
-        "❌ ============== INVOICE SEND FAILED ==============",
-    );
-    console.error("❌ Error type:", error.type);
-    console.error("❌ Error message:", error.message);
-    console.error("❌ Error code:", error.code);
-    console.error("❌ Full error:", JSON.stringify(error, null, 2));
-    console.error(
-        "❌ =================================================",
-    );
     return false;
   }
 }
@@ -376,7 +310,6 @@ async function verifyAuthToken(req) {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     return decodedToken;
   } catch (error) {
-    console.error("Token verification failed:", error);
     throw new Error("Invalid authentication token");
   }
 }
@@ -408,77 +341,46 @@ function validatePriceId(priceId) {
 exports.createCheckoutSession = onRequest(
     {secrets: [stripeSecretKey], cors: true},
     async (req, res) => {
-      // Initialize Stripe with the secret (only once)
       if (!stripe) {
         stripe = require("stripe")(stripeSecretKey.value());
       }
 
       try {
-        // SECURITY: Only accept POST requests
         if (req.method !== "POST") {
-          console.error("🔍 DEBUG: Invalid method:", req.method);
           return res.status(405).json({error: "Method not allowed"});
         }
 
-        console.log("🔍 DEBUG: Request received");
-
-        // SECURITY: Verify Firebase Authentication token
         let decodedToken;
         try {
           decodedToken = await verifyAuthToken(req);
-          console.log(
-              "🔍 DEBUG: Auth token verified for user:",
-              decodedToken.uid,
-          );
         } catch (error) {
-          console.error(
-              "🔍 DEBUG: Auth verification failed:",
-              error.message,
-          );
           return res.status(401).json({
             error: "Unauthorized: " + error.message,
           });
         }
 
         const {priceId, successUrl, cancelUrl} = req.body;
-        console.log("🔍 DEBUG: Request body:", {priceId, successUrl, cancelUrl});
 
-        // Validate required parameters
         if (!priceId) {
-          console.error("🔍 DEBUG: Missing priceId");
           return res.status(400).json({error: "Missing priceId"});
         }
 
         if (!successUrl || !cancelUrl) {
-          console.error("🔍 DEBUG: Missing redirect URLs");
           return res.status(400).json({
             error: "Missing redirect URLs",
           });
         }
 
-        // SECURITY: Validate price ID against whitelist
         let planDetails;
         try {
           planDetails = validatePriceId(priceId);
-          console.log("🔍 DEBUG: Price ID validated:", planDetails);
         } catch (error) {
-          console.error("🔍 DEBUG: Invalid price ID:", priceId);
           return res.status(400).json({error: "Invalid plan selected"});
         }
 
-        // Get user details from verified token
         const userId = decodedToken.uid;
         const userEmail = decodedToken.email;
 
-        console.log("🔍 DEBUG: Creating Stripe session for:", {
-          userId,
-          userEmail,
-          priceId,
-          tier: planDetails.tier,
-          price: planDetails.price,
-        });
-
-        // Check if customer already exists in Firestore
         let customerId = null;
         try {
           const userDoc = await admin.firestore()
@@ -487,12 +389,10 @@ exports.createCheckoutSession = onRequest(
             customerId = userDoc.data().stripeCustomerId;
           }
         } catch (error) {
-          console.error("Error fetching user document:", error);
+          // Continue without customer ID
         }
 
-        // Create or reuse Stripe Customer
         if (!customerId) {
-          console.log("🔍 Creating new Stripe customer for:", userEmail);
           const customer = await stripe.customers.create({
             email: userEmail,
             metadata: {
@@ -500,28 +400,21 @@ exports.createCheckoutSession = onRequest(
             },
           });
           customerId = customer.id;
-          console.log("✅ Stripe customer created:", customerId);
-        } else {
-          console.log("🔍 Using existing Stripe customer:", customerId);
         }
 
-        // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
-          payment_method_types: ["card", "paypal"],
+          payment_method_types: ["card"],
           line_items: [
             {
-              price: priceId, // Use validated priceId
+              price: priceId,
               quantity: 1,
             },
           ],
           mode: "payment",
           success_url: successUrl,
           cancel_url: cancelUrl,
-          customer: customerId, // Use customer ID instead of just email
+          customer: customerId,
           client_reference_id: userId,
-          // Enable automatic tax calculation if needed
-          // automatic_tax: {enabled: true},
-          // Store metadata for webhook processing
           metadata: {
             userId: userId,
             tier: planDetails.tier,
@@ -529,7 +422,6 @@ exports.createCheckoutSession = onRequest(
             durationDays: planDetails.durationDays.toString(),
             priceId: priceId,
           },
-          // Enable invoice creation and email sending
           invoice_creation: {
             enabled: true,
             invoice_data: {
@@ -543,20 +435,8 @@ exports.createCheckoutSession = onRequest(
           },
         });
 
-        console.log("✅ Checkout session created:", session.id);
-
-        // Return only the session ID (not sensitive data)
         res.json({id: session.id});
       } catch (error) {
-        console.error("❌ ERROR creating checkout session:", {
-          message: error.message,
-          type: error.type,
-          code: error.code,
-          statusCode: error.statusCode,
-          stack: error.stack,
-        });
-
-        // Return more detailed error for debugging
         res.status(500).json({
           error: "Failed to create checkout session",
           details: error.message,
@@ -583,20 +463,14 @@ exports.stripeWebhook = onRequest(
         return res.status(405).send("Method not allowed");
       }
 
-      // Initialize Stripe with the secret
       if (!stripe) {
         stripe = require("stripe")((stripeSecretKey.value() || "").trim());
       }
 
-      // SECURITY: Verify webhook signature
       const sig = req.headers["stripe-signature"];
       const webhookSecret = (stripeWebhookSecret.value() || "").trim();
 
-      console.log("🔍 Webhook request received");
-      console.log("🔍 Has signature:", !!sig);
-
       if (!sig) {
-        console.error("❌ Missing Stripe signature header");
         return res.status(400).send("Missing signature");
       }
 
@@ -612,77 +486,38 @@ exports.stripeWebhook = onRequest(
           }
         }
 
-
         if (!rawBody || rawBody.length === 0) {
-          console.error("❌ Missing raw body for webhook signature check");
           return res.status(400).send("Missing webhook payload");
         }
 
         let event;
 
         try {
-          // SECURITY: Construct event from raw body buffer
           event = stripe.webhooks.constructEvent(
               rawBody,
               sig,
               webhookSecret,
           );
         } catch (err) {
-          console.error(
-              "⚠️ Webhook signature verification failed:", err.message,
-          );
           return res.status(400).send(`Webhook Error: ${err.message}`);
         }
 
-        console.log("✅ Webhook verified:", event.type);
-        console.log("🔍 Full event data:", JSON.stringify(event, null, 2));
-
-        // Handle successful payment event
         if (event.type === "checkout.session.completed") {
           const session = event.data.object;
 
-          console.log("💳 ========== CHECKOUT SESSION COMPLETED ==========");
-          console.log("💳 Processing payment:", {
-            sessionId: session.id,
-            customerId: session.customer,
-            customerEmail: session.customer_email,
-            amountTotal: session.amount_total,
-            currency: session.currency,
-            paymentStatus: session.payment_status,
-            paymentIntent: session.payment_intent,
-          });
-          console.log(
-              "💳 Full session object:",
-              JSON.stringify(session, null, 2),
-          );
-
           try {
-            // Extract metadata (set by createCheckoutSession)
             const {userId, tier, price, durationDays, priceId} =
               session.metadata;
 
-            console.log("🔍 Extracted metadata:", {
-              userId,
-              tier,
-              price,
-              durationDays,
-              priceId,
-            });
-
             if (!userId || !tier || !durationDays) {
-              console.error("❌ Missing required metadata:", session.metadata);
               return res.status(400).send("Invalid session metadata");
             }
 
-            // Calculate subscription dates
             const now = new Date();
             const endDate = new Date(
                 now.getTime() + parseInt(durationDays) * 24 * 60 * 60 * 1000,
             );
 
-            // Update user subscription in Firestore
-            // Use set with merge to create document if it doesn't exist
-            console.log("🔍 Updating user document in Firestore...");
             await admin.firestore().collection("users").doc(userId).set({
               tier: tier,
               subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
@@ -691,14 +526,9 @@ exports.stripeWebhook = onRequest(
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             }, {merge: true});
 
-            console.log(`✅ User ${userId} upgraded to ${tier}`);
-
-            // Create order record for tracking
-            // Use priceId to get plan name, fallback to tier name
             const planInfo = priceId ? VALID_PRICE_IDS[priceId] : null;
             const planName = planInfo? planInfo.name : tier;
 
-            console.log("🔍 Creating order record in Firestore...");
             const orderRef = await admin.firestore().collection("orders").add({
               userId: userId,
               tier: tier,
@@ -713,57 +543,18 @@ exports.stripeWebhook = onRequest(
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            console.log(`✅ Order created for user ${userId}`, {
-              orderId: orderRef.id,
-            });
-
-            // Handle invoice - Stripe auto-creates it via
-            // invoice_creation setting
-            console.log("💰 ========== PROCESSING STRIPE INVOICE ==========");
-            console.log("💰 Session data:", {
-              sessionId: session.id,
-              customerId: session.customer,
-              customerEmail: session.customer_email,
-              invoice: session.invoice,
-              paymentIntent: session.payment_intent,
-              paymentStatus: session.payment_status,
-            });
-
             let invoiceId = null;
             if (session.invoice) {
-              console.log(
-                  "✅ Invoice was auto-created by Stripe:",
-                  session.invoice,
-              );
               invoiceId = session.invoice;
+              await sendStripeInvoice(invoiceId);
 
-              // Send the invoice email
-              const invoiceSent = await sendStripeInvoice(invoiceId);
-              console.log("💰 Invoice send result:", {
-                invoiceId: invoiceId,
-                sent: invoiceSent,
-              });
-
-              // Update order with invoice ID
               if (invoiceId) {
                 await orderRef.update({
                   stripeInvoiceId: invoiceId,
                 });
-                console.log("✅ Invoice linked to order:", {
-                  orderId: orderRef.id,
-                  invoiceId: invoiceId,
-                });
               }
-            } else {
-              console.warn("⚠️ No invoice was auto-created by Stripe");
-              console.warn(
-                  "⚠️ Check invoice_creation is enabled in checkout",
-              );
             }
-            console.log("💰 ========== INVOICE PROCESSING COMPLETE ==========");
 
-            // Send purchase confirmation email
-            console.log("📨 Sending purchase confirmation email...");
             const customerEmail = session.customer_email || "";
             const userName = customerEmail.split("@")[0] || "User";
             await sendPurchaseConfirmationEmail(
@@ -773,32 +564,14 @@ exports.stripeWebhook = onRequest(
                 parseInt(durationDays),
             );
 
-            console.log("🎉 ========== WEBHOOK PROCESSING COMPLETE ==========");
-            console.log("🎉 Summary:", {
-              userId: userId,
-              tier: tier,
-              planName: planName,
-              orderCreated: !!orderRef.id,
-              invoiceCreated: !!invoiceId,
-              invoiceId: invoiceId,
-              confirmationEmailQueued: true,
-            });
-
-            // Send success response to Stripe
             res.json({received: true});
           } catch (error) {
-            console.error("❌ Error processing payment:", error);
-            // Return 500 so Stripe retries the webhook
             return res.status(500).send("Error processing payment");
           }
         } else {
-          // Acknowledge other event types
-          console.log(`ℹ️ Unhandled event type: ${event.type}`);
           res.json({received: true});
         }
       } catch (error) {
-        // Handle errors in reading request body or webhook processing
-        console.error("❌ Error in webhook handler:", error);
         return res.status(400).send("Bad request");
       }
     });

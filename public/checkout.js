@@ -51,6 +51,16 @@
     const badgeStr = String(badge || "").trim();
     const durationStr = String(duration || "").trim();
 
+    // Map color badges to plan display names
+    const badgeDisplayMap = {
+      bronze: "Quick-Study",
+      silver: "30-Day Preparation",
+      gold: "Full Preparation",
+      free: "Free",
+    };
+
+    const displayBadge = badgeDisplayMap[badgeStr.toLowerCase()] || badgeStr;
+
     // Treat as free if price == 0 OR badge/plan indicates free
     const isFree =
       priceNum === 0 ||
@@ -60,7 +70,7 @@
       params.get("free") === "1" ||
       params.get("total") === "0";
 
-    return { params, priceNum, badgeStr, durationStr, isFree };
+    return { params, priceNum, badgeStr: displayBadge, originalBadge: badgeStr, durationStr, isFree };
   }
 
   function applyBadgeColor(badgeEl, badgeStr, isFree) {
@@ -84,14 +94,14 @@
     }
   }
 
-  function fillSummaryText({ badgeStr, durationStr, isFree }) {
+  function fillSummaryText({ badgeStr, originalBadge, durationStr, isFree }) {
     const badgeEl = document.querySelector(".order-summary-badge");
     const textEl = document.querySelector(".order-summary-text");
 
     if (badgeEl) {
       const label = badgeStr || (isFree ? "Free" : "");
       badgeEl.textContent = label ? label.toUpperCase() : "";
-      applyBadgeColor(badgeEl, label, isFree);
+      applyBadgeColor(badgeEl, originalBadge || badgeStr, isFree);
     }
 
     if (textEl) {
