@@ -206,7 +206,12 @@
                   <li>You may cancel within 3 days for eligible plans</li>
                   <li>
                     Refund eligibility is subject to our
-                    <a href="/refund-policy" class="checkout-legal-link">Refund Policy</a>
+                    <a
+                      href="/refund-policy"
+                      class="checkout-legal-link checkout-doc-link"
+                      data-doc="refund"
+                      >Refund Policy</a
+                    >
                   </li>
                   <li>Subscription access is personal and may not be shared</li>
                 </ul>
@@ -231,6 +236,185 @@
       ></div>
     </div>
 
+    <!-- ===================== REFUND POLICY MODAL ===================== -->
+    <div
+      id="checkout-doc-modal"
+      class="checkout-doc-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="checkout-doc-title"
+    >
+      <div class="checkout-doc-card">
+        <div class="checkout-doc-header">
+          <h2 id="checkout-doc-title" class="checkout-doc-title">
+            Refund Policy
+          </h2>
+          <div class="checkout-doc-actions">
+            <button
+              id="checkout-doc-lang"
+              class="checkout-doc-lang"
+              type="button"
+            >
+              FR
+            </button>
+            <button
+              id="checkout-doc-close"
+              class="checkout-doc-close"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div class="checkout-doc-body">
+          <section data-doc-panel="refund" class="checkout-doc-panel">
+            <div data-lang="en">
+              <h3 class="checkout-doc-subtitle">Return and Refund Policy</h3>
+              <p class="checkout-doc-updated">Last Updated: March 2026</p>
+              <p class="checkout-doc-text">
+                Welcome to SimpleTCF. This Return and Refund Policy explains
+                your rights regarding subscription cancellations and refunds, in
+                accordance with applicable Canadian consumer protection laws.
+              </p>
+              <p class="checkout-doc-text">
+                By purchasing a subscription to SimpleTCF, you agree to the
+                terms outlined in this policy.
+              </p>
+              <ol class="checkout-doc-list">
+                <li>
+                  <strong>Nature of Our Services</strong> — SimpleTCF provides
+                  digital educational services, including practice exams,
+                  interactive exercises, study materials, performance tracking
+                  tools, and audio, reading, and writing training modules. Access
+                  is granted immediately upon activation. Digital services are
+                  considered consumed once access is granted, subject to
+                  cancellation rights below.
+                </li>
+                <li>
+                  <strong>Subscription Cancellation Rights</strong> — You may
+                  cancel your subscription within 3 calendar days of your
+                  initial purchase without providing a reason. The cancellation
+                  period begins on the date your subscription is activated.
+                  To request cancellation, email support@simpletcf.com.
+                </li>
+                <li>
+                  <strong>Non-Refundable Plans</strong> — Certain entry-level or
+                  promotional plans may be designated as non-refundable when
+                  disclosed at purchase.
+                </li>
+                <li>
+                  <strong>Refund Eligibility</strong> — Refunds are issued only
+                  when requests are within the 3-day cooling-off period, the
+                  subscription qualifies, and the account has not violated our
+                  Terms of Service. Requests submitted after the cooling-off
+                  period may be declined unless required by law.
+                </li>
+                <li>
+                  <strong>Refund Processing</strong> — If approved, refunds are
+                  issued within 14 business days using the original payment
+                  method. Processor fees may be deducted where permitted by law.
+                </li>
+                <li>
+                  <strong>Subscription Renewals</strong> — Subscriptions may
+                  renew automatically. You authorize SimpleTCF to charge the
+                  selected payment method unless cancelled before the next
+                  billing cycle.
+                </li>
+                <li>
+                  <strong>Account Sharing and Unauthorized Use</strong> —
+                  Subscriptions are personal and may not be shared. If SimpleTCF
+                  detects account sharing or abuse, we may terminate the account
+                  without notice. Terminated accounts are not eligible for
+                  refunds.
+                </li>
+                <li>
+                  <strong>Service Access After Cancellation</strong> — Once
+                  cancelled, access remains active until the end of the paid
+                  period unless terminated for violations. No partial refunds
+                  are issued after the cooling-off period.
+                </li>
+                <li>
+                  <strong>Consumer Protection Compliance</strong> — This policy
+                  does not limit rights granted under Canadian consumer
+                  protection laws.
+                </li>
+                <li>
+                  <strong>Contact Information</strong> — info@simpletcf.com | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+            <div data-lang="fr" class="hidden">
+              <h3 class="checkout-doc-subtitle">Politique de retour et de remboursement</h3>
+              <p class="checkout-doc-updated">Derniere mise a jour : mars 2026</p>
+              <p class="checkout-doc-text">
+                Bienvenue sur SimpleTCF. Cette politique de retour et de
+                remboursement explique vos droits d'annulation et de
+                remboursement, conforme aux lois canadiennes applicables.
+              </p>
+              <p class="checkout-doc-text">
+                En achetant un abonnement SimpleTCF, vous acceptez cette
+                politique.
+              </p>
+              <ol class="checkout-doc-list">
+                <li>
+                  <strong>Nature des services</strong> — SimpleTCF fournit des
+                  services educatifs numeriques : examens pratiques, exercices
+                  interactifs, supports d'etude, suivi de performance, et
+                  modules audio, lecture et ecriture. L'acces est immediat. Les
+                  services numeriques sont consideres consommes a l'activation,
+                  sous reserve des droits d'annulation.
+                </li>
+                <li>
+                  <strong>Droit d'annulation</strong> — Vous pouvez annuler dans
+                  les 3 jours calendaires suivant l'achat. Le delai commence a
+                  l'activation. Demande par email : support@simpletcf.com.
+                </li>
+                <li>
+                  <strong>Plans non remboursables</strong> — Certains plans
+                  promotionnels peuvent etre non remboursables si indique lors
+                  de l'achat.
+                </li>
+                <li>
+                  <strong>Eligibilite</strong> — Remboursement si demande dans le
+                  delai, abonnement eligible, et respect des Conditions
+                  d'utilisation. Les demandes apres le delai peuvent etre
+                  refusees sauf exigence legale.
+                </li>
+                <li>
+                  <strong>Traitement</strong> — Si approuve, remboursement sous
+                  14 jours ouvrables via le moyen de paiement initial. Des frais
+                  peuvent etre deduits si la loi l'autorise.
+                </li>
+                <li>
+                  <strong>Renouvellements</strong> — Les abonnements peuvent se
+                  renouveler automatiquement. Vous autorisez SimpleTCF a
+                  prelever le moyen de paiement sauf annulation avant l'echeance.
+                </li>
+                <li>
+                  <strong>Partage et usage non autorise</strong> — Les abonnements
+                  sont personnels. En cas de partage ou d'abus, SimpleTCF peut
+                  suspendre ou resilier sans remboursement.
+                </li>
+                <li>
+                  <strong>Acces apres annulation</strong> — L'acces reste actif
+                  jusqu'a la fin de la periode payee. Pas de remboursement
+                  partiel apres le delai d'annulation.
+                </li>
+                <li>
+                  <strong>Conformite</strong> — Cette politique ne limite pas les
+                  droits prevus par la loi canadienne.
+                </li>
+                <li>
+                  <strong>Contact</strong> — info@simpletcf.com | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <!-- Firebase initialization (config hardcoded) -->
     <script type="module" src="config.js"></script>
     <script type="module" src="db-service.js"></script>
@@ -240,5 +424,60 @@
     <!-- Then app scripts -->
     <script type="module" src="script.js"></script>
     <script type="module" src="checkout.js"></script>
+    <script>
+      (function() {
+        const modal = document.getElementById("checkout-doc-modal");
+        const closeBtn = document.getElementById("checkout-doc-close");
+        const langBtn = document.getElementById("checkout-doc-lang");
+        const panels = Array.from(document.querySelectorAll(".checkout-doc-panel"));
+        const links = Array.from(document.querySelectorAll(".checkout-doc-link"));
+
+        let currentLang = "en";
+
+        function setLang(lang) {
+          currentLang = lang;
+          langBtn.textContent = currentLang === "en" ? "FR" : "EN";
+          panels.forEach((panel) => {
+            const enBlock = panel.querySelector('[data-lang="en"]');
+            const frBlock = panel.querySelector('[data-lang="fr"]');
+            if (enBlock) enBlock.classList.toggle("hidden", lang !== "en");
+            if (frBlock) frBlock.classList.toggle("hidden", lang !== "fr");
+          });
+        }
+
+        function openPanel(docKey) {
+          panels.forEach((panel) => {
+            const isActive = panel.getAttribute("data-doc-panel") === docKey;
+            panel.classList.toggle("hidden", !isActive);
+          });
+          setLang(currentLang);
+          modal.classList.remove("hidden");
+          document.body.classList.add("checkout-modal-open");
+        }
+
+        function closeModal() {
+          modal.classList.add("hidden");
+          document.body.classList.remove("checkout-modal-open");
+        }
+
+        links.forEach((link) => {
+          link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const docKey = link.getAttribute("data-doc");
+            openPanel(docKey);
+          });
+        });
+
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) closeModal();
+        });
+        langBtn.addEventListener("click", () => {
+          setLang(currentLang === "en" ? "fr" : "en");
+        });
+
+        setLang("en");
+      })();
+    </script>
   </body>
 </html>
