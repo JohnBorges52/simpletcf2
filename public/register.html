@@ -313,15 +313,515 @@
 
           <p class="text-center text-xs text-gray-500 leading-relaxed mt-4">
             By registering, you agree to the
-            <a href="#" class="text-purple-600 hover:underline">Terms of Use</a>
-            and
-            <a href="#" class="text-purple-600 hover:underline"
+            <a
+              href="/terms"
+              data-doc="terms"
+              class="text-purple-600 hover:underline register-doc-link"
+              >Terms of Use</a
+            >,
+            <a
+              href="/privacy-policy"
+              data-doc="privacy"
+              class="text-purple-600 hover:underline register-doc-link"
               >Privacy Policy</a
+            >, and
+            <a
+              href="/refund-policy"
+              data-doc="refund"
+              class="text-purple-600 hover:underline register-doc-link"
+              >Refund Policy</a
             >.
           </p>
+
+          <div class="mt-4 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <p class="font-semibold text-gray-700">Subscription Agreement Notice</p>
+            <ul class="mt-2 space-y-1">
+              <li>• You are purchasing a digital educational subscription</li>
+              <li>• Your subscription may renew automatically</li>
+              <li>• You may cancel within 3 days for eligible plans</li>
+              <li>• Refund eligibility is subject to our Refund Policy</li>
+              <li>• Subscription access is personal and may not be shared</li>
+            </ul>
+            <div class="mt-2">
+              <a
+                href="/terms"
+                data-doc="terms"
+                class="text-purple-600 hover:underline register-doc-link"
+                >Full Terms</a
+              >
+              <span class="text-gray-400">|</span>
+              <a
+                href="/refund-policy"
+                data-doc="refund"
+                class="text-purple-600 hover:underline register-doc-link"
+                >Refund Policy</a
+              >
+              <span class="text-gray-400">|</span>
+              <a
+                href="/privacy-policy"
+                data-doc="privacy"
+                class="text-purple-600 hover:underline register-doc-link"
+                >Privacy Policy</a
+              >
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- ===================== TERMS/PRIVACY/REFUND MODAL ===================== -->
+    <div
+      id="register-doc-modal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="register-doc-title"
+    >
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 id="register-doc-title" class="text-lg font-bold text-gray-800">
+            Legal Documents
+          </h2>
+          <div class="flex items-center gap-3">
+            <button
+              id="register-doc-lang"
+              class="text-xs font-semibold px-3 py-1 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50"
+              type="button"
+            >
+              FR
+            </button>
+            <button
+              id="register-doc-close"
+              class="text-sm font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 max-h-[70vh] overflow-y-auto">
+          <section data-doc-panel="terms" class="register-doc-panel hidden">
+            <div data-lang="en">
+              <h3 class="text-xl font-bold text-gray-900">Terms of Service</h3>
+              <p class="text-sm text-gray-500 mt-1">Last Updated: March 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                Welcome to SimpleTCF. These Terms of Service ("Terms") govern
+                your use of the SimpleTCF website and learning platform.
+              </p>
+              <p class="mt-2 text-sm text-gray-700">
+                By accessing or using our Service, you agree to be bound by these
+                Terms. If you do not agree, you must not use the Service.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Description of Service</span> —
+                  SimpleTCF provides online educational tools designed to help
+                  users prepare for the TCF Canada examination, including
+                  practice tests, study tools, performance tracking, audio and
+                  reading modules, and writing preparation tools. SimpleTCF does
+                  not guarantee examination results or immigration outcomes.
+                </li>
+                <li>
+                  <span class="font-semibold">Eligibility</span> — You must be
+                  at least 18 years old, or use the platform under parental or
+                  legal guardian supervision.
+                </li>
+                <li>
+                  <span class="font-semibold">Account Registration</span> — You
+                  agree to provide accurate registration information, maintain
+                  confidentiality of login credentials, and accept
+                  responsibility for activity under your account. SimpleTCF is
+                  not responsible for unauthorized access resulting from user
+                  negligence.
+                </li>
+                <li>
+                  <span class="font-semibold">Subscription and Billing</span>
+                  — SimpleTCF operates on a subscription model. By subscribing,
+                  you authorize us to charge your selected payment method through
+                  our payment provider (Stripe or equivalent). Subscriptions may
+                  renew automatically unless cancelled before the next billing
+                  cycle.
+                </li>
+                <li>
+                  <span class="font-semibold">Refund Policy</span> — Refunds are
+                  governed by our Return and Refund Policy. Users acknowledge
+                  that digital services are considered consumed upon activation.
+                </li>
+                <li>
+                  <span class="font-semibold">Acceptable Use</span> — You agree
+                  NOT to share account credentials, copy or redistribute content,
+                  attempt to reverse engineer or scrape content, use automated
+                  bots or scripts, or use the Service for unlawful purposes.
+                  Violations may result in account termination without refund.
+                </li>
+                <li>
+                  <span class="font-semibold">Intellectual Property</span> —
+                  All platform content is owned by SimpleTCF or licensed to us.
+                  You may not reproduce or distribute content without written
+                  permission.
+                </li>
+                <li>
+                  <span class="font-semibold">Service Availability</span> — We
+                  aim to provide continuous access but do not guarantee
+                  uninterrupted service. Maintenance, updates, or technical
+                  issues may cause temporary disruptions.
+                </li>
+                <li>
+                  <span class="font-semibold">Limitation of Liability</span> —
+                  To the maximum extent permitted by Canadian law, SimpleTCF is
+                  not liable for exam performance results, immigration outcomes,
+                  loss of data, service interruptions, or indirect damages.
+                </li>
+                <li>
+                  <span class="font-semibold">Termination</span> — We reserve
+                  the right to suspend or terminate accounts that violate these
+                  Terms.
+                </li>
+                <li>
+                  <span class="font-semibold">Governing Law</span> — These Terms
+                  are governed by the laws of Canada and applicable provincial
+                  laws.
+                </li>
+                <li>
+                  <span class="font-semibold">Contact</span> —
+                  info@simpletcf.com | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+            <div data-lang="fr" class="hidden">
+              <h3 class="text-xl font-bold text-gray-900">Conditions d'utilisation</h3>
+              <p class="text-sm text-gray-500 mt-1">Derniere mise a jour : mars 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                Bienvenue sur SimpleTCF. Ces conditions d'utilisation
+                ("Conditions") regissent votre utilisation du site et de la
+                plateforme SimpleTCF.
+              </p>
+              <p class="mt-2 text-sm text-gray-700">
+                En accedant au service ou en l'utilisant, vous acceptez d'etre
+                lie par ces Conditions. Si vous n'etes pas d'accord, vous ne
+                devez pas utiliser le Service.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Description du service</span> —
+                  SimpleTCF propose des outils educatifs en ligne pour preparer
+                  l'examen TCF Canada : tests pratiques, outils d'etude, suivi
+                  de performance, modules audio et lecture, et preparation
+                  a l'ecrit. SimpleTCF ne garantit pas les resultats d'examen
+                  ni les issues d'immigration.
+                </li>
+                <li>
+                  <span class="font-semibold">Eligibilite</span> — Vous devez
+                  avoir au moins 18 ans ou utiliser la plateforme sous la
+                  supervision d'un parent ou tuteur legal.
+                </li>
+                <li>
+                  <span class="font-semibold">Inscription</span> — Vous acceptez
+                  de fournir des informations exactes, de proteger vos
+                  identifiants, et d'assumer toute activite liee a votre compte.
+                  SimpleTCF n'est pas responsable des acces non autorises dus a
+                  la negligence de l'utilisateur.
+                </li>
+                <li>
+                  <span class="font-semibold">Abonnement et facturation</span>
+                  — SimpleTCF fonctionne par abonnement. En vous abonnant, vous
+                  autorisez la facturation via notre prestataire (Stripe ou
+                  equivalent). Les abonnements peuvent se renouveler
+                  automatiquement sauf annulation avant l'echeance.
+                </li>
+                <li>
+                  <span class="font-semibold">Politique de remboursement</span>
+                  — Les remboursements sont regis par notre politique de retour
+                  et de remboursement. Les services numeriques sont consideres
+                  consommes a l'activation.
+                </li>
+                <li>
+                  <span class="font-semibold">Utilisation acceptable</span> —
+                  Vous acceptez de NE PAS partager vos identifiants, copier ou
+                  redistribuer le contenu, tenter d'ingenierie inverse ou de
+                  collecte automatisee, utiliser des robots ou scripts, ou
+                  utiliser le service a des fins illegales. Toute violation peut
+                  entrainer la fermeture du compte sans remboursement.
+                </li>
+                <li>
+                  <span class="font-semibold">Propriete intellectuelle</span>
+                  — Tout le contenu appartient a SimpleTCF ou est sous licence.
+                  Vous ne pouvez pas reproduire ou distribuer sans autorisation
+                  ecrite.
+                </li>
+                <li>
+                  <span class="font-semibold">Disponibilite</span> — Nous visons
+                  une disponibilite continue sans garantie d'absence
+                  d'interruption. Maintenance, mises a jour ou problemes
+                  techniques peuvent survenir.
+                </li>
+                <li>
+                  <span class="font-semibold">Limitation de responsabilite</span>
+                  — Dans les limites permises par la loi canadienne, SimpleTCF
+                  n'est pas responsable des resultats d'examen, des issues
+                  d'immigration, pertes de donnees, interruptions ou dommages
+                  indirects.
+                </li>
+                <li>
+                  <span class="font-semibold">Resiliation</span> — Nous pouvons
+                  suspendre ou resilier les comptes en cas de violation.
+                </li>
+                <li>
+                  <span class="font-semibold">Loi applicable</span> — Ces
+                  Conditions sont regies par les lois du Canada et les lois
+                  provinciales applicables.
+                </li>
+                <li>
+                  <span class="font-semibold">Contact</span> —
+                  info@simpletcf.com | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+          </section>
+
+          <section data-doc-panel="privacy" class="register-doc-panel hidden">
+            <div data-lang="en">
+              <h3 class="text-xl font-bold text-gray-900">Privacy Policy</h3>
+              <p class="text-sm text-gray-500 mt-1">Last Updated: March 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                SimpleTCF respects your privacy and is committed to protecting
+                your personal information in accordance with Canadian privacy
+                legislation.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Information We Collect</span> —
+                  Personal information (name, email address, account login data,
+                  payment transaction references) and technical information (IP
+                  address, device type, browser data, usage analytics).
+                </li>
+                <li>
+                  <span class="font-semibold">How We Use Information</span> —
+                  Provide and operate the platform, process payments, improve
+                  learning performance tools, communicate updates, and detect
+                  fraud or unauthorized activity.
+                </li>
+                <li>
+                  <span class="font-semibold">Payment Processing</span> —
+                  Payments are processed by third-party providers such as Stripe.
+                  SimpleTCF does not store full credit card details.
+                </li>
+                <li>
+                  <span class="font-semibold">Firebase Services</span> — We use
+                  Google Firebase for authentication, data storage, hosting, and
+                  analytics. Google may process data according to their privacy
+                  policy.
+                </li>
+                <li>
+                  <span class="font-semibold">Analytics</span> — We use Google
+                  Analytics or equivalent tools. You may disable analytics
+                  through browser privacy settings.
+                </li>
+                <li>
+                  <span class="font-semibold">Data Security</span> — We
+                  implement industry-standard safeguards, but no online system
+                  can guarantee absolute security.
+                </li>
+                <li>
+                  <span class="font-semibold">Data Retention</span> — We retain
+                  personal data only as long as necessary to provide services or
+                  comply with legal obligations.
+                </li>
+                <li>
+                  <span class="font-semibold">User Rights (Canada)</span> — You
+                  may request access to data, correction of inaccurate data, or
+                  account deletion. Contact: support@simpletcf.com
+                </li>
+                <li>
+                  <span class="font-semibold">Cookies</span> — We use cookies to
+                  maintain login sessions, track performance data, and improve
+                  user experience. You may disable cookies in browser settings.
+                </li>
+              </ol>
+            </div>
+            <div data-lang="fr" class="hidden">
+              <h3 class="text-xl font-bold text-gray-900">Politique de confidentialite</h3>
+              <p class="text-sm text-gray-500 mt-1">Derniere mise a jour : mars 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                SimpleTCF respecte votre vie privee et protege vos informations
+                personnelles conformement a la legislation canadienne.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Informations collectees</span> —
+                  Informations personnelles (nom, email, donnees de connexion,
+                  references de transaction) et informations techniques (adresse
+                  IP, type d'appareil, navigateur, analytics d'usage).
+                </li>
+                <li>
+                  <span class="font-semibold">Utilisation</span> — Fournir la
+                  plateforme, traiter les paiements, ameliorer les outils,
+                  communiquer des mises a jour, et detecter la fraude.
+                </li>
+                <li>
+                  <span class="font-semibold">Traitement des paiements</span>
+                  — Les paiements sont traites par des tiers comme Stripe.
+                  SimpleTCF ne stocke pas les details complets de carte.
+                </li>
+                <li>
+                  <span class="font-semibold">Services Firebase</span> —
+                  Authentification, stockage, hebergement et analytics via
+                  Google Firebase. Google traite les donnees selon sa politique.
+                </li>
+                <li>
+                  <span class="font-semibold">Analytics</span> — Utilisation de
+                  Google Analytics ou equivalent. Vous pouvez desactiver via les
+                  parametres du navigateur.
+                </li>
+                <li>
+                  <span class="font-semibold">Securite</span> — Nous appliquons
+                  des mesures standards, sans garantie absolue.
+                </li>
+                <li>
+                  <span class="font-semibold">Conservation</span> — Les donnees
+                  sont conservees le temps necessaire aux services ou aux
+                  obligations legales.
+                </li>
+                <li>
+                  <span class="font-semibold">Droits des utilisateurs</span> —
+                  Acces, correction ou suppression des donnees. Contact :
+                  support@simpletcf.com
+                </li>
+                <li>
+                  <span class="font-semibold">Cookies</span> — Utilises pour
+                  sessions, suivi et experience. Desactivation possible via le
+                  navigateur.
+                </li>
+              </ol>
+            </div>
+          </section>
+
+          <section data-doc-panel="refund" class="register-doc-panel hidden">
+            <div data-lang="en">
+              <h3 class="text-xl font-bold text-gray-900">Return and Refund Policy</h3>
+              <p class="text-sm text-gray-500 mt-1">Last Updated: March 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                SimpleTCF provides digital learning resources to help users
+                prepare for the TCF Canada exam. This policy explains your
+                rights regarding cancellations and refunds.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Nature of Services</span> — Access
+                  is granted immediately upon activation. Digital services are
+                  considered consumed once access is granted, subject to
+                  cancellation rights below.
+                </li>
+                <li>
+                  <span class="font-semibold">Cancellation Rights</span> — You
+                  may cancel within 3 calendar days of your initial purchase.
+                  Email: support@simpletcf.com
+                </li>
+                <li>
+                  <span class="font-semibold">Non-Refundable Plans</span> —
+                  Entry-level or promotional plans may be non-refundable when
+                  disclosed at purchase.
+                </li>
+                <li>
+                  <span class="font-semibold">Refund Eligibility</span> —
+                  Refunds are issued only when requests are within the cooling-
+                  off period, the plan qualifies, and Terms are not violated.
+                </li>
+                <li>
+                  <span class="font-semibold">Refund Processing</span> — If
+                  approved, refunds are issued within 14 business days to the
+                  original payment method. Processor fees may be deducted where
+                  permitted by law.
+                </li>
+                <li>
+                  <span class="font-semibold">Subscription Renewals</span> —
+                  Subscriptions may renew automatically unless cancelled before
+                  the next billing cycle.
+                </li>
+                <li>
+                  <span class="font-semibold">Account Sharing</span> —
+                  Accounts are personal. Sharing or abuse may result in
+                  termination without refund.
+                </li>
+                <li>
+                  <span class="font-semibold">Access After Cancellation</span>
+                  — Access remains until the end of the paid period. No partial
+                  refunds after the cooling-off period.
+                </li>
+                <li>
+                  <span class="font-semibold">Compliance</span> — This policy
+                  does not limit rights under Canadian consumer protection laws.
+                </li>
+                <li>
+                  <span class="font-semibold">Contact</span> — info@simpletcf.com
+                  | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+            <div data-lang="fr" class="hidden">
+              <h3 class="text-xl font-bold text-gray-900">Politique de retour et de remboursement</h3>
+              <p class="text-sm text-gray-500 mt-1">Derniere mise a jour : mars 2026</p>
+              <p class="mt-4 text-sm text-gray-700">
+                SimpleTCF fournit des ressources numeriques pour preparer le TCF
+                Canada. Cette politique explique vos droits d'annulation et de
+                remboursement.
+              </p>
+              <ol class="mt-4 space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                <li>
+                  <span class="font-semibold">Nature des services</span> —
+                  L'acces est immediat. Les services numeriques sont consideres
+                  consommes a l'activation, sous reserve des droits ci-dessous.
+                </li>
+                <li>
+                  <span class="font-semibold">Droit d'annulation</span> — Vous
+                  pouvez annuler dans les 3 jours calendaires suivant l'achat.
+                  Email : support@simpletcf.com
+                </li>
+                <li>
+                  <span class="font-semibold">Plans non remboursables</span> —
+                  Certains plans promotionnels peuvent etre non remboursables si
+                  indique lors de l'achat.
+                </li>
+                <li>
+                  <span class="font-semibold">Eligibilite</span> — Remboursement
+                  si demande dans le delai, plan eligible, et respect des
+                  Conditions d'utilisation.
+                </li>
+                <li>
+                  <span class="font-semibold">Traitement</span> — Remboursement
+                  sous 14 jours ouvrables, sur le moyen de paiement initial.
+                  Des frais peuvent etre deduits si la loi l'autorise.
+                </li>
+                <li>
+                  <span class="font-semibold">Renouvellements</span> — Les
+                  abonnements peuvent se renouveler automatiquement sauf
+                  annulation avant l'echeance.
+                </li>
+                <li>
+                  <span class="font-semibold">Partage de compte</span> — Les
+                  comptes sont personnels. Le partage peut entrainer une
+                  suspension sans remboursement.
+                </li>
+                <li>
+                  <span class="font-semibold">Acces apres annulation</span> —
+                  Acces jusqu'a la fin de la periode payee. Pas de remboursement
+                  partiel apres le delai.
+                </li>
+                <li>
+                  <span class="font-semibold">Conformite</span> — Cette
+                  politique ne limite pas les droits prevus par la loi.
+                </li>
+                <li>
+                  <span class="font-semibold">Contact</span> — info@simpletcf.com
+                  | https://simpletcf.com
+                </li>
+              </ol>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
 
     <!-- Firebase initialization (config hardcoded) -->
     <script type="module" src="auth-service.js"></script>
@@ -329,5 +829,60 @@
     <script type="module" src="db-service.js"></script>
     <!-- Then app scripts -->
     <script type="module" src="script.js"></script>
+    <script>
+      (function() {
+        const modal = document.getElementById("register-doc-modal");
+        const closeBtn = document.getElementById("register-doc-close");
+        const langBtn = document.getElementById("register-doc-lang");
+        const panels = Array.from(document.querySelectorAll(".register-doc-panel"));
+        const links = Array.from(document.querySelectorAll(".register-doc-link"));
+
+        let currentLang = "en";
+
+        function setLang(lang) {
+          currentLang = lang;
+          langBtn.textContent = currentLang === "en" ? "FR" : "EN";
+          panels.forEach((panel) => {
+            const enBlock = panel.querySelector('[data-lang="en"]');
+            const frBlock = panel.querySelector('[data-lang="fr"]');
+            if (enBlock) enBlock.classList.toggle("hidden", lang !== "en");
+            if (frBlock) frBlock.classList.toggle("hidden", lang !== "fr");
+          });
+        }
+
+        function openPanel(docKey) {
+          panels.forEach((panel) => {
+            const isActive = panel.getAttribute("data-doc-panel") === docKey;
+            panel.classList.toggle("hidden", !isActive);
+          });
+          setLang(currentLang);
+          modal.classList.remove("hidden");
+          document.body.classList.add("overflow-hidden");
+        }
+
+        function closeModal() {
+          modal.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden");
+        }
+
+        links.forEach((link) => {
+          link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const docKey = link.getAttribute("data-doc");
+            openPanel(docKey);
+          });
+        });
+
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) closeModal();
+        });
+        langBtn.addEventListener("click", () => {
+          setLang(currentLang === "en" ? "fr" : "en");
+        });
+
+        setLang("en");
+      })();
+    </script>
   </body>
 </html>

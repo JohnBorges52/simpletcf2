@@ -337,16 +337,22 @@ async function sendStripeInvoice(invoiceId) {
       invoice_pdf: sentInvoice.invoice_pdf,
       hosted_invoice_url: sentInvoice.hosted_invoice_url,
     });
-    console.log("📧 ================== INVOICE SENT SUCCESSFULLY ==================");
+    console.log(
+        "📧 ============ INVOICE SENT SUCCESSFULLY ============",
+    );
 
     return true;
   } catch (error) {
-    console.error("❌ ================== INVOICE SEND FAILED ==================");
+    console.error(
+        "❌ ============== INVOICE SEND FAILED ==============",
+    );
     console.error("❌ Error type:", error.type);
     console.error("❌ Error message:", error.message);
     console.error("❌ Error code:", error.code);
     console.error("❌ Full error:", JSON.stringify(error, null, 2));
-    console.error("❌ ===============================================================");
+    console.error(
+        "❌ =================================================",
+    );
     return false;
   }
 }
@@ -475,7 +481,8 @@ exports.createCheckoutSession = onRequest(
         // Check if customer already exists in Firestore
         let customerId = null;
         try {
-          const userDoc = await admin.firestore().collection("users").doc(userId).get();
+          const userDoc = await admin.firestore()
+              .collection("users").doc(userId).get();
           if (userDoc.exists) {
             customerId = userDoc.data().stripeCustomerId;
           }
@@ -644,7 +651,10 @@ exports.stripeWebhook = onRequest(
             paymentStatus: session.payment_status,
             paymentIntent: session.payment_intent,
           });
-          console.log("💳 Full session object:", JSON.stringify(session, null, 2));
+          console.log(
+              "💳 Full session object:",
+              JSON.stringify(session, null, 2),
+          );
 
           try {
             // Extract metadata (set by createCheckoutSession)
@@ -707,7 +717,8 @@ exports.stripeWebhook = onRequest(
               orderId: orderRef.id,
             });
 
-            // Handle invoice - Stripe auto-creates it via invoice_creation setting
+            // Handle invoice - Stripe auto-creates it via
+            // invoice_creation setting
             console.log("💰 ========== PROCESSING STRIPE INVOICE ==========");
             console.log("💰 Session data:", {
               sessionId: session.id,
@@ -720,7 +731,10 @@ exports.stripeWebhook = onRequest(
 
             let invoiceId = null;
             if (session.invoice) {
-              console.log("✅ Invoice was auto-created by Stripe:", session.invoice);
+              console.log(
+                  "✅ Invoice was auto-created by Stripe:",
+                  session.invoice,
+              );
               invoiceId = session.invoice;
 
               // Send the invoice email
@@ -742,7 +756,9 @@ exports.stripeWebhook = onRequest(
               }
             } else {
               console.warn("⚠️ No invoice was auto-created by Stripe");
-              console.warn("⚠️ Check that invoice_creation is enabled in checkout session");
+              console.warn(
+                  "⚠️ Check invoice_creation is enabled in checkout",
+              );
             }
             console.log("💰 ========== INVOICE PROCESSING COMPLETE ==========");
 

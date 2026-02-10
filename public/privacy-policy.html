@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy | SimpleTCF</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body { background: #f8fafc; color: #111827; }
+      .legal-wrap { max-width: 900px; margin: 48px auto; padding: 0 20px 80px; }
+      .legal-card { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); }
+      .legal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+      .legal-title { font-size: 28px; font-weight: 700; margin: 0; }
+      .legal-sub { color: #6b7280; margin: 4px 0 0; }
+      .lang-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 12px; cursor: pointer; }
+      .legal-list { margin: 12px 0 0; padding-left: 20px; }
+      .legal-list li { margin: 10px 0; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <main class="legal-wrap">
+      <div class="legal-card">
+        <div class="legal-header">
+          <div>
+            <h1 class="legal-title">Privacy Policy</h1>
+            <p class="legal-sub">Last Updated: March 2026</p>
+          </div>
+          <button id="langToggle" class="lang-btn" type="button">FR</button>
+        </div>
+
+        <div data-lang="en">
+          <p>
+            SimpleTCF respects your privacy and is committed to protecting your
+            personal information in accordance with Canadian privacy legislation.
+          </p>
+          <ol class="legal-list">
+            <li>
+              <strong>Information We Collect</strong> — Personal information (name,
+              email address, account login data, payment transaction references)
+              and technical information (IP address, device type, browser data,
+              usage analytics).
+            </li>
+            <li>
+              <strong>How We Use Information</strong> — Provide and operate the
+              platform, process payments, improve learning performance tools,
+              communicate account updates, and detect fraud or unauthorized activity.
+            </li>
+            <li>
+              <strong>Payment Processing</strong> — Payments are processed securely
+              by third-party providers such as Stripe. SimpleTCF does NOT store
+              full credit card details.
+            </li>
+            <li>
+              <strong>Firebase Services</strong> — SimpleTCF uses Google Firebase for
+              authentication, data storage, hosting, and analytics. Google may
+              process data according to their privacy policy.
+            </li>
+            <li>
+              <strong>Analytics</strong> — We use Google Analytics or equivalent
+              tools to understand user behavior and improve services. You may
+              disable analytics through browser privacy settings.
+            </li>
+            <li>
+              <strong>Data Security</strong> — We implement industry-standard
+              security safeguards. However, no online system can guarantee
+              absolute security.
+            </li>
+            <li>
+              <strong>Data Retention</strong> — We retain personal data only as long
+              as necessary to provide services or comply with legal obligations.
+            </li>
+            <li>
+              <strong>User Rights (Canadian Compliance)</strong> — You may request
+              access to your personal data, correction of inaccurate data, or
+              account deletion. Contact: support@simpletcf.com
+            </li>
+            <li>
+              <strong>Cookies</strong> — SimpleTCF uses cookies to maintain login
+              sessions, track performance data, and improve user experience. You
+              may disable cookies through browser settings.
+            </li>
+          </ol>
+        </div>
+
+        <div data-lang="fr" class="hidden">
+          <p>
+            SimpleTCF respecte votre vie privee et protege vos informations
+            personnelles conformement a la legislation canadienne.
+          </p>
+          <ol class="legal-list">
+            <li>
+              <strong>Informations collectees</strong> — Informations personnelles
+              (nom, email, donnees de connexion, references de transaction) et
+              informations techniques (adresse IP, type d'appareil, navigateur,
+              analytics d'usage).
+            </li>
+            <li>
+              <strong>Utilisation</strong> — Fournir la plateforme, traiter les
+              paiements, ameliorer les outils, communiquer les mises a jour, et
+              detecter la fraude ou les activites non autorisees.
+            </li>
+            <li>
+              <strong>Traitement des paiements</strong> — Les paiements sont traites
+              par des tiers comme Stripe. SimpleTCF ne stocke pas les details
+              complets de carte.
+            </li>
+            <li>
+              <strong>Services Firebase</strong> — Authentification, stockage,
+              hebergement et analytics via Google Firebase. Google peut traiter
+              les donnees selon sa politique.
+            </li>
+            <li>
+              <strong>Analytics</strong> — Utilisation de Google Analytics ou
+              equivalent. Vous pouvez desactiver via les parametres du navigateur.
+            </li>
+            <li>
+              <strong>Securite</strong> — Nous appliquons des mesures standards,
+              sans garantie absolue.
+            </li>
+            <li>
+              <strong>Conservation</strong> — Les donnees sont conservees le temps
+              necessaire aux services ou aux obligations legales.
+            </li>
+            <li>
+              <strong>Droits des utilisateurs</strong> — Acces, correction ou
+              suppression des donnees. Contact: support@simpletcf.com
+            </li>
+            <li>
+              <strong>Cookies</strong> — Utilises pour sessions, suivi et
+              experience. Desactivation possible via le navigateur.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById("langToggle");
+        const blocks = document.querySelectorAll("[data-lang]");
+        let lang = "en";
+
+        function applyLang() {
+          blocks.forEach((block) => {
+            const isActive = block.getAttribute("data-lang") === lang;
+            block.classList.toggle("hidden", !isActive);
+          });
+          toggle.textContent = lang === "en" ? "FR" : "EN";
+        }
+
+        toggle.addEventListener("click", () => {
+          lang = lang === "en" ? "fr" : "en";
+          applyLang();
+        });
+
+        applyLang();
+      })();
+    </script>
+  </body>
+</html>
