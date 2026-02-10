@@ -306,10 +306,10 @@ document.addEventListener("DOMContentLoaded", () => {
       showVerificationMessage(email, name);
 
     } catch (error) {
-      console.error("Registration error:", error);
-      
       // Special handling for email already in use
       if (error.code === "auth/email-already-in-use") {
+        console.log("Email already registered, checking verification status...");
+        
         try {
           startBtn.textContent = "Checking account...";
           
@@ -318,6 +318,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const user = credential.user;
           
           if (!user.emailVerified) {
+            console.log("Account exists but not verified - resending verification email");
+            
             // Account exists but unverified - resend verification email
             await sendEmailVerification(user);
             
@@ -326,24 +328,28 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Show verification message
             showVerificationMessage(email, name);
+            return; // Exit early - success case
           } else {
             // Account exists and is verified - tell them to sign in
             await AuthService.signOutUser();
             showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
             shakeElement("#register-form");
+            return; // Exit early
           }
         } catch (signInError) {
           // Sign-in failed - email exists with different password
-          console.error("Sign-in check failed:", signInError);
+          console.log("Email exists but wrong password provided");
           showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
           shakeElement("#register-form");
+          return; // Exit early
         }
-      } else {
-        // Other errors
-        const msg = AuthService.formatAuthError(error);
-        showFieldError(emailInput, "err-email", msg);
-        shakeElement("#register-form");
       }
+      
+      // Other errors (not email-already-in-use)
+      console.error("Registration error:", error);
+      const msg = AuthService.formatAuthError(error);
+      showFieldError(emailInput, "err-email", msg);
+      shakeElement("#register-form");
     } finally {
       startBtn.disabled = false;
       startBtn.textContent = "Get Started";
@@ -481,9 +487,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Check if email is verified
       if (!user.emailVerified) {
+        console.log("⚠️ Login blocked - email not verified. Sending verification email...");
+        
         // Send new verification email
         try {
           await sendEmailVerification(user);
+          console.log("✅ Verification email sent");
         } catch (e) {
           console.warn("Could not send verification email:", e);
         }
@@ -494,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showFieldError(
           emailInput,
           "err-login-email",
-          `📩 Your email isn't verified. We just sent a new verification link to ${email}. Please verify, then log in.`
+          `📩 Your email isn't verified yet. We just sent a new verification link to ${email}. Please check your inbox and verify your email, then try logging in again.`
         );
         shakeElement("#loginForm");
         return;
