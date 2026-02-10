@@ -68,41 +68,16 @@
               🎉 Your email has been verified!
             </h2>
             <p class="text-green-700">
-              Enter your credentials below to sign in and start your TCF preparation journey.
+              Welcome to SimpleTCF! Click the button below to complete your setup and start practicing.
             </p>
           </div>
-
-          <!-- Email Input for Sign In -->
-          <div class="mb-4 text-left">
-            <label for="signin-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              id="signin-email"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder="Enter your email"
-            />
-          </div>
-          
-          <!-- Password Input for Sign In -->
-          <div class="mb-6 text-left">
-            <label for="signin-password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-            <input
-              type="password"
-              id="signin-password"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder="Enter your password"
-            />
-          </div>
-          
-          <!-- Error Message -->
-          <p id="signin-error" class="text-sm text-red-600 mb-4 hidden"></p>
           
           <!-- CTA Button -->
           <button
             id="go-home-btn"
             class="inline-block w-full bg-gradient-to-r from-[#6366f1] to-[#C1C6F8] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Sign In and Continue
+            Complete Setup
           </button>
         </div>
       </div>
@@ -118,93 +93,44 @@
       
       document.addEventListener('DOMContentLoaded', async () => {
         try {
-          // Check if we just verified email via link
-          const urlParams = new URLSearchParams(window.location.search);
-          const verifiedEmail = urlParams.get('verified_email');
-          
-          // Pre-fill email if available
-          if (verifiedEmail) {
-            const emailInput = document.getElementById('signin-email');
-            if (emailInput) emailInput.value = verifiedEmail;
-          }
-          
-          // User should NOT be logged in yet - they need to sign in on this page
+          // Wait for auth to be ready
           const user = await AuthService.waitForAuth();
           
-          if (user) {
-            // User is already logged in (shouldn't happen in new flow)
-            // Check verification status
-            if (!user.emailVerified) {
-              console.log('User logged in but not verified, signing out');
-              await AuthService.signOutUser();
-              window.location.href = '/login.html';
-              return;
-            }
-            
-            // Already logged in and verified - skip to home
-            console.log('User already logged in and verified, redirecting to home');
-            window.location.href = '/index.html';
+          if (!user) {
+            // No user logged in - redirect to login
+            console.log('No user found, redirecting to login');
+            window.location.href = '/login.html';
             return;
           }
 
-          // Show welcome message
-          const emailEl = document.getElementById('welcome-email');
-          
-          if (emailEl && verifiedEmail) emailEl.textContent = verifiedEmail;
+          // Check if email is verified
+          if (!user.emailVerified) {
+            // Email not verified yet - shouldn't happen on welcome page
+            console.log('Email not verified, redirecting back to register');
+            window.location.href = '/register.html';
+            return;
+          }
 
-          // Handle "Sign In and Continue" button
+          // User is logged in and verified - show their info
+          const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+          const email = user.email || '';
+          
+          const emailEl = document.getElementById('welcome-email');
+          if (emailEl) emailEl.textContent = email;
+
+          // Handle "Complete Setup" button
           const goHomeBtn = document.getElementById('go-home-btn');
-          const emailInput = document.getElementById('signin-email');
-          const passwordInput = document.getElementById('signin-password');
-          const errorEl = document.getElementById('signin-error');
           
           if (goHomeBtn) {
             goHomeBtn.addEventListener('click', async () => {
               // Prevent multiple clicks
               if (goHomeBtn.disabled) return;
               
-              const email = emailInput?.value.trim() || '';
-              const password = passwordInput?.value || '';
-              
-              // Clear previous errors
-              if (errorEl) {
-                errorEl.textContent = '';
-                errorEl.classList.add('hidden');
-              }
-              
-              // Validation
-              if (!email || !password) {
-                if (errorEl) {
-                  errorEl.textContent = 'Please enter your email and password.';
-                  errorEl.classList.remove('hidden');
-                }
-                return;
-              }
-              
               try {
                 goHomeBtn.disabled = true;
-                goHomeBtn.textContent = 'Signing in...';
-
-                // Sign in the user
-                const result = await AuthService.signInWithEmail(email, password);
-                const user = result.user;
-                
-                // Verify email is verified
-                if (!user.emailVerified) {
-                  await AuthService.signOutUser();
-                  if (errorEl) {
-                    errorEl.textContent = 'Your email is not verified yet. Please check your inbox.';
-                    errorEl.classList.remove('hidden');
-                  }
-                  goHomeBtn.disabled = false;
-                  goHomeBtn.textContent = 'Sign In and Continue';
-                  return;
-                }
-                
-                console.log('✅ User signed in successfully:', user.email);
                 goHomeBtn.textContent = 'Setting up your account...';
 
-                // Create Firestore user document now
+                // Create Firestore user document
                 await window.__firestoreReady;
                 const firestore = window.__firestore;
                 const { doc, setDoc, serverTimestamp, getDoc } = window.firestoreExports;
@@ -212,10 +138,9 @@
                 if (firestore && user) {
                   const userRef = doc(firestore, 'users', user.uid);
                   
-                  // Check if document already exists to avoid overwriting
+                  // Check if document already exists
                   const userDoc = await getDoc(userRef);
                   if (!userDoc.exists()) {
-                    // Create new document only if it doesn't exist
                     await setDoc(userRef, {
                       email: user.email,
                       displayName: user.displayName || user.email?.split('@')[0] || 'User',
@@ -230,17 +155,13 @@
                   }
                 }
 
-                // Redirect to home page
+                // Redirect to home
                 window.location.href = '/index.html';
               } catch (error) {
-                console.error('Error signing in:', error);
-                const msg = AuthService.formatAuthError(error);
-                if (errorEl) {
-                  errorEl.textContent = msg;
-                  errorEl.classList.remove('hidden');
-                }
+                console.error('Error completing setup:', error);
                 goHomeBtn.disabled = false;
-                goHomeBtn.textContent = 'Sign In and Continue';
+                goHomeBtn.textContent = 'Complete Setup';
+                alert('An error occurred. Please try again.');
               }
             });
           }
