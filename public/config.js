@@ -591,6 +591,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!sendResetBtn) return;
 
+  const queryEmail = new URLSearchParams(window.location.search).get("email");
+  if (queryEmail && forgotEmailInput) {
+    forgotEmailInput.value = queryEmail;
+    forgotEmailInput.focus();
+  }
+
 
   const sendResetEmail = async () => {
     const email = forgotEmailInput?.value.trim() || "";

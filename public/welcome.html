@@ -188,12 +188,25 @@
                 placeholder="Enter your password"
               />
             </div>
-            <p id="signin-error" class="text-sm text-red-600 mb-4 hidden"></p>
+            <p id="signin-error" class="text-sm text-red-600 mb-3 hidden"></p>
+            <p class="text-sm text-right mb-4">
+              <a id="signin-forgot-password" href="#" class="text-blue-600 hover:text-blue-700 font-medium">Forgot password?</a>
+            </p>
           `;
           
           // Insert form before button
           button.insertAdjacentHTML('beforebegin', formHTML);
           button.textContent = 'Sign In and Continue';
+
+          const forgotPasswordLink = document.getElementById('signin-forgot-password');
+          forgotPasswordLink?.addEventListener('click', (event) => {
+            event.preventDefault();
+            const emailValue = document.getElementById('signin-email')?.value?.trim() || '';
+            const forgotUrl = emailValue
+              ? `/forgotPassword?email=${encodeURIComponent(emailValue)}`
+              : '/forgotPassword';
+            window.location.href = forgotUrl;
+          });
           
           // Handle sign-in
           button.addEventListener('click', handleSignIn);
