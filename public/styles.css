@@ -1890,7 +1890,7 @@ li {
   left: 50%;
   width: 0;
   height: 2px;
-  background: #fff;
+  background: #3b82f6;
   transition: all 0.4s ease;
 }
 
@@ -1912,7 +1912,7 @@ li {
 
 .quiz--main_h nav > ul > li > .quiz--nav__link:hover,
 .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle:hover {
-  color: var(--accent);
+  color: #3b82f6;
   letter-spacing: 2px;
 }
 
@@ -1933,7 +1933,7 @@ li {
 .quiz--main_h.quiz--sticky nav a.quiz--nav__link::after,
 .quiz--main_h.quiz--sticky nav .quiz--nav__dropdown-toggle::before,
 .quiz--main_h.quiz--sticky nav .quiz--nav__dropdown-toggle::after {
-  background: var(--accent);
+  background: #3b82f6;
 }
 
 .quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__link {
@@ -1941,7 +1941,7 @@ li {
 }
 
 .quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__link:hover {
-  color: var(--accent);
+  color: #3b82f6;
 }
 
 /* Mobile menu panel */
@@ -1982,7 +1982,7 @@ li {
   .quiz--main_h nav > ul > li > .quiz--nav__link::after,
   .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::before,
   .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::after {
-    background: var(--accent);
+    background: #3b82f6;
   }
 }
 
