@@ -249,7 +249,6 @@ import {
         const auth = await window.__authReady;
         if (auth) await signOut(auth);
       } catch (e) {
-        console.warn("signOut failed:", e);
       }
 
       // Optional: keep if you still use these elsewhere
@@ -284,7 +283,6 @@ import {
     try {
       userDoc = await window.dbService.getUser(user.uid);
     } catch (e) {
-      console.warn("getUser failed:", e);
     }
 
     setAvatarAndName(

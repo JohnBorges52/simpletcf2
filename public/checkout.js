@@ -195,12 +195,10 @@
     try {
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
-        console.warn('Cannot activate free tier: no user logged in');
         return;
       }
 
       if (!window.SubscriptionService) {
-        console.warn('SubscriptionService not available');
         return;
       }
 
@@ -215,7 +213,6 @@
         }
       });
 
-      console.log('✅ Free tier activated');
     } catch (error) {
       console.error('Error activating free tier:', error);
     }
@@ -228,17 +225,14 @@
     try {
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
-        console.warn('Cannot activate paid tier: no user logged in');
         return;
       }
 
       if (!window.SubscriptionService) {
-        console.warn('SubscriptionService not available');
         return;
       }
 
       await window.SubscriptionService.setUserTier(user.uid, tierName, durationDays, price);
-      console.log(`✅ ${tierName} tier activated for ${durationDays} days at $${price}`);
     } catch (error) {
       console.error('Error activating paid tier:', error);
     }
@@ -291,10 +285,8 @@
       if (completePaymentBtn) {
         completePaymentBtn.addEventListener("click", async () => {
           try {
-            console.log("💳 Payment button clicked");
 
             const tierConfig = getTierConfig(sel.badgeStr, sel.durationStr);
-            console.log("Selected tier:", tierConfig);
 
             // Validate Stripe service is loaded
             if (!window.StripeService) {
@@ -304,11 +296,9 @@
 
             // Initialize Stripe if not already done
             if (!window.StripeService.isInitialized()) {
-              console.log("Initializing Stripe...");
               await window.StripeService.init();
             }
 
-            console.log("Creating checkout session...");
 
             // SECURITY: Only send tier name, backend controls pricing
             await window.StripeService.createCheckoutSession(

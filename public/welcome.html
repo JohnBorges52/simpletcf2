@@ -113,10 +113,7 @@
               tier: 'free',
               subscriptionStatus: 'free'
             });
-            console.log('✅ User document created in Firestore');
-          } else {
-            console.log('✅ User document already exists');
-          }
+          } 
         }
         window.location.href = '/';
       }
@@ -132,7 +129,6 @@
           
           if (!user) {
             // No user logged in - show sign-in form
-            console.log('Email verified but user not logged in - showing sign-in form');
             showSignInForm(verifiedEmail);
             return;
           }
@@ -142,14 +138,12 @@
             // Reload user to get latest verification status
             await user.reload();
             if (!user.emailVerified) {
-              console.log('Email not verified, redirecting back to register');
               window.location.href = '/register';
               return;
             }
           }
 
           // User is logged in and verified - show complete setup button
-          console.log('User logged in and verified - showing setup button');
           showCompleteSetup(user);
         } catch (error) {
           console.error('Error loading welcome page:', error);

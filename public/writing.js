@@ -16,21 +16,17 @@
   
   if (!user || !user.emailVerified) {
     if (user && !user.emailVerified) {
-      console.log("🔒 User email not verified, signing out and redirecting to login...");
       // Sign out unverified user
       try {
         await window.AuthService.signOutUser();
       } catch (error) {
         console.error("Error signing out:", error);
       }
-    } else {
-      console.log("🔒 User not logged in, redirecting to login...");
-    }
+    } 
     window.location.href = "/login";
     return;
   }
   
-  console.log("✅ User authenticated and email verified:", user.email);
   
   // Show page content only after verification passes
   document.body.style.visibility = "visible";
@@ -168,10 +164,8 @@
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        console.log("[Writing] ✅ Loaded JSON from:", url);
         return data;
       } catch (e) {
-        console.warn("[Writing] JSON not found at", url, "-", e?.message || e);
       }
     }
     throw new Error("All JSON URL candidates returned 404/failed.");
@@ -536,13 +530,11 @@
   async function initializeSubscription() {
     try {
       if (!window.SubscriptionService) {
-        console.warn('SubscriptionService not available');
         return;
       }
       
       const userData = await window.SubscriptionService.init();
       userSubscription = userData;
-      console.log('🔍 [DEBUG] Writing - Subscription initialized, full data:', JSON.stringify(userData, null, 2));
     } catch (error) {
       console.error('Error initializing subscription:', error);
     }
@@ -555,12 +547,10 @@
   async function checkWritingAccess() {
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
-      console.log('No user logged in');
       return true; // Allow access when not logged in
     }
 
     if (!window.SubscriptionService || !userSubscription) {
-      console.warn('Subscription service not initialized');
       return true; // Fail open
     }
 
@@ -621,7 +611,6 @@
     // ✅ Track for ALL users (limits are checked separately)
     try {
       await window.SubscriptionService.incrementUsage(user.uid, 'writing');
-      console.log('✅ Writing usage incremented');
       
       // Refresh subscription data
       userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
@@ -654,7 +643,6 @@
   (async () => {
     // ✅ Wait for Firebase to initialize before using subscription service
     await window.AuthService?.waitForAuth();
-    console.log('✅ Firebase ready, initializing writing page...');
     
     // Initialize subscription first
     await initializeSubscription();

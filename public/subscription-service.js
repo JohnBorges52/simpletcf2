@@ -60,7 +60,6 @@ class SubscriptionService {
   async init() {
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
-      console.log('No user logged in');
       return null;
     }
 
@@ -167,7 +166,6 @@ class SubscriptionService {
       };
 
       await addDoc(collection(db, 'orders'), orderData);
-      console.log(`✅ Order created: ${tier} - $${price}`);
     } catch (error) {
       console.error('Failed to create order:', error);
     }
@@ -204,7 +202,6 @@ class SubscriptionService {
     const endDate = userData.subscriptionEndDate.toDate ? userData.subscriptionEndDate.toDate() : new Date(userData.subscriptionEndDate);
 
     if (now > endDate) {
-      console.log('⏰ Subscription expired, downgrading to free tier');
       await this.updateUserSubscriptionData(userId, {
         tier: TIERS.FREE,
         subscriptionStartDate: null,
@@ -217,7 +214,6 @@ class SubscriptionService {
       // ✅ Refresh currentUserData after downgrade
       const updatedUserData = await this.getUserSubscriptionData(userId);
       this.currentUserData = updatedUserData;
-      console.log('✅ User downgraded to free tier, data refreshed');
     }
   }
 
@@ -261,7 +257,6 @@ class SubscriptionService {
     }
 
     const newValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
-    console.log(`📊 ${type} usage: ${oldValue} → ${newValue}`);
 
     await this.updateUserSubscriptionData(userId, { usage });
     
@@ -274,31 +269,25 @@ class SubscriptionService {
    */
   canAccess(feature, userData = null) {
     const data = userData || this.currentUserData;
-    console.log('🔍 [DEBUG] canAccess called - feature:', feature, 'data:', data);
     
     if (!data) {
-      console.log('🔍 [DEBUG] No data, returning true (new user)');
       return true; // ✅ No data yet = new user, allow access
     }
 
     const tierLimits = TIER_LIMITS[data.tier] || TIER_LIMITS[TIERS.FREE];
     const usage = data.usage || {}; // ✅ Default to empty usage object
-    console.log('🔍 [DEBUG] Tier:', data.tier, 'TierLimits:', tierLimits, 'Usage:', usage);
 
     switch (feature) {
       case 'listening':
         const listeningResult = (usage.listeningQuestionsAnswered || 0) < tierLimits.listeningQuestions;
-        console.log('🔍 [DEBUG] Listening check:', usage.listeningQuestionsAnswered, '<', tierLimits.listeningQuestions, '=', listeningResult);
         return listeningResult;
       
       case 'reading':
         const readingResult = (usage.readingQuestionsAnswered || 0) < tierLimits.readingQuestions;
-        console.log('🔍 [DEBUG] Reading check:', usage.readingQuestionsAnswered, '<', tierLimits.readingQuestions, '=', readingResult);
         return readingResult;
       
       case 'writing':
         const writingResult = !tierLimits.hasWriting ? false : (usage.writingPromptsUsed || 0) < tierLimits.writingPrompts;
-        console.log('🔍 [DEBUG] Writing check - hasWriting:', tierLimits.hasWriting, 'usage:', usage.writingPromptsUsed, '<', tierLimits.writingPrompts, '=', writingResult);
         return writingResult;
       
       case 'realTests':

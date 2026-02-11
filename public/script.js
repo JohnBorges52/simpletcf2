@@ -493,7 +493,6 @@ run("contact-button", () => {
       });
       
       // Note: no-cors mode doesn't return response, so we assume success
-      console.log('Email sent to Google Apps Script');
       
       // Success animation
       button.classList.remove("onclic");
@@ -658,10 +657,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // ✅ Check if user already has a paid plan
         if (window.SubscriptionService) {
-          console.log('🔍 Checking user subscription status...');
           await window.SubscriptionService.init();
           const currentTier = window.SubscriptionService.getCurrentTier();
-          console.log('🎫 Current tier:', currentTier);
           
           if (currentTier && currentTier !== 'free') {
             // Remove the disabled state so they can try again later
@@ -669,9 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
             return;
           }
-        } else {
-          console.warn('⚠️ SubscriptionService not available');
-        }
+        } 
 
         // ✅ Set flag before redirecting to prevent alerts on back navigation
         sessionStorage.setItem('navigating_to_checkout', 'true');

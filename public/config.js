@@ -147,7 +147,6 @@ window.getFirebaseStorageUrl = async (path) => {
     const fileRef = ref(storage, cleanPath);
     return await getDownloadURL(fileRef);
   } catch (err) {
-    console.warn(`Storage URL failed for ${path}:`, err);
     return null;
   }
 };
@@ -219,9 +218,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Only run on register page
   if (!startBtn && !googleBtn) return;
 
-  console.log("📝 Register page detected");
-  console.log("Start button:", startBtn);
-  console.log("Google button:", googleBtn);
 
   // Wire password toggles
   wirePasswordToggle({
@@ -298,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
       await AuthService.registerWithEmail(email, password, name);
       
       // Keep user logged in (they just can't access protected pages until verified)
-      console.log('✅ Account created. User stays logged in but must verify email.');
 
       // Show verification message
       showVerificationMessage(email, name);
@@ -306,7 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       // Special handling for email already in use
       if (error.code === "auth/email-already-in-use") {
-        console.log("Email already registered, checking verification status...");
         
         try {
           startBtn.textContent = "Checking account...";
@@ -316,13 +310,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const user = credential.user;
           
           if (!user.emailVerified) {
-            console.log("Account exists but not verified - resending verification email");
             
             // Account exists but unverified - resend verification email
             await sendEmailVerification(user);
             
             // Keep user logged in (they just can't access protected pages until verified)
-            console.log('✅ Verification email resent. User stays logged in.');
             
             // Show verification message
             showVerificationMessage(email, name);
@@ -336,7 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         } catch (signInError) {
           // Sign-in failed - email exists with different password
-          console.log("Email exists but wrong password provided");
           showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
           shakeElement("#register-form");
           return; // Exit early
@@ -356,22 +347,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google Sign-in
   googleBtn?.addEventListener("click", async () => {
-    console.log("Google register button clicked!");
     
     const originalHTML = googleBtn.innerHTML;
     try {
       googleBtn.disabled = true;
       googleBtn.innerHTML = '<span>Signing in with Google...</span>';
 
-      console.log("Waiting for auth...");
       // Wait for auth to be ready
       await AuthService.waitForAuth();
 
-      console.log("Calling signInWithGoogle...");
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
-      console.log("Google sign-in successful:", user.email);
       
       // Check if this is a new user (additionalUserInfo.isNewUser)
       const isNewUser = result._tokenResponse?.isNewUser || false;
@@ -395,7 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
         // User cancelled, just re-enable button
-        console.log("User cancelled Google sign-in");
       } else {
         const msg = AuthService.formatAuthError(error);
         showFieldError(emailInput, "err-email", msg);
@@ -421,11 +407,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Only run on login page
   if (!loginForm && !googleLoginBtn) return;
 
-  console.log("🔐 Login page detected");
-  console.log("Login form:", loginForm);
-  console.log("Google button:", googleLoginBtn);
-  console.log("Email input:", emailInput);
-  console.log("Password input:", passwordInput);
 
   // Wire password toggle
   wirePasswordToggle({
@@ -485,14 +466,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Check if email is verified
       if (!user.emailVerified) {
-        console.log("⚠️ Login blocked - email not verified. Sending verification email...");
         
         // Send new verification email
         try {
           await sendEmailVerification(user);
-          console.log("✅ Verification email sent");
         } catch (e) {
-          console.warn("Could not send verification email:", e);
         }
         
         // Sign out unverified user
@@ -523,22 +501,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Google Login
   googleLoginBtn?.addEventListener("click", async () => {
-    console.log("Google login button clicked!");
     
     const originalHTML = googleLoginBtn.innerHTML;
     try {
       googleLoginBtn.disabled = true;
       googleLoginBtn.innerHTML = '<span>Signing in with Google...</span>';
 
-      console.log("Waiting for auth...");
       // Wait for auth to be ready
       await AuthService.waitForAuth();
 
-      console.log("Calling signInWithGoogle...");
       const result = await AuthService.signInWithGoogle();
       const user = result.user;
 
-      console.log("Google sign-in successful:", user.email);
       // Google users are typically pre-verified
       showWelcomeMessage(user.displayName || "User", user.email);
 
@@ -547,7 +521,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
         // User cancelled
-        console.log("User cancelled Google sign-in");
       } else {
         const msg = AuthService.formatAuthError(error);
         showFieldError(emailInput, "err-login-email", msg);
@@ -584,7 +557,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!sendResetBtn) return;
 
-  console.log("🔑 Forgot password page detected");
 
   const sendResetEmail = async () => {
     const email = forgotEmailInput?.value.trim() || "";
@@ -672,7 +644,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!resetForm) return;
 
-  console.log("🔑 Password reset page detected");
 
   resetBtn?.addEventListener("click", async () => {
     const email = resetEmailInput?.value.trim() || "";
@@ -802,10 +773,7 @@ function showVerificationMessage(email, name) {
         // If user is logged in, reload their data to update emailVerified status
         if (auth.currentUser) {
           await auth.currentUser.reload();
-          console.log("✅ Email verified successfully - user still logged in");
-        } else {
-          console.log("✅ Email verified successfully (user not logged in)");
-        }
+        } 
       }
       
       // Redirect to welcome page with verified email parameter

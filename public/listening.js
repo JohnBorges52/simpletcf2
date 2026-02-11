@@ -35,7 +35,6 @@ import {
   
   if (!user || !user.emailVerified) {
     if (user && !user.emailVerified) {
-      console.log("🔒 User email not verified, signing out and redirecting to login...");
       // Sign out unverified user
       try {
         const authService = await import('./auth-service.js');
@@ -43,14 +42,11 @@ import {
       } catch (error) {
         console.error("Error signing out:", error);
       }
-    } else {
-      console.log("🔒 User not logged in, redirecting to login...");
-    }
+    } 
     window.location.href = "/login";
     return;
   }
   
-  console.log("✅ User authenticated and email verified:", user.email);
   
   // Show page content only after verification passes
   document.body.style.visibility = "visible";
@@ -406,7 +402,6 @@ import {
       try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) {
-          console.warn("JSON candidate returned non-ok status", url, res.status, res.url);
           continue;
         }
         const ct = res.headers.get("content-type") || "";
@@ -414,17 +409,14 @@ import {
           const text = await res.text();
           try {
             const parsed = JSON.parse(text);
-            console.log("Loaded JSON (content-type mismatch) from:", url, res.url);
             return parsed;
           } catch (err) {
-            console.warn("Not JSON at", url, "response.url=", res.url, "body starts:", text.slice(0, 400));
             continue;
           }
         }
         const data = await res.json();
         return data;
       } catch (err) {
-        console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
         continue;
       }
     }
@@ -714,7 +706,6 @@ import {
               return;
             }
           } catch (err) {
-            console.warn("Storage URL failed for picture, trying local path:", imgSrc, err);
           }
         }
         
@@ -744,7 +735,6 @@ import {
               audioEl.load();
             }
           } catch (err) {
-            console.warn("Storage URL failed, using local:", src);
             audioEl.src = src;
             audioEl.load();
           }
@@ -1035,7 +1025,6 @@ import {
         selectedOption: selectedLetter,
         isCorrect: isCorrect,
       }).catch(err => {
-        console.warn("Failed to log listening response to Firestore:", err);
       });
     }
 
@@ -1358,7 +1347,6 @@ import {
    */
   async function saveTestResultToDatabase(correctAnswers, weightedScore, clb) {
     if (!window.dbService || !window.dbService.saveTestResult) {
-      console.warn("⚠️ Database service not available, cannot save test result");
       return;
     }
 
@@ -1388,7 +1376,6 @@ import {
       };
 
       const docId = await window.dbService.saveTestResult(testData);
-      console.log("✅ Listening test result saved:", docId);
     } catch (error) {
       console.error("❌ Failed to save test result:", error);
     }
@@ -1600,7 +1587,6 @@ import {
               source.parentElement?.load?.();
             }
           } catch (err) {
-            console.warn("Storage URL failed for review:", src);
           }
         }
       });
@@ -1644,13 +1630,11 @@ import {
   async function initializeSubscription() {
     try {
       if (!window.SubscriptionService) {
-        console.warn('SubscriptionService not available');
         return;
       }
       
       const userData = await window.SubscriptionService.init();
       state.userSubscription = userData;
-      console.log('🔍 [DEBUG] Subscription initialized, full data:', JSON.stringify(userData, null, 2));
 
       // ✅ Migrate existing answered questions to subscription usage counter
       await migrateExistingAnswers();
@@ -1666,13 +1650,11 @@ import {
     try {
       const user = window.AuthService?.getCurrentUser();
       if (!user || !window.SubscriptionService) {
-        console.log('🔍 [DEBUG] Migration skipped - no user or service');
         return;
       }
 
       // ✅ Ensure user has subscription data with usage object
       if (!state.userSubscription || !state.userSubscription.usage) {
-        console.log('⚠️ No subscription data yet, skipping migration');
         return;
       }
 
@@ -1683,11 +1665,9 @@ import {
       // Get current subscription usage
       const currentUsage = state.userSubscription.usage.listeningQuestionsAnswered || 0;
 
-      console.log('🔍 [DEBUG] Migration check - tracked:', answeredCount, 'subscriptionUsage:', currentUsage);
 
       // If old tracking has more answers than subscription counter, sync them
       if (answeredCount > currentUsage && answeredCount > 0) {
-        console.log(`📊 Migrating ${answeredCount} existing listening answers to subscription system`);
         
         await window.SubscriptionService.updateUserSubscriptionData(user.uid, {
           usage: {
@@ -1698,10 +1678,7 @@ import {
 
         // Refresh subscription data
         state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
-        console.log('✅ Listening usage synced:', answeredCount);
-      } else {
-        console.log('🔍 [DEBUG] No migration needed');
-      }
+      } 
     } catch (error) {
       console.error('Error migrating existing answers:', error);
     }
@@ -1714,21 +1691,16 @@ import {
   async function checkListeningAccess() {
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
-      console.log('No user logged in');
       return true; // Allow access when not logged in (or redirect to login)
     }
 
     if (!window.SubscriptionService || !state.userSubscription) {
-      console.warn('Subscription service not initialized');
       return true; // Fail open
     }
 
-    console.log('🔍 [DEBUG] checkListeningAccess - state.userSubscription:', JSON.stringify(state.userSubscription, null, 2));
     const canAccess = window.SubscriptionService.canAccess('listening', state.userSubscription);
-    console.log('🔍 [DEBUG] canAccess result:', canAccess);
     
     if (!canAccess) {
-      console.log('❌ Access denied - showing upgrade modal');
       const remaining = window.SubscriptionService.getRemainingUsage(state.userSubscription);
       window.SubscriptionService.showUpgradeModal(
         `You've used all ${15} free listening questions! Keep enjoying SimpleTCF by selecting a plan.`
@@ -1740,7 +1712,6 @@ import {
       return false;
     }
 
-    console.log('✅ Access granted to listening practice');
     return true;
   }
 
@@ -1754,7 +1725,6 @@ import {
     // ✅ Track for ALL users (limits are checked separately)
     try {
       await window.SubscriptionService.incrementUsage(user.uid, 'listening');
-      console.log('✅ Listening usage incremented');
       
       // Refresh subscription data
       state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
@@ -1808,7 +1778,6 @@ import {
   async function init() {
     // ✅ Wait for Firebase to initialize before using Storage
     await window.AuthService.waitForAuth();
-    console.log('✅ Firebase ready, initializing listening page...');
     
     // ✅ Initialize subscription service and check access
     await initializeSubscription();

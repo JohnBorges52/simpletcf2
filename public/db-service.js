@@ -91,7 +91,6 @@ async function getUser(userId) {
     if (userSnap.exists()) {
       return { id: userSnap.id, ...userSnap.data() };
     } else {
-      console.log("No user document found for:", userId);
       return null;
     }
   } catch (error) {
@@ -115,13 +114,11 @@ async function logQuestionResponse(responseData) {
   
   // Get current user from AuthService
   if (!window.AuthService) {
-    console.warn("⚠️ AuthService not available, cannot log response");
     return null;
   }
   
   const user = window.AuthService.getCurrentUser();
   if (!user) {
-    console.warn("⚠️ User not authenticated, cannot log response");
     return null;
   }
   
@@ -143,7 +140,6 @@ async function logQuestionResponse(responseData) {
   try {
     const responsesRef = collection(db, "questionResponses");
     const docRef = await addDoc(responsesRef, responseDoc);
-    console.log("✅ Question response logged:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("❌ Error logging question response:", error);
@@ -534,7 +530,6 @@ async function saveTestResult(testData) {
   // Get current user
   const user = window.AuthService.getCurrentUser();
   if (!user) {
-    console.warn("⚠️ User not authenticated, cannot save test result");
     return null;
   }
   
@@ -555,7 +550,6 @@ async function saveTestResult(testData) {
   try {
     const testsRef = collection(db, "testResults");
     const docRef = await addDoc(testsRef, testDoc);
-    console.log("✅ Test result saved:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("❌ Error saving test result:", error);

@@ -49,7 +49,6 @@ class StripeService {
 
       this.stripe = Stripe(this.publishableKey);
       this.initialized = true;
-      console.log("✅ Stripe initialized");
     } catch (error) {
       console.error("❌ Failed to initialize Stripe:", error);
       throw error;
@@ -88,9 +87,6 @@ class StripeService {
         throw new Error("Invalid plan selected");
       }
 
-      console.log("🔍 DEBUG: Creating checkout session for:", {tier, priceId});
-      console.log("🔍 DEBUG: User ID:", user.uid);
-      console.log("🔍 DEBUG: User Email:", user.email);
 
       // SECURITY: Call Cloud Function with authentication
       const response = await fetch(this.cloudFunctionUrl, {
@@ -111,7 +107,6 @@ class StripeService {
         }),
       });
 
-      console.log("🔍 DEBUG: Response status:", response.status);
 
       if (!response.ok) {
         // Try to get error details from response
@@ -136,7 +131,6 @@ class StripeService {
         throw new Error("Invalid session response");
       }
 
-      console.log("✅ Session created, redirecting to Stripe...");
 
       // Redirect to Stripe Checkout
       const result = await this.stripe.redirectToCheckout({

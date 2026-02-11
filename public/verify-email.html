@@ -159,7 +159,6 @@
             // Check if email is already verified
             if (user.emailVerified) {
               // Already verified, redirect to welcome page
-              console.log('Email already verified, redirecting to welcome page');
               window.location.href = '/welcome';
               return;
             }
@@ -213,7 +212,6 @@
 
           } else {
             // No user logged in, redirect to registration
-            console.log('No user found, redirecting to registration');
             window.location.href = '/register';
           }
         } catch (error) {
