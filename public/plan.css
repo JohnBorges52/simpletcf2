@@ -1066,9 +1066,25 @@ body.plans .hero__title-big {
   background: rgba(233, 238, 252, 0.8);
 }
 
+#plans .plan-carousel__btn:not(:disabled) {
+  animation: planCarouselPulse 1.8s ease-in-out infinite;
+}
+
 #plans .plan-carousel__btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes planCarouselPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 92, 255, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(124, 92, 255, 0.22);
+  }
 }
 
 /* Left/right placement */
