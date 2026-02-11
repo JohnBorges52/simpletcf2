@@ -1878,7 +1878,9 @@ img {
 }
 
 .quiz--main_h nav > ul > li > .quiz--nav__link::before,
-.quiz--main_h nav > ul > li > .quiz--nav__link::after {
+.quiz--main_h nav > ul > li > .quiz--nav__link::after,
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::before,
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::after {
   content: "";
   position: absolute;
   left: 50%;
@@ -1892,27 +1894,41 @@ img {
   top: 0;
 }
 
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::before {
+  top: 0;
+}
+
 .quiz--main_h nav > ul > li > .quiz--nav__link::after {
   bottom: 0;
 }
 
-.quiz--main_h nav > ul > li > .quiz--nav__link:hover {
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::after {
+  bottom: 0;
+}
+
+.quiz--main_h nav > ul > li > .quiz--nav__link:hover,
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle:hover {
   color: var(--accent);
   letter-spacing: 2px;
 }
 
 .quiz--main_h nav > ul > li > .quiz--nav__link:hover::before,
-.quiz--main_h nav > ul > li > .quiz--nav__link:hover::after {
+.quiz--main_h nav > ul > li > .quiz--nav__link:hover::after,
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle:hover::before,
+.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle:hover::after {
   left: 0;
   width: 100%;
 }
 
-.quiz--main_h.quiz--sticky nav a.quiz--nav__link {
+.quiz--main_h.quiz--sticky nav a.quiz--nav__link,
+.quiz--main_h.quiz--sticky nav .quiz--nav__dropdown-toggle {
   color: #2b2b2b;
 }
 
 .quiz--main_h.quiz--sticky nav a.quiz--nav__link::before,
-.quiz--main_h.quiz--sticky nav a.quiz--nav__link::after {
+.quiz--main_h.quiz--sticky nav a.quiz--nav__link::after,
+.quiz--main_h.quiz--sticky nav .quiz--nav__dropdown-toggle::before,
+.quiz--main_h.quiz--sticky nav .quiz--nav__dropdown-toggle::after {
   background: var(--accent);
 }
 
@@ -1953,12 +1969,15 @@ img {
     gap: 16px;
   }
 
-  .quiz--main_h nav > ul > li > .quiz--nav__link {
+  .quiz--main_h nav > ul > li > .quiz--nav__link,
+  .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle {
     color: #2b2b2b;
   }
 
   .quiz--main_h nav > ul > li > .quiz--nav__link::before,
-  .quiz--main_h nav > ul > li > .quiz--nav__link::after {
+  .quiz--main_h nav > ul > li > .quiz--nav__link::after,
+  .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::before,
+  .quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle::after {
     background: var(--accent);
   }
 }
