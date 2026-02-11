@@ -839,11 +839,6 @@ body.plans .hero-wrap .hero {
   border-right: 0;
 }
 
-.color-blue-span{
-  color: cornflowerblue;
-  font-size: clamp(2.2rem, 5vw, 3.2rem);
-  text-decoration: none;
-}
 
 /* ================= HERO (PHOTO ONLY) ================= */
 
@@ -890,6 +885,14 @@ body.plans .hero__title-big {
   font-size: clamp(2.8rem, 6.5vw, 4.2rem);
   display: block;
   font-weight: 700;
+}
+
+.color-blue-span{
+  color: 61baff;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  text-decoration: none;
+  border-bottom: 0px solid transparent;
+  
 }
 
 .btn--lg {
