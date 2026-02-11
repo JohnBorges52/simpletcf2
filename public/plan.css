@@ -839,6 +839,10 @@ body.plans .hero-wrap .hero {
   border-right: 0;
 }
 
+.color-blue-span{
+  color: cornflowerblue;
+}
+
 /* ================= HERO (PHOTO ONLY) ================= */
 
 body.plans .hero {
