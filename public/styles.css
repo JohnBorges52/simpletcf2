@@ -2056,7 +2056,7 @@ li {
   min-width: 280px;
   justify-content: center;
 
-  background: var( #fff);
+  background: #fff;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 12px;
 
@@ -2085,7 +2085,7 @@ li {
 /* show on hover/focus (desktop) */
 .quiz--nav__dropdown:hover .quiz--nav__dropdown-menu,
 .quiz--nav__dropdown:focus-within .quiz--nav__dropdown-menu {
-  opacity: 1;
+  opacity: 100%;
   visibility: visible;
   transform: translateY(0);
 }
