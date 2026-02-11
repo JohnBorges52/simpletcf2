@@ -32,9 +32,17 @@
           alert("Not allowed");
           return;
         }
-        // Get Firebase ID token
+        // Get Firebase ID token robustly
         let idToken = null;
-        if (window.firebase && window.firebase.auth) {
+        if (window.AuthService && window.AuthService.getCurrentUser) {
+          await window.AuthService.waitForAuth();
+          const currentUser = window.AuthService.getCurrentUser();
+          if (currentUser && currentUser.getIdToken) {
+            idToken = await currentUser.getIdToken();
+          }
+        }
+        // Fallback to firebase.auth
+        if (!idToken && window.firebase && window.firebase.auth) {
           const currentUser = window.firebase.auth().currentUser;
           if (currentUser) idToken = await currentUser.getIdToken();
         }
