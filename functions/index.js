@@ -1,5 +1,5 @@
-const {onRequest} = require("firebase-functions/v2/https");
-const {defineSecret} = require("firebase-functions/params");
+const { onRequest } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 
 // Define secret parameters for Stripe keys
@@ -44,12 +44,7 @@ const VALID_PRICE_IDS = {
  * @param {string} planName - Plan name
  * @param {number} durationDays - Plan duration in days
  */
-async function sendPurchaseConfirmationEmail(
-    email,
-    userName,
-    planName,
-    durationDays,
-) {
+async function sendPurchaseConfirmationEmail(email, userName, planName, durationDays) {
   try {
     // Create email HTML template
     const emailHTML = `
@@ -269,14 +264,10 @@ async function sendPurchaseConfirmationEmail(
  * @return {Promise<boolean>} Success status
  */
 async function sendStripeInvoice(invoiceId) {
-  if (!stripe) {
-    return false;
-  }
+  if (!stripe) return false;
 
   try {
-    if (!invoiceId) {
-      return false;
-    }
+    if (!invoiceId) return false;
 
     const invoice = await stripe.invoices.retrieve(invoiceId);
 
@@ -307,8 +298,7 @@ async function verifyAuthToken(req) {
   const idToken = authHeader.split("Bearer ")[1];
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    return decodedToken;
+    return await admin.auth().verifyIdToken(idToken);
   } catch (error) {
     throw new Error("Invalid authentication token");
   }
@@ -322,260 +312,289 @@ async function verifyAuthToken(req) {
  */
 function validatePriceId(priceId) {
   const planDetails = VALID_PRICE_IDS[priceId];
-
-  if (!planDetails) {
-    throw new Error("Invalid price ID");
-  }
-
+  if (!planDetails) throw new Error("Invalid price ID");
   return planDetails;
 }
 
 /**
  * Create Stripe Checkout Session
- * Security Features:
- * - Validates Firebase Auth token
- * - Whitelists price IDs (prevents price manipulation)
- * - Uses server-side pricing (never trusts client)
- * - Stores metadata for webhook processing
  */
 exports.createCheckoutSession = onRequest(
-    {secrets: [stripeSecretKey], cors: true},
-    async (req, res) => {
-      if (!stripe) {
-        stripe = require("stripe")(stripeSecretKey.value());
-      }
-
-      try {
-        if (req.method !== "POST") {
-          return res.status(405).json({error: "Method not allowed"});
-        }
-
-        let decodedToken;
-        try {
-          decodedToken = await verifyAuthToken(req);
-        } catch (error) {
-          return res.status(401).json({
-            error: "Unauthorized: " + error.message,
-          });
-        }
-
-        const {priceId, successUrl, cancelUrl} = req.body;
-
-        if (!priceId) {
-          return res.status(400).json({error: "Missing priceId"});
-        }
-
-        if (!successUrl || !cancelUrl) {
-          return res.status(400).json({
-            error: "Missing redirect URLs",
-          });
-        }
-
-        let planDetails;
-        try {
-          planDetails = validatePriceId(priceId);
-        } catch (error) {
-          return res.status(400).json({error: "Invalid plan selected"});
-        }
-
-        const userId = decodedToken.uid;
-        const userEmail = decodedToken.email;
-
-        let customerId = null;
-        try {
-          const userDoc = await admin.firestore()
-              .collection("users").doc(userId).get();
-          if (userDoc.exists) {
-            customerId = userDoc.data().stripeCustomerId;
-          }
-        } catch (error) {
-          // Continue without customer ID
-        }
-
-        if (!customerId) {
-          const customer = await stripe.customers.create({
-            email: userEmail,
-            metadata: {
-              firebaseUID: userId,
-            },
-          });
-          customerId = customer.id;
-        }
-
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ["card"],
-          line_items: [
-            {
-              price: priceId,
-              quantity: 1,
-            },
-          ],
-          mode: "payment",
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-          customer: customerId,
-          client_reference_id: userId,
-          metadata: {
-            userId: userId,
-            tier: planDetails.tier,
-            price: planDetails.price.toString(),
-            durationDays: planDetails.durationDays.toString(),
-            priceId: priceId,
-          },
-          invoice_creation: {
-            enabled: true,
-            invoice_data: {
-              description: `SimpleTCF - ${planDetails.name}`,
-              metadata: {
-                userId: userId,
-                tier: planDetails.tier,
-              },
-              footer: "Thank you for choosing SimpleTCF!",
-            },
-          },
-        });
-
-        res.json({id: session.id});
-      } catch (error) {
-        res.status(500).json({
-          error: "Failed to create checkout session",
-          details: error.message,
-          type: error.type,
-        });
-      }
+  { secrets: [stripeSecretKey], cors: true },
+  async (req, res) => {
+    // ✅ Log no começo: confirma que entrou e ajuda a debugar CORS/auth
+    console.log("➡️ createCheckoutSession HIT", {
+      method: req.method,
+      origin: req.headers.origin,
+      hasAuth: !!req.headers.authorization,
+      bodyKeys: Object.keys(req.body || {}),
     });
+
+    // ✅ Init Stripe com logs seguros
+    try {
+      const secretValue = (stripeSecretKey.value() || "").trim();
+
+      console.log("Stripe key prefix:", secretValue.substring(0, 8));
+      console.log("Stripe key length:", secretValue.length);
+      console.log("Stripe mode:", secretValue.startsWith("sk_live_") ? "LIVE" : "TEST/UNKNOWN");
+
+      if (!secretValue) {
+        console.error("❌ STRIPE_SECRET_KEY is empty/undefined");
+        return res.status(500).json({ error: "Stripe secret key missing" });
+      }
+
+      if (!stripe) {
+        stripe = require("stripe")(secretValue);
+        console.log("✅ Stripe initialized");
+      }
+    } catch (initError) {
+      console.error("❌ Stripe init error:", initError?.message || initError);
+      console.error("❌ Stripe init stack:", initError?.stack);
+      return res.status(500).json({ error: "Stripe initialization failed" });
+    }
+
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+      }
+
+      let decodedToken;
+      try {
+        decodedToken = await verifyAuthToken(req);
+      } catch (error) {
+        console.warn("⚠️ Unauthorized:", error?.message || error);
+        return res.status(401).json({
+          error: "Unauthorized: " + (error?.message || "Unknown auth error"),
+        });
+      }
+
+      const { priceId, successUrl, cancelUrl } = req.body || {};
+
+      if (!priceId) {
+        return res.status(400).json({ error: "Missing priceId" });
+      }
+      if (!successUrl || !cancelUrl) {
+        return res.status(400).json({ error: "Missing redirect URLs" });
+      }
+
+      let planDetails;
+      try {
+        planDetails = validatePriceId(priceId);
+      } catch (error) {
+        console.warn("⚠️ Invalid plan selected:", priceId);
+        return res.status(400).json({ error: "Invalid plan selected" });
+      }
+
+      const userId = decodedToken.uid;
+      const userEmail = decodedToken.email;
+
+      if (!userEmail) {
+        console.warn("⚠️ Token has no email. uid:", userId);
+      }
+
+      let customerId = null;
+      try {
+        const userDoc = await admin.firestore().collection("users").doc(userId).get();
+        if (userDoc.exists) {
+          customerId = userDoc.data()?.stripeCustomerId || null;
+        }
+      } catch (error) {
+        console.warn("⚠️ Could not read user doc for stripeCustomerId:", error?.message || error);
+      }
+
+      if (!customerId) {
+        console.log("ℹ️ Creating Stripe customer for uid:", userId);
+        const customer = await stripe.customers.create({
+          email: userEmail || undefined,
+          metadata: { firebaseUID: userId },
+        });
+        customerId = customer.id;
+        console.log("✅ Stripe customer created:", customerId);
+      }
+
+      console.log("ℹ️ Creating checkout session...", {
+        priceId,
+        userId,
+        customerId,
+      });
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: "payment",
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        customer: customerId,
+        client_reference_id: userId,
+        metadata: {
+          userId: userId,
+          tier: planDetails.tier,
+          price: planDetails.price.toString(),
+          durationDays: planDetails.durationDays.toString(),
+          priceId: priceId,
+        },
+        invoice_creation: {
+          enabled: true,
+          invoice_data: {
+            description: `SimpleTCF - ${planDetails.name}`,
+            metadata: { userId: userId, tier: planDetails.tier },
+            footer: "Thank you for choosing SimpleTCF!",
+          },
+        },
+      });
+
+      console.log("✅ Checkout session created:", session.id);
+
+      return res.json({ id: session.id });
+    } catch (error) {
+      // ✅ NÃO faça JSON.stringify(error) no objeto inteiro (pode quebrar)
+      console.error("❌ createCheckoutSession FAILED:", error?.message || error);
+
+      console.error("❌ Stripe details:", {
+        type: error?.type,
+        message: error?.message,
+        code: error?.code,
+        statusCode: error?.statusCode,
+        requestId: error?.requestId,
+        rawType: error?.rawType,
+        rawMessage: error?.raw?.message,
+        stack: error?.stack,
+      });
+
+      return res.status(500).json({
+        error: "Failed to create checkout session",
+        details: error?.message || String(error),
+        type: error?.type || "UnknownError",
+        requestId: error?.requestId || null,
+      });
+    }
+  }
+);
 
 /**
  * Stripe Webhook Handler
- * Security Features:
- * - Verifies Stripe webhook signature (prevents request forgery)
- * - Uses rawBody for signature verification
- * - Validates event data before processing
- * - Creates atomic Firestore updates
- *
- * Note: For Firebase Functions v2, we collect the raw body from the
- * request stream before processing to enable Stripe signature verification
  */
 exports.stripeWebhook = onRequest(
-    {secrets: [stripeSecretKey, stripeWebhookSecret]},
-    async (req, res) => {
-      if (req.method !== "POST") {
-        return res.status(405).send("Method not allowed");
+  { secrets: [stripeSecretKey, stripeWebhookSecret] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      return res.status(405).send("Method not allowed");
+    }
+
+    // Initialize Stripe with the secret
+    if (!stripe) {
+      stripe = require("stripe")((stripeSecretKey.value() || "").trim());
+    }
+
+    const sig = req.headers["stripe-signature"];
+    const webhookSecret = (stripeWebhookSecret.value() || "").trim();
+
+    if (!sig) {
+      return res.status(400).send("Missing signature");
+    }
+
+    try {
+      // Prefer req.rawBody (provided by Firebase runtime). If it is not
+      // available, derive a Buffer from req.body as a safe fallback.
+      let rawBody = req.rawBody;
+      if (!rawBody && req.body) {
+        if (Buffer.isBuffer(req.body)) {
+          rawBody = req.body;
+        } else if (typeof req.body === "string") {
+          rawBody = Buffer.from(req.body, "utf8");
+        } else {
+          rawBody = Buffer.from(JSON.stringify(req.body), "utf8");
+        }
       }
 
-      // Initialize Stripe with the secret
-      if (!stripe) {
-        stripe = require("stripe")((stripeSecretKey.value() || "").trim());
+      if (!rawBody || rawBody.length === 0) {
+        console.error("❌ Missing raw body for webhook signature check");
+        return res.status(400).send("Missing webhook payload");
       }
 
-      const sig = req.headers["stripe-signature"];
-      const webhookSecret = (stripeWebhookSecret.value() || "").trim();
-
-      if (!sig) {
-        return res.status(400).send("Missing signature");
-      }
+      let event;
 
       try {
-        // Prefer req.rawBody (provided by Firebase runtime). If it is not
-        // available, derive a Buffer from req.body as a safe fallback.
-        let rawBody = req.rawBody;
-        if (!rawBody && req.body) {
-          if (Buffer.isBuffer(req.body)) {
-            rawBody = req.body;
-          } else if (typeof req.body === "string") {
-            rawBody = Buffer.from(req.body, "utf8");
-          } else {
-            rawBody = Buffer.from(JSON.stringify(req.body), "utf8");
-          }
-        }
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      } catch (err) {
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
 
-        if (!rawBody || rawBody.length === 0) {
-          console.error("❌ Missing raw body for webhook signature check");
-          return res.status(400).send("Missing webhook payload");
-        }
-
-        let event;
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
 
         try {
-          event = stripe.webhooks.constructEvent(
-              rawBody,
-              sig,
-              webhookSecret,
+          const { userId, tier, price, durationDays, priceId } = session.metadata || {};
+
+          if (!userId || !tier || !durationDays) {
+            return res.status(400).send("Invalid session metadata");
+          }
+
+          const now = new Date();
+          const endDate = new Date(
+            now.getTime() + parseInt(durationDays, 10) * 24 * 60 * 60 * 1000
           );
-        } catch (err) {
-          return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
 
-        if (event.type === "checkout.session.completed") {
-          const session = event.data.object;
-
-          try {
-            const {userId, tier, price, durationDays, priceId} =
-              session.metadata;
-
-            if (!userId || !tier || !durationDays) {
-              return res.status(400).send("Invalid session metadata");
-            }
-
-            const now = new Date();
-            const endDate = new Date(
-                now.getTime() + parseInt(durationDays) * 24 * 60 * 60 * 1000,
-            );
-
-            await admin.firestore().collection("users").doc(userId).set({
+          await admin.firestore().collection("users").doc(userId).set(
+            {
               tier: tier,
               subscriptionStartDate: admin.firestore.Timestamp.fromDate(now),
               subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
               stripeCustomerId: session.customer || null,
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            }, {merge: true});
+            },
+            { merge: true }
+          );
 
-            const planInfo = priceId ? VALID_PRICE_IDS[priceId] : null;
-            const planName = planInfo? planInfo.name : tier;
+          const planInfo = priceId ? VALID_PRICE_IDS[priceId] : null;
+          const planName = planInfo ? planInfo.name : tier;
 
-            const orderRef = await admin.firestore().collection("orders").add({
-              userId: userId,
-              tier: tier,
-              plan: planName,
-              price: parseFloat(price) || (session.amount_total / 100),
-              currency: session.currency || "cad",
-              status: "completed",
-              stripeSessionId: session.id,
-              stripePaymentIntent: session.payment_intent,
-              stripeCustomerId: session.customer,
-              customerEmail: session.customer_email,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+          const orderRef = await admin.firestore().collection("orders").add({
+            userId: userId,
+            tier: tier,
+            plan: planName,
+            price: parseFloat(price) || (session.amount_total / 100),
+            currency: session.currency || "cad",
+            status: "completed",
+            stripeSessionId: session.id,
+            stripePaymentIntent: session.payment_intent,
+            stripeCustomerId: session.customer,
+            customerEmail: session.customer_email,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
 
-            let invoiceId = null;
-            if (session.invoice) {
-              invoiceId = session.invoice;
-              await sendStripeInvoice(invoiceId);
+          let invoiceId = null;
+          if (session.invoice) {
+            invoiceId = session.invoice;
+            await sendStripeInvoice(invoiceId);
 
-              if (invoiceId) {
-                await orderRef.update({
-                  stripeInvoiceId: invoiceId,
-                });
-              }
+            if (invoiceId) {
+              await orderRef.update({ stripeInvoiceId: invoiceId });
             }
-
-            const customerEmail = session.customer_email || "";
-            const userName = customerEmail.split("@")[0] || "User";
-            await sendPurchaseConfirmationEmail(
-                customerEmail,
-                userName,
-                planName,
-                parseInt(durationDays),
-            );
-
-            res.json({received: true});
-          } catch (error) {
-            return res.status(500).send("Error processing payment");
           }
-        } else {
-          res.json({received: true});
+
+          const customerEmail = session.customer_email || "";
+          const userName = customerEmail.split("@")[0] || "User";
+          await sendPurchaseConfirmationEmail(
+            customerEmail,
+            userName,
+            planName,
+            parseInt(durationDays, 10)
+          );
+
+          return res.json({ received: true });
+        } catch (error) {
+          console.error("❌ Error processing payment:", error?.message || error);
+          console.error("❌ stack:", error?.stack);
+          return res.status(500).send("Error processing payment");
         }
-      } catch (error) {
-        return res.status(400).send("Bad request");
+      } else {
+        return res.json({ received: true });
       }
-    });
+    } catch (error) {
+      console.error("❌ Webhook bad request:", error?.message || error);
+      console.error("❌ stack:", error?.stack);
+      return res.status(400).send("Bad request");
+    }
+  }
+);
