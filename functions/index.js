@@ -463,6 +463,7 @@ exports.stripeWebhook = onRequest(
         return res.status(405).send("Method not allowed");
       }
 
+      // Initialize Stripe with the secret
       if (!stripe) {
         stripe = require("stripe")((stripeSecretKey.value() || "").trim());
       }
@@ -475,6 +476,8 @@ exports.stripeWebhook = onRequest(
       }
 
       try {
+        // Prefer req.rawBody (provided by Firebase runtime). If it is not
+        // available, derive a Buffer from req.body as a safe fallback.
         let rawBody = req.rawBody;
         if (!rawBody && req.body) {
           if (Buffer.isBuffer(req.body)) {
@@ -487,6 +490,7 @@ exports.stripeWebhook = onRequest(
         }
 
         if (!rawBody || rawBody.length === 0) {
+          console.error("❌ Missing raw body for webhook signature check");
           return res.status(400).send("Missing webhook payload");
         }
 
