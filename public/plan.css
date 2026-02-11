@@ -345,6 +345,13 @@ code {
   max-width: 76ch;
 }
 
+.section__subtitle--photo-width {
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
 /* Features */
 .grid-3 {
   display: grid;
