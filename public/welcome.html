@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Welcome to SimpleTCF</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Tailwind (utility classes only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Your site CSS -->
+    <link rel="stylesheet" href="styles.css" />
+    
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+      
+      .animate-fadeIn {
+        animation: fadeIn 0.8s ease-out;
+      }
+      
+      .animate-pulse-once {
+        animation: pulse 2s ease-in-out;
+      }
+    </style>
+  </head>
+
+  <body
+    class="welcome-page min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-indigo-100 flex items-center justify-center p-4"
+  >
+    <section class="w-full max-w-2xl animate-fadeIn">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full text-center">
+        <!-- Success Icon -->
+        <div class="mb-6">
+          <div
+            class="w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full mx-auto mb-6 flex items-center justify-center animate-pulse-once"
+          >
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+
+          <!-- Welcome Title -->
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            Welcome to SimpleTCF!
+          </h1>
+
+          <!-- User Info -->
+          <div class="mb-6" id="user-info-section">
+            <p id="welcome-email" class="text-gray-600 mb-6">
+              <!-- Email will be inserted here -->
+            </p>
+          </div>
+
+          <!-- Success Message -->
+          <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-green-800 mb-2">
+              🎉 Your email has been verified!
+            </h2>
+            <p class="text-green-700">
+              Welcome to SimpleTCF! Click the button below to complete your setup and start practicing.
+            </p>
+          </div>
+          
+          <!-- CTA Button -->
+          <button
+            id="go-home-btn"
+            class="inline-block w-full bg-gradient-to-r from-[#6366f1] to-[#C1C6F8] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            Complete Setup
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Firebase initialization -->
+    <script type="module" src="config.js"></script>
+    <script type="module" src="auth-service.js"></script>
+    <script type="module" src="db-service.js"></script>
+    <script type="module">
+      // Handle welcome page logic
+      import * as AuthService from './auth-service.js';
+      
+      // Shared function to complete setup
+      async function completeSetup(user) {
+        await window.__firestoreReady;
+        const firestore = window.__firestore;
+        const { doc, setDoc, serverTimestamp, getDoc } = window.firestoreExports;
+
+        if (firestore && user) {
+          const userRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              email: user.email,
+              displayName: user.displayName || user.email?.split('@')[0] || 'User',
+              createdAt: serverTimestamp(),
+              emailVerified: true,
+              tier: 'free',
+              subscriptionStatus: 'free'
+            });
+            console.log('✅ User document created in Firestore');
+          } else {
+            console.log('✅ User document already exists');
+          }
+        }
+        window.location.href = '/';
+      }
+      
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          // Check if we have a verified email from the verification link
+          const urlParams = new URLSearchParams(window.location.search);
+          const verifiedEmail = urlParams.get('verified_email');
+          
+          // Wait for auth to be ready
+          const user = await AuthService.waitForAuth();
+          
+          if (!user) {
+            // No user logged in - show sign-in form
+            console.log('Email verified but user not logged in - showing sign-in form');
+            showSignInForm(verifiedEmail);
+            return;
+          }
+
+          // User is logged in - check verification
+          if (!user.emailVerified) {
+            // Reload user to get latest verification status
+            await user.reload();
+            if (!user.emailVerified) {
+              console.log('Email not verified, redirecting back to register');
+              window.location.href = '/register';
+              return;
+            }
+          }
+
+          // User is logged in and verified - show complete setup button
+          console.log('User logged in and verified - showing setup button');
+          showCompleteSetup(user);
+        } catch (error) {
+          console.error('Error loading welcome page:', error);
+          window.location.href = '/register.html';
+        }
+      });
+      
+      // Function to show sign-in form (when user is not logged in)
+      function showSignInForm(email) {
+        // Update UI text
+        const messageEl = document.querySelector('.bg-green-50 p');
+        if (messageEl) {
+          messageEl.textContent = 'Your email has been verified! Please sign in to continue.';
+        }
+        
+        // Show email
+        const emailEl = document.getElementById('welcome-email');
+        if (emailEl && email) emailEl.textContent = email;
+        
+        // Create sign-in form
+        const button = document.getElementById('go-home-btn');
+        
+        if (button) {
+          // Create form elements
+          const formHTML = `
+            <div class="mb-4 text-left">
+              <label for="signin-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+              <input
+                type="email"
+                id="signin-email"
+                value="${email || ''}"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                placeholder="Enter your email"
+              />
+            </div>
+            <div class="mb-4 text-left">
+              <label for="signin-password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <input
+                type="password"
+                id="signin-password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                placeholder="Enter your password"
+              />
+            </div>
+            <p id="signin-error" class="text-sm text-red-600 mb-4 hidden"></p>
+          `;
+          
+          // Insert form before button
+          button.insertAdjacentHTML('beforebegin', formHTML);
+          button.textContent = 'Sign In and Continue';
+          
+          // Handle sign-in
+          button.addEventListener('click', handleSignIn);
+        }
+      }
+      
+      // Function to handle sign-in
+      async function handleSignIn() {
+        const button = document.getElementById('go-home-btn');
+        const emailInput = document.getElementById('signin-email');
+        const passwordInput = document.getElementById('signin-password');
+        const errorEl = document.getElementById('signin-error');
+        
+        if (button.disabled) return;
+        
+        const email = emailInput?.value.trim() || '';
+        const password = passwordInput?.value || '';
+        
+        // Clear errors
+        if (errorEl) {
+          errorEl.textContent = '';
+          errorEl.classList.add('hidden');
+        }
+        
+        // Validation
+        if (!email || !password) {
+          if (errorEl) {
+            errorEl.textContent = 'Please enter your email and password.';
+            errorEl.classList.remove('hidden');
+          }
+          return;
+        }
+        
+        try {
+          button.disabled = true;
+          button.textContent = 'Signing in...';
+          
+          // Sign in
+          const result = await AuthService.signInWithEmail(email, password);
+          const user = result.user;
+          
+          // Check verification
+          if (!user.emailVerified) {
+            await AuthService.signOutUser();
+            if (errorEl) {
+              errorEl.textContent = 'Your email is not verified yet. Please check your inbox.';
+              errorEl.classList.remove('hidden');
+            }
+            button.disabled = false;
+            button.textContent = 'Sign In and Continue';
+            return;
+          }
+          
+          // Proceed with setup
+          button.textContent = 'Setting up your account...';
+          await completeSetup(user);
+          
+        } catch (error) {
+          console.error('Error signing in:', error);
+          const msg = AuthService.formatAuthError(error);
+          if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.classList.remove('hidden');
+          }
+          button.disabled = false;
+          button.textContent = 'Sign In and Continue';
+        }
+      }
+      
+      // Function to show complete setup (when user is already logged in)
+      function showCompleteSetup(user) {
+        const email = user.email || '';
+        
+        const emailEl = document.getElementById('welcome-email');
+        if (emailEl) emailEl.textContent = email;
+
+        // Handle "Complete Setup" button
+        const goHomeBtn = document.getElementById('go-home-btn');
+        
+        if (goHomeBtn) {
+          goHomeBtn.addEventListener('click', async () => {
+            if (goHomeBtn.disabled) return;
+            goHomeBtn.disabled = true;
+            goHomeBtn.textContent = 'Setting up your account...';
+            
+            try {
+              await completeSetup(user);
+            } catch (error) {
+              console.error('Error completing setup:', error);
+              goHomeBtn.disabled = false;
+              goHomeBtn.textContent = 'Complete Setup';
+              alert('An error occurred. Please try again.');
+            }
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

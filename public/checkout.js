@@ -51,6 +51,16 @@
     const badgeStr = String(badge || "").trim();
     const durationStr = String(duration || "").trim();
 
+    // Map color badges to plan display names
+    const badgeDisplayMap = {
+      bronze: "Quick-Study",
+      silver: "30-Day Preparation",
+      gold: "Full Preparation",
+      free: "Free",
+    };
+
+    const displayBadge = badgeDisplayMap[badgeStr.toLowerCase()] || badgeStr;
+
     // Treat as free if price == 0 OR badge/plan indicates free
     const isFree =
       priceNum === 0 ||
@@ -60,7 +70,7 @@
       params.get("free") === "1" ||
       params.get("total") === "0";
 
-    return { params, priceNum, badgeStr, durationStr, isFree };
+    return { params, priceNum, badgeStr: displayBadge, originalBadge: badgeStr, durationStr, isFree };
   }
 
   function applyBadgeColor(badgeEl, badgeStr, isFree) {
@@ -84,14 +94,14 @@
     }
   }
 
-  function fillSummaryText({ badgeStr, durationStr, isFree }) {
+  function fillSummaryText({ badgeStr, originalBadge, durationStr, isFree }) {
     const badgeEl = document.querySelector(".order-summary-badge");
     const textEl = document.querySelector(".order-summary-text");
 
     if (badgeEl) {
       const label = badgeStr || (isFree ? "Free" : "");
       badgeEl.textContent = label ? label.toUpperCase() : "";
-      applyBadgeColor(badgeEl, label, isFree);
+      applyBadgeColor(badgeEl, originalBadge || badgeStr, isFree);
     }
 
     if (textEl) {
@@ -109,9 +119,6 @@
 
   function setTotals({ priceNum, isFree }) {
     const platformFeeEl = $("#platformFeeId");
-    const subtotalEl = $("#subtotalId");
-    const gstEl = $("#gstId");
-    const pstEl = $("#pstId");
     const totalEl = $("#totalId");
 
     // first line "Package Price" value span
@@ -122,25 +129,16 @@
     if (isFree) {
       if (pkgPriceEl) pkgPriceEl.textContent = money(0);
       if (platformFeeEl) platformFeeEl.textContent = money(0);
-      if (subtotalEl) subtotalEl.textContent = money(0);
-      if (gstEl) gstEl.textContent = money(0);
-      if (pstEl) pstEl.textContent = money(0);
       if (totalEl) totalEl.textContent = money(0);
       return;
     }
 
     const pkg = Number(priceNum || 0);
-    const platformFee = pkg * 0.025; // 2.5%
-    const subtotal = pkg + platformFee;
-    const gst = subtotal * 0.05; // 5%
-    const pst = subtotal * 0.07; // 7%
-    const total = subtotal + gst + pst;
+    const platformFee = pkg * 0.0295; // 2.95%
+    const total = pkg + platformFee;
 
     if (pkgPriceEl) pkgPriceEl.textContent = money(pkg);
     if (platformFeeEl) platformFeeEl.textContent = money(platformFee);
-    if (subtotalEl) subtotalEl.textContent = money(subtotal);
-    if (gstEl) gstEl.textContent = money(gst);
-    if (pstEl) pstEl.textContent = money(pst);
     if (totalEl) totalEl.textContent = money(total);
   }
 
@@ -183,7 +181,7 @@
     cta.addEventListener("click", async () => {
       // ✅ Set user to free tier in Firestore
       await activateFreeTier();
-      window.location.href = "profile.html";
+      window.location.href = "profile";
     });
 
     row.appendChild(cta);
@@ -253,18 +251,18 @@
     const badge = (badgeStr || '').toLowerCase();
     const duration = (durationStr || '').toLowerCase();
 
-    // Quick Study: 10 days
-    if (badge.includes('quick') || badge.includes('study')) {
+    // Quick Study: Bronze badge, 10 days
+    if (badge.includes('bronze') || duration.includes('10')) {
       return { tier: 'quick-study', days: 10 };
     }
 
-    // 30-day Intensive
-    if (badge.includes('30') || badge.includes('intensive') || duration.includes('30')) {
+    // 30-day Intensive: Silver badge, 30 days
+    if (badge.includes('silver') || duration.includes('30')) {
       return { tier: '30-day', days: 30 };
     }
 
-    // Full Preparation: 60 days
-    if (badge.includes('full') || badge.includes('prep') || duration.includes('60')) {
+    // Full Preparation: Gold badge, 60 days
+    if (badge.includes('gold') || duration.includes('60')) {
       return { tier: 'full-prep', days: 60 };
     }
 

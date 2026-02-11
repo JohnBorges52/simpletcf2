@@ -16,16 +16,16 @@ class StripeService {
     this.initialized = false;
 
     // SECURITY: Only publishable key is safe to expose in frontend
-    // Get from: https://dashboard.stripe.com/test/apikeys
-    this.publishableKey = "pk_test_51SymiRCwya11CpgZM80uSO1NdGsTCQNO7J6W7bJZKsDYdjOMQBzMcR6ERbrUiW7HLnseg5AdcpcvU8RmKtNLQfER00hkpc0AVo";
+    // Get from: https://dashboard.stripe.com/apikeys (Live mode)
+    this.publishableKey = "pk_live_51LPvkVCjnElzxNngyE3orsGbMc4G8W3qXqyC0hj0HPtSupDNj5B5TcX9QzZOsUX5x39psHalzUL94AvjXjpzlsGj00IGft9mbl";
 
     // SECURITY: Map tier names to Stripe Price IDs
     // These are used for display purposes only
     // Backend validates against its own whitelist
     this.priceIds = {
-      "quick-study": "price_1SymwrCwya11CpgZ3eFENT6r",
-      "30-day": "price_1SymymCwya11CpgZCe0uZNIc",
-      "full-prep": "price_1SymzZCwya11CpgZSf5VpJdy",
+      "quick-study": "price_1SzOPyCjnElzxNngxs0lvgQv",
+      "30-day": "price_1SzOQyCjnElzxNngf4vtCnTC",
+      "full-prep": "price_1SzOSLCjnElzxNngwqqTwHal",
     };
 
     // Cloud Function endpoint (deployed URL)
@@ -74,7 +74,7 @@ class StripeService {
       const user = window.AuthService?.getCurrentUser();
       if (!user) {
         alert("Please log in to purchase a plan");
-        window.location.href = "/login.html";
+        window.location.href = "/login";
         return;
       }
 

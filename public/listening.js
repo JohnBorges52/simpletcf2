@@ -28,17 +28,33 @@ import {
 } from "./auth-service.js";
 
 (async () => {
-  // ✅ AUTHENTICATION CHECK - Redirect non-logged-in users to plans
+  // ✅ AUTHENTICATION & VERIFICATION CHECK
+  // Unverified users are treated the same as logged-out users
   await waitForAuth();
   const user = getCurrentUser();
   
-  if (!user) {
-    console.log("🔒 User not logged in, redirecting to plans page...");
-    window.location.href = "/plan.html";
+  if (!user || !user.emailVerified) {
+    if (user && !user.emailVerified) {
+      console.log("🔒 User email not verified, signing out and redirecting to login...");
+      // Sign out unverified user
+      try {
+        const authService = await import('./auth-service.js');
+        await authService.signOutUser();
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    } else {
+      console.log("🔒 User not logged in, redirecting to login...");
+    }
+    window.location.href = "/login";
     return;
   }
   
-  console.log("✅ User authenticated:", user.email);
+  console.log("✅ User authenticated and email verified:", user.email);
+  
+  // Show page content only after verification passes
+  document.body.style.visibility = "visible";
+  
   /* 1) Constants */
   const PATHS = Object.freeze({ DATA: "/data/all_quiz_data.json" });
 
@@ -120,6 +136,7 @@ import {
     transcriptText: () => $("#transcriptContainer #transcriptText"),
     onlyChk: () => $("#onlyUnansweredChk"),
     qStats: () => $("#questionStats"),
+    emptyState: () => $("#emptyState"),
   };
 
   const RT = {
@@ -561,6 +578,9 @@ import {
   }
 
   async function countDeservesAttentionForCurrentScope() {
+    // ✅ Return 0 when no weight selected (same as reading.js)
+    if (state.currentWeight == null) return 0;
+
     let pool = state.allData;
     if (state.currentWeight != null) {
       pool = pool.filter(
@@ -608,6 +628,12 @@ import {
   }
 
   async function recomputeFiltered() {
+    // ✅ Show empty state when no weight is selected (same as reading.js)
+    if (!state.realTestMode && state.currentWeight == null) {
+      state.filtered = [];
+      return;
+    }
+
     let items = state.allData.slice();
 
     if (state.currentWeight != null) {
@@ -830,12 +856,19 @@ import {
     const qNum = els.qNumber();
     const audioEl = els.audio();
     const transcriptWrap = els.transcriptWrap();
+    const emptyState = els.emptyState();
 
     if (!q) {
-      const container = els.options();
-      if (container)
-        container.textContent =
-          "📭 Select a weight to start, or no questions match the current filter.";
+      // Hide quiz, show empty state
+      els.quiz()?.classList.add(CLS.hidden);
+      if (emptyState) {
+        emptyState.classList.remove(CLS.hidden);
+        if (state.currentWeight == null && !state.realTestMode) {
+          emptyState.textContent = "📭 Select a weight to start.";
+        } else {
+          emptyState.textContent = "📭 No questions match the current filter.";
+        }
+      }
 
       safeText(qNum, "");
       try {
@@ -857,6 +890,10 @@ import {
       updateKpiVisibility();
       return;
     }
+
+    // Hide empty state, show quiz
+    if (emptyState) emptyState.classList.add(CLS.hidden);
+    els.quiz()?.classList.remove(CLS.hidden);
 
     const headerNum = getHeaderNumber(q);
     const qNumDisplayStr = fmt2or3(headerNum);
@@ -975,14 +1012,14 @@ import {
       });
     }
 
-    // ✅ Show UI feedback immediately, then run database writes in background (non-blocking)
+    // ✅ Show UI feedback immediately, then run database writes
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     refreshWeightButtonsLabels();
     
-    // ✅ Run database writes in background without blocking UI
-    trackAnswerLocally(q, isCorrect).catch(err => {
+    // ✅ MUST await trackAnswerLocally so stats are updated before renderQuestion reads them
+    await trackAnswerLocally(q, isCorrect).catch(err => {
       console.error("Failed to save answer to database:", err);
     });
     
@@ -1004,7 +1041,7 @@ import {
 
     // ✅ PRACTICE MODE: re-render so correct/wrong colors + transcript become available
     if (!state.realTestMode) {
-      await renderQuestion(); // <-- this is the missing piece
+      await renderQuestion(); // <-- now stats will be updated because we awaited trackAnswerLocally
       return;
     }
 

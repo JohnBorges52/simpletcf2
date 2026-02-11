@@ -30,7 +30,7 @@
 
   function goToLoginThenReturn(checkoutUrl) {
     sessionStorage.setItem("postLoginRedirect", checkoutUrl.toString());
-    const loginUrl = new URL("/login.html", window.location.origin);
+    const loginUrl = new URL("/login", window.location.origin);
     loginUrl.searchParams.set(
       "next",
       checkoutUrl.pathname + checkoutUrl.search,
@@ -45,19 +45,45 @@
 
     if (isLoggedIn()) {
       authLink.textContent = "Profile";
-      authLink.href = "/profile.html";
+      authLink.href = "/profile";
     } else {
       authLink.textContent = "Sign In";
-      authLink.href = "/login.html";
+      authLink.href = "/login";
     }
   }
 
   // =======================
-  // ✅ ALL paid plans → auth-gated
+  // ✅ Check if user has active paid plan
+  // =======================
+  async function checkUserPlanStatus() {
+    try {
+      // Wait for auth to be ready
+      if (window.AuthService) {
+        await window.AuthService.waitForAuth();
+        const user = window.AuthService.getCurrentUser();
+        
+        if (!user) return null;
+        
+        // Initialize subscription service to get user tier
+        if (window.SubscriptionService) {
+          await window.SubscriptionService.init();
+          const tier = window.SubscriptionService.getCurrentTier();
+          return tier;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error checking user plan status:", error);
+      return null;
+    }
+  }
+
+  // =======================
+  // ✅ ALL paid plans → auth-gated + check existing plan
   // =======================
   function initPlanCheckoutButtons() {
     document.querySelectorAll(".price__cta").forEach((button) => {
-      button.addEventListener("click", (e) => {
+      button.addEventListener("click", async (e) => {
         e.preventDefault();
 
         const price = parseFloat(button.dataset.price || "0");
@@ -69,7 +95,7 @@
           JSON.stringify({ price, duration, badge }),
         );
 
-        const checkoutUrl = new URL("/checkout.html", window.location.origin);
+        const checkoutUrl = new URL("/checkout", window.location.origin);
         checkoutUrl.searchParams.set("price", String(price));
         checkoutUrl.searchParams.set("duration", duration);
         checkoutUrl.searchParams.set("badge", badge);
@@ -77,6 +103,13 @@
         if (!isLoggedIn()) {
           console.log("🔒 Not logged in → redirect to login");
           goToLoginThenReturn(checkoutUrl);
+          return;
+        }
+
+        // ✅ Check if user already has a paid plan
+        const currentTier = await checkUserPlanStatus();
+        if (currentTier && currentTier !== 'free') {
+          alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
           return;
         }
 
@@ -92,7 +125,7 @@
   function initStartFreeButton() {
     document.querySelectorAll(".start-free-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const checkoutUrl = new URL("/checkout.html", window.location.origin);
+        const checkoutUrl = new URL("/checkout", window.location.origin);
         checkoutUrl.searchParams.set("price", "0");
         checkoutUrl.searchParams.set("duration", "Free");
         checkoutUrl.searchParams.set("badge", "Free");
@@ -130,56 +163,62 @@
   }
 
   function initPlansCarousel() {
-    const track = document.getElementById("planCarouselTrack");
-    const prev = document.querySelector("#plans .plan-carousel__btn--prev");
-    const next = document.querySelector("#plans .plan-carousel__btn--next");
-    if (!track || !prev || !next) return;
+    // Find all carousels (both #plans and index.html)
+    const carousels = document.querySelectorAll(".plan-carousel");
+    
+    carousels.forEach((carousel) => {
+      const track = carousel.querySelector(".plan-grid--carousel");
+      const prev = carousel.querySelector(".plan-carousel__btn--prev");
+      const next = carousel.querySelector(".plan-carousel__btn--next");
+      
+      if (!track || !prev || !next) return;
 
-    const cards = Array.from(track.querySelectorAll(".plan"));
-    if (!cards.length) return;
+      const cards = Array.from(track.querySelectorAll(".plan"));
+      if (!cards.length) return;
 
-    let index = 0;
+      let index = 0;
 
-    const visibleCount = () =>
-      window.matchMedia("(max-width: 900px)").matches ? 1 : 3;
+      const visibleCount = () =>
+        window.matchMedia("(max-width: 900px)").matches ? 1 : 3;
 
-    function clampIndex(i) {
-      const max = Math.max(0, cards.length - visibleCount());
-      return Math.max(0, Math.min(i, max));
-    }
+      function clampIndex(i) {
+        const max = Math.max(0, cards.length - visibleCount());
+        return Math.max(0, Math.min(i, max));
+      }
 
-    function gapPx() {
-      const cs = getComputedStyle(track);
-      return parseFloat(cs.gap || "0") || 0;
-    }
+      function gapPx() {
+        const cs = getComputedStyle(track);
+        return parseFloat(cs.gap || "0") || 0;
+      }
 
-    function stepPx() {
-      const cardW = cards[0].getBoundingClientRect().width;
-      return cardW + gapPx();
-    }
+      function stepPx() {
+        const cardW = cards[0].getBoundingClientRect().width;
+        return cardW + gapPx();
+      }
 
-    function render() {
-      index = clampIndex(index);
-      const x = stepPx() * index;
-      track.style.transform = `translateX(${-x}px)`;
+      function render() {
+        index = clampIndex(index);
+        const x = stepPx() * index;
+        track.style.transform = `translateX(${-x}px)`;
 
-      const max = Math.max(0, cards.length - visibleCount());
-      prev.disabled = index <= 0;
-      next.disabled = index >= max;
-    }
+        const max = Math.max(0, cards.length - visibleCount());
+        prev.disabled = index <= 0;
+        next.disabled = index >= max;
+      }
 
-    prev.addEventListener("click", () => {
-      index -= 1;
-      render();
+      prev.addEventListener("click", () => {
+        index -= 1;
+        render();
+      });
+
+      next.addEventListener("click", () => {
+        index += 1;
+        render();
+      });
+
+      window.addEventListener("resize", () => render());
+      requestAnimationFrame(render);
     });
-
-    next.addEventListener("click", () => {
-      index += 1;
-      render();
-    });
-
-    window.addEventListener("resize", () => render());
-    requestAnimationFrame(render);
   }
 
   document.addEventListener("DOMContentLoaded", () => {

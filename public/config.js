@@ -297,11 +297,54 @@ document.addEventListener("DOMContentLoaded", () => {
       startBtn.textContent = "Creating account...";
 
       await AuthService.registerWithEmail(email, password, name);
+      
+      // Keep user logged in (they just can't access protected pages until verified)
+      console.log('✅ Account created. User stays logged in but must verify email.');
 
       // Show verification message
       showVerificationMessage(email, name);
 
     } catch (error) {
+      // Special handling for email already in use
+      if (error.code === "auth/email-already-in-use") {
+        console.log("Email already registered, checking verification status...");
+        
+        try {
+          startBtn.textContent = "Checking account...";
+          
+          // Try to sign in to check if account is unverified
+          const credential = await AuthService.signInWithEmail(email, password);
+          const user = credential.user;
+          
+          if (!user.emailVerified) {
+            console.log("Account exists but not verified - resending verification email");
+            
+            // Account exists but unverified - resend verification email
+            await sendEmailVerification(user);
+            
+            // Keep user logged in (they just can't access protected pages until verified)
+            console.log('✅ Verification email resent. User stays logged in.');
+            
+            // Show verification message
+            showVerificationMessage(email, name);
+            return; // Exit early - success case
+          } else {
+            // Account exists and is verified - tell them to sign in
+            await AuthService.signOutUser();
+            showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
+            shakeElement("#register-form");
+            return; // Exit early
+          }
+        } catch (signInError) {
+          // Sign-in failed - email exists with different password
+          console.log("Email exists but wrong password provided");
+          showFieldError(emailInput, "err-email", "This email is already registered. Please sign in instead.");
+          shakeElement("#register-form");
+          return; // Exit early
+        }
+      }
+      
+      // Other errors (not email-already-in-use)
       console.error("Registration error:", error);
       const msg = AuthService.formatAuthError(error);
       showFieldError(emailInput, "err-email", msg);
@@ -330,8 +373,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const user = result.user;
 
       console.log("Google sign-in successful:", user.email);
-      // For Google sign-in, users are auto-verified
-      showWelcomeMessage(user.displayName || "User", user.email);
+      
+      // Check if this is a new user (additionalUserInfo.isNewUser)
+      const isNewUser = result._tokenResponse?.isNewUser || false;
+      
+      if (isNewUser) {
+        // New user - check if email is verified (Google users are usually verified)
+        if (user.emailVerified) {
+          // Email verified - redirect to welcome page
+          window.location.href = '/welcome';
+        } else {
+          // Email not verified - redirect to verification page
+          window.location.href = '/verify-email';
+        }
+      } else {
+        // Returning user - show welcome message and redirect to home
+        showWelcomeMessage(user.displayName || "User", user.email);
+      }
 
     } catch (error) {
       console.error("Google sign-in error:", error);
@@ -428,9 +486,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Check if email is verified
       if (!user.emailVerified) {
+        console.log("⚠️ Login blocked - email not verified. Sending verification email...");
+        
         // Send new verification email
         try {
           await sendEmailVerification(user);
+          console.log("✅ Verification email sent");
         } catch (e) {
           console.warn("Could not send verification email:", e);
         }
@@ -441,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showFieldError(
           emailInput,
           "err-login-email",
-          `📩 Your email isn't verified. We just sent a new verification link to ${email}. Please verify, then log in.`
+          `📩 Your email isn't verified yet. We just sent a new verification link to ${email}. Please check your inbox and verify your email, then try logging in again.`
         );
         shakeElement("#loginForm");
         return;
@@ -501,7 +562,109 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================
-// Password Reset Logic
+// Forgot Password Link Handler (Login Page)
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const forgotLink = document.getElementById("forgotLink");
+  
+  forgotLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/forgotPassword";
+  });
+});
+
+// ===============================
+// Forgot Password Page Logic
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const sendResetBtn = document.getElementById("send-reset-btn");
+  const forgotEmailInput = document.getElementById("forgot-email");
+  const forgotForm = document.getElementById("forgot-form");
+  const successScreen = document.getElementById("success-screen");
+  const resendLink = document.getElementById("resend-link");
+
+  if (!sendResetBtn) return;
+
+  console.log("🔑 Forgot password page detected");
+
+  const sendResetEmail = async () => {
+    const email = forgotEmailInput?.value.trim() || "";
+
+    // Clear previous errors
+    const errEl = document.getElementById("err-forgot-email");
+    if (errEl) {
+      errEl.textContent = "";
+      errEl.classList.add("hidden");
+    }
+
+    if (!email) {
+      if (errEl) {
+        errEl.textContent = "Email is required.";
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+      return;
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (errEl) {
+        errEl.textContent = "Please enter a valid email address.";
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+      return;
+    }
+
+    try {
+      sendResetBtn.disabled = true;
+      sendResetBtn.textContent = "Sending...";
+
+      await AuthService.resetPassword(email);
+
+      // Show success animation
+      if (forgotForm) forgotForm.classList.add("hidden");
+      if (successScreen) {
+        successScreen.classList.remove("hidden");
+        const successEmailEl = document.getElementById("success-email");
+        if (successEmailEl) successEmailEl.textContent = email;
+      }
+
+    } catch (error) {
+      console.error("Password reset error:", error);
+      const msg = AuthService.formatAuthError(error);
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove("hidden");
+      }
+      shakeElement("#forgot-form");
+    } finally {
+      sendResetBtn.disabled = false;
+      sendResetBtn.textContent = "Send Email";
+    }
+  };
+
+  sendResetBtn.addEventListener("click", sendResetEmail);
+
+  // Handle Enter key
+  forgotEmailInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendResetEmail();
+    }
+  });
+
+  // Resend link
+  resendLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (successScreen) successScreen.classList.add("hidden");
+    if (forgotForm) forgotForm.classList.remove("hidden");
+    if (forgotEmailInput) forgotEmailInput.focus();
+  });
+});
+
+// ===============================
+// Password Reset Logic (Old - keeping for backward compatibility)
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const resetForm = document.getElementById("resetForm");
@@ -545,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       setTimeout(() => {
-        window.location.href = "/login.html";
+        window.location.href = "/login";
       }, 2000);
 
     } catch (error) {
@@ -591,33 +754,27 @@ function showWelcomeMessage(name, email) {
   }
 
   setTimeout(() => {
-    window.location.href = "/index.html";
+    window.location.href = "/";
   }, 1500);
 }
 
 function showVerificationMessage(email, name) {
-  const welcomeSection = document.getElementById("welcome-screen");
+  // Show pop-up notification
+  const notification = document.getElementById('email-sent-notification');
+  const emailEl = document.getElementById('notification-email');
+  const closeBtn = document.getElementById('close-notification-btn');
   
-  if (welcomeSection) {
-    const registerForm = document.getElementById("register-form");
-    if (registerForm) registerForm.classList.add("blur-bg");
+  if (notification && emailEl) {
+    emailEl.textContent = `We sent a verification email to ${email}`;
+    notification.classList.remove('hidden');
     
-    welcomeSection.classList.remove("hidden");
-    
-    const title = document.getElementById("verify-title");
-    const nameEl = document.getElementById("welcome-name");
-    const emailEl = document.getElementById("welcome-email");
-    const avatarEl = document.getElementById("avatar-initial");
-    
-    if (title) title.textContent = "Verify Your Email";
-    if (nameEl) nameEl.textContent = `Check your inbox, ${name}!`;
-    if (emailEl) emailEl.textContent = `We sent a verification link to ${email}`;
-    if (avatarEl) avatarEl.textContent = (name[0] || "U").toUpperCase();
-  } else {
-    alert(`✅ Account created! Please check ${email} for a verification link.`);
-    setTimeout(() => {
-      window.location.href = "/login.html";
-    }, 500);
+    // Close button handler - just close popup
+    // User stays logged in but can't access protected pages until verified
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        notification.classList.add('hidden');
+      }, { once: true });
+    }
   }
 }
 
@@ -629,16 +786,39 @@ function showVerificationMessage(email, name) {
 
   if (mode === "verifyEmail" && code) {
     try {
+      // Wait for auth to be initialized
+      await AuthService.initAuth(app);
       const auth = AuthService.getAuthInstance();
+      
+      let verifiedEmail = '';
+      
       if (auth) {
+        // Check the action code to get the email before applying it
+        const info = await checkActionCode(auth, code);
+        verifiedEmail = info.data.email || '';
+        
+        // Apply the verification code
         await applyActionCode(auth, code);
-        await auth.currentUser?.reload();
-        console.log("✅ Email verified successfully");
+        
+        // If user is logged in, reload their data to update emailVerified status
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+          console.log("✅ Email verified successfully - user still logged in");
+        } else {
+          console.log("✅ Email verified successfully (user not logged in)");
+        }
       }
-      window.location.replace("/login.html?verified=1");
+      
+      // Redirect to welcome page with verified email parameter
+      // If user is logged in, they'll see "Complete Setup" button
+      // If user is logged out, they'll see sign-in form with pre-filled email
+      const redirectUrl = verifiedEmail 
+        ? `/welcome?verified_email=${encodeURIComponent(verifiedEmail)}`
+        : '/welcome';
+      window.location.replace(redirectUrl);
     } catch (error) {
       console.error("Email verification error:", error);
-      window.location.replace("/login.html?verify_error=1");
+      window.location.replace("/login?verify_error=1");
     }
   }
 })();

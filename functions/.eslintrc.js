@@ -23,6 +23,25 @@ module.exports = {
       },
       rules: {},
     },
+    {
+      files: ["**/*.test.js"],
+      env: {
+        jest: true,
+      },
+      globals: {
+        describe: "readonly",
+        test: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+      },
+      rules: {
+        "max-len": "off",
+      },
+    },
   ],
   globals: {},
 };

@@ -3,18 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TCF Audio Practice</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Practice | SimpleTCF</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Your global site styles -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,600|Cardo:400,700&display=swap"
+      rel="stylesheet"
+    />
     <meta
       name="description"
-      content="Practice TCF audio questions with weights, progress tracking, and transcripts."
+      content="Master TCF Canada with dedicated listening, reading, and writing practice sections."
     />
   </head>
 
-  <body>
+  <body class="practice page--light">
+    <!-- Header -->
     <header class="quiz--main_h quiz--sticky" id="mainHeader">
       <div class="quiz--row">
-        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+        <a class="quiz--logo" href="/">Simple.TCF</a>
 
         <button
           class="quiz--mobile-toggle"
@@ -29,25 +41,27 @@
 
         <nav id="site-nav" aria-label="Primary">
           <ul>
-            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li><a href="/" class="quiz--nav__link">Home</a></li>
             <li>
-              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+              <a href="/tcf-exam" class="quiz--nav__link">TCF Exam</a>
             </li>
+
             <li class="quiz--nav__item quiz--nav__dropdown">
-              <a
+              <button
+                type="button"
                 class="quiz--nav__link quiz--nav__dropdown-toggle"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
                 Practice
                 <span class="quiz--nav__caret" aria-hidden="true"></span>
-              </a>
+              </button>
 
               <ul class="quiz--nav__dropdown-menu" role="menu">
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/listening.html"
+                    href="/listening"
                     class="quiz--nav__link"
                     >Listening</a
                   >
@@ -55,7 +69,7 @@
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/reading.html"
+                    href="/reading"
                     class="quiz--nav__link"
                     >Reading</a
                   >
@@ -63,7 +77,7 @@
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/writing.html"
+                    href="/writing"
                     class="quiz--nav__link"
                     >Writing</a
                   >
@@ -72,17 +86,17 @@
             </li>
 
             <li>
-              <a href="/plan.html" class="quiz--nav__link">Plans</a>
+              <a href="/pricing" class="quiz--nav__link">Pricing</a>
             </li>
             <li>
-              <a href="#contact-section" class="quiz--nav__link">Contact</a>
+              <a href="/#contact-section" class="quiz--nav__link">Contact</a>
             </li>
 
             <!-- ✅ Auth-controlled nav item (JS will swap Sign In <-> Profile) -->
             <li id="auth-item">
               <a
                 id="auth-link"
-                href="/login.html"
+                href="/login"
                 class="quiz--nav__link bold-text"
                 >Sign In</a
               >
@@ -92,122 +106,279 @@
       </div>
     </header>
 
-    <section aria-labelledby="filters-title" class="controls">
-      <h2 id="filters-title" class="hidden">Filters</h2>
-
-      <label class="toggle-row" for="onlyUnansweredChk">
-        <input type="checkbox" id="onlyUnansweredChk" />
-        Never responded questions only
-      </label>
-
-      <div class="toolbar" role="toolbar" aria-label="Question weight filters">
-        <button
-          type="button"
-          class="weight-btn"
-          data-all="1"
-          id="allBtn"
-          onclick="filterQuestions('all')"
-        >
-          All Questions
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(33)">
-          Weight-33
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(26)">
-          Weight-26
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(21)">
-          Weight-21
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(15)">
-          Weight-15
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(9)">
-          Weight-09
-        </button>
-        <button type="button" class="weight-btn" onclick="filterQuestions(3)">
-          Weight-03
-        </button>
-
-        <button type="button" id="deservesBtn" class="deserves-btn">
-          📚 Deserves Attention (0)
-        </button>
-
-        <button type="button" id="realTestBtn" class="realtest-btn">
-          🧪 Real Test
-        </button>
-      </div>
-    </section>
-
-    <div id="realTestLoading" class="hidden">
-      <div class="loading-backdrop" id="rtBackdrop"></div>
-      <div class="loading-card">
-        <button class="close-x" id="rtClose">✕</button>
-        <div class="spinner" id="rtSpinner"></div>
-        <p id="rtLoadingText">Loading test…</p>
-        <button id="startRealTestBtn" class="hidden">Start the test</button>
-      </div>
+    <!-- Hero -->
+    <div class="hero sec01" style="--hero-bg: url(/general/SimpleTCFPlans.jpg)">
+      <h1 class="hero__title">Comprehensive Practice Sections</h1>
     </div>
 
-    <section id="realTestContainer" class="hidden">
-      <div id="questionNav"></div>
-      <div class="test-controls">
-        <button id="finishRealTestBtn">Finish Test</button>
-      </div>
-    </section>
+    <main class="practice-main">
+      <!-- Features Section -->
+      <section class="section">
+        <div class="section__header">
+          <h2 class="section__title">Master Each Skill</h2>
+          <p class="section__subtitle">Get detailed practice for every TCF Canada skill.</p>
+        </div>
 
-    <main id="quiz" class="hidden quiz">
-      <div id="questionNumber" class="question-number"></div>
-      <div id="pictureContainer" class="picture hidden"></div>
-      <audio id="audio" class="audio" controls></audio>
-      <div id="alternatives" class="alternatives"></div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <h3>🎧 Listening Practice</h3>
+            <p>
+              Build your listening comprehension with real TCF Canada audio questions.
+              Practice with questions weighted by difficulty to focus on your weak areas.
+            </p>
+          </div>
 
-      <button id="confirmBtn" class="confirm-btn hidden">✅ Confirm</button>
+          <div class="feature-card">
+            <h3>📖 Reading Practice</h3>
+            <p>
+              Improve your reading skills with authentic TCF Canada passages.
+              Learn to identify key information and improve your comprehension speed. Copiable text to help you in your native language.
+            </p>
+          </div>
 
-      <div class="buttons">
-        <button type="button" class="directionBtn" onclick="prevQuestion()">
-          ⏪ Previous
-        </button>
-        <button type="button" class="directionBtn" onclick="nextQuestion()">
-          Next ⏩
-        </button>
-      </div>
+          <div class="feature-card">
+            <h3>✍️ Writing Practice</h3>
+            <p>
+              Develop your writing abilities with TCF real exam-style prompts.
+              Use our writing tool to mimic the same environment you will encounter on test day.
+            </p>
+          </div>
 
-      <p id="score" class="score"></p>
+          <div class="feature-card">
+            <h3>📊 Progress Tracking</h3>
+            <p>
+              Track your improvement over time with detailed statistics and performance analytics.
+              See which areas need more focus and celebrate your progress.
+            </p>
+          </div>
 
-      <div id="transcriptContainer" class="transcript">
-        <button type="button" id="transcriptBtn" onclick="loadTranscript()">
-          Transcript
-        </button>
-        <div id="transcriptText"></div>
-      </div>
+          <div class="feature-card">
+            <h3>📋 Real Test Simulations</h3>
+            <p>
+              Experience full TCF Canada test simulations with no time limits.
+              Get CLB-based scoring to know exactly where you stand.
+            </p>
+          </div>
 
-      <button id="statsToggleBtn" class="stats-btn" onclick="toggleStats()">
-        📊 Show Stats
-      </button>
-      <div id="statsGraph" class="stats-graph"></div>
+          <div class="feature-card">
+            <h3>⭐ "Deserves Attention" Mode</h3>
+            <p>
+              Focus on questions you struggle with using our smart review mode.
+              Strengthen weak areas and build confidence before exam day.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Practice Sections -->
+      <section class="section" id="practice-sections">
+        <div class="section__header">
+          <h2 class="section__title">Start Your Practice</h2>
+          <p class="section__subtitle">Choose the skill you want to practice and improve today.</p>
+        </div>
+
+        <div class="practice-cards-grid">
+          <!-- Listening Card -->
+          <div class="practice-card">
+            <div class="practice-card__icon">🎧</div>
+            <h3 class="practice-card__title">Listening</h3>
+            <p class="practice-card__description">
+              Master listening comprehension with real TCF Canada audio questions.
+            </p>
+            <ul class="practice-card__features">
+              <li>✓ Real TCF Canada questions</li>
+              <li>✓ Weight-based filtering</li>
+              <li>✓ Progress tracking</li>
+              <li>✓ Answer transcripts</li>
+            </ul>
+            <a href="/listening" class="btn btn--primary btn--full" style="margin-top: 20px;">
+              Start Listening Practice
+            </a>
+          </div>
+
+          <!-- Reading Card -->
+          <div class="practice-card">
+            <div class="practice-card__icon">📖</div>
+            <h3 class="practice-card__title">Reading</h3>
+            <p class="practice-card__description">
+              Improve reading comprehension with authentic TCF Canada passages.
+            </p>
+            <ul class="practice-card__features">
+              <li>✓ Real TCF Canada passages</li>
+              <li>✓ Weight-based filtering</li>
+              <li>✓ Self-paced practice</li>
+              <li>✓ Performance analytics</li>
+            </ul>
+            <a href="/reading" class="btn btn--primary btn--full" style="margin-top: 20px;">
+              Start Reading Practice
+            </a>
+          </div>
+
+          <!-- Writing Card -->
+          <div class="practice-card">
+            <div class="practice-card__icon">✍️</div>
+            <h3 class="practice-card__title">Writing</h3>
+            <p class="practice-card__description">
+              Develop your writing skills with guided exercises and real exam prompts.
+            </p>
+            <ul class="practice-card__features">
+              <li>✓ Real TCF Canada prompts</li>
+              <li>✓ CLB-based scoring</li>
+              <li>✓ Writing templates</li>
+              <li>✓ Improvement tracking</li>
+            </ul>
+            <a href="/writing" class="btn btn--primary btn--full" style="margin-top: 20px;">
+              Start Writing Practice
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="section" style="background: linear-gradient(135deg, #36a6ff 0%, #4a7db8 100%); color: white; text-align: center; padding: 60px 20px; border-radius: 8px; margin: 40px 0;">
+        <h2 style="color: white; margin: 0 0 20px 0; font-size: 2rem;">Ready to Improve Your French?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 30px; opacity: 0.95;">
+          Start practicing now and get CLB 7 on your TCF Canada exam.
+        </p>
+        <a href="/pricing" class="btn btn--light" style="display: inline-block; padding: 14px 40px; font-size: 1.1rem; font-weight: 600;">
+          View Plans & Get Started
+        </a>
+      </section>
     </main>
 
-    <section id="realTestResults" class="hidden">
-      <div id="resultsHeader"></div>
-      <div id="clbTable"></div>
-      <div id="resultsDots"></div>
-      <div class="again-wrap">
-        <button id="againBtn">🔁 Do another Real Test</button>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container footer__container">
+        <div class="footer__brand">
+          <img
+            class="footer__img"
+            src="https://image.ibb.co/kcVou6/path3000.png"
+            alt=""
+          />
+          <h4 class="footer__title">
+            Simple<span class="footer__light">.TCF</span>
+          </h4>
+        </div>
+        <nav class="footer__links" aria-label="Legal">
+          <a href="/terms" class="footer__link">Terms</a>
+          <a href="/privacy-policy" class="footer__link">Privacy</a>
+          <a href="/refund-policy" class="footer__link">Refunds</a>
+        </nav>
       </div>
-      <div id="allQuestionsReview"></div>
-    </section>
-
-    <div id="dayCountdown" class="countdown"></div>
-
-    <noscript>
-      <p><strong>JavaScript is required</strong> to run this practice app.</p>
-    </noscript>
+    </footer>
 
     <!-- Firebase initialization (config hardcoded) -->
     <script type="module" src="config.js"></script>
-    <!-- Then other modules and scripts -->
+    <script type="module" src="auth-service.js"></script>
+    <script type="module" src="db-service.js"></script>
+    <script src="subscription-service.js"></script>
+    <!-- Then other modules -->
     <script type="module" src="script.js"></script>
-    <script type="module" src="app.js"></script>
+
+    <style>
+      .practice-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+      }
+
+      .practice-card {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .practice-card:hover {
+        border-color: #1885ed;
+        box-shadow: 0 4px 20px rgba(24, 133, 237, 0.15);
+        transform: translateY(-4px);
+      }
+
+      .practice-card__icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+
+      .practice-card__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 15px 0;
+        color: #1a1a1a;
+      }
+
+      .practice-card__description {
+        color: #666;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      .practice-card__features {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        text-align: left;
+      }
+
+      .practice-card__features li {
+        color: #666;
+        margin: 8px 0;
+        font-size: 0.95rem;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-top: 40px;
+      }
+
+      .feature-card {
+        background: #f9f9f9;
+        padding: 25px;
+        border-radius: 8px;
+        border-left: 4px solid #1885ed;
+      }
+
+      .feature-card h3 {
+        margin: 0 0 12px 0;
+        color: #1a1a1a;
+        font-size: 1.15rem;
+      }
+
+      .feature-card p {
+        margin: 0;
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .practice-main {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 60px 20px;
+      }
+
+      .btn--light {
+        background: white;
+        color: #1885ed;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .btn--light:hover {
+        background: #f0f0f0;
+        transform: scale(1.02);
+      }
+    </style>
   </body>
 </html>

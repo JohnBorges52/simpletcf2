@@ -8,6 +8,10 @@
     />
     <title>Login | SimpleTCF</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
     <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -23,6 +27,30 @@
     id="login-body"
     class="login-body min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-indigo-100 flex items-center justify-center p-4"
   >
+    <!-- Check if user is already logged in and redirect -->
+    <script>
+      (function() {
+        // Check if user is already authenticated via Firebase localStorage
+        const fbAuthKey = Object.keys(localStorage).find(k => k.startsWith('firebase:authUser'));
+        if (fbAuthKey) {
+          try {
+            const authData = JSON.parse(localStorage.getItem(fbAuthKey));
+            if (authData && authData.email) {
+              // User is logged in, redirect to home or profile
+              window.location.replace('/');
+              return;
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        // Also check legacy login flags
+        if (localStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('userEmail')) {
+          window.location.replace('/');
+          return;
+        }
+      })();
+    </script>
     <noscript>
       <div
         style="
@@ -65,7 +93,7 @@
     <div id="loginContainer" class="login-container flex justify-center flex-1">
       <div class="login-left p-6 sm:p-12">
         <div class="login-logo-div">
-          <a href="/index.html" aria-label="Back to Home">
+          <a href="/" aria-label="Back to Home">
             <img
               src="/general/simpletcflogo.png"
               class="login-logo"
@@ -184,7 +212,7 @@
             </p>
             <p class="login-terms">
               Do not have an account?
-              <a href="/register.html" class="login-link">Sign up!</a>
+              <a href="/register" class="login-link">Sign up!</a>
             </p>
           </form>
         </div>

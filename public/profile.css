@@ -456,6 +456,16 @@
   color: #065f46;
 }
 
+.status-badge.status-ongoing {
+  background: rgba(16, 185, 129, 0.18);
+  color: #065f46;
+}
+
+.status-badge.status-expired {
+  background: rgba(239, 68, 68, 0.18);
+  color: #991b1b;
+}
+
 .status-badge.status-free {
   background: rgba(59, 130, 246, 0.18);
   color: #1e40af;
@@ -879,6 +889,41 @@
   font-size: 14px;
   margin-top: 12px;
 }
+
+/* ===========================
+   ACCOUNT PAGE - PLAN BADGE
+   Reduce width by 80% as requested
+   =========================== */
+
+#tab-account .order-summary-badge {
+  width: 20%;
+  min-width: 120px;
+  max-width: 200px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+/* Plan expiration date styling */
+.plan-expiration {
+  margin-top: 0px;
+  font-size: 14px;
+  color: var(--muted, #6b7280);
+  font-weight: 500;
+}
+
+.plan-expiration strong {
+  color: var(--ink, #1f2937);
+}
+
+.plan-expiration.warning {
+  color: #d97706;
+}
+
+.plan-expiration.critical {
+  color: #dc2626;
+  font-weight: 600;
+}
+
 
 .answer-history-table thead {
   background: #f8fafc;

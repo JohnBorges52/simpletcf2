@@ -16,17 +16,33 @@ import {
 } from "./auth-service.js";
 
 (async () => {
-  // ✅ AUTHENTICATION CHECK - Redirect non-logged-in users to plans
+  // ✅ AUTHENTICATION & VERIFICATION CHECK
+  // Unverified users are treated the same as logged-out users
   await waitForAuth();
   const user = getCurrentUser();
   
-  if (!user) {
-    console.log("🔒 User not logged in, redirecting to plans page...");
-    window.location.href = "/plan.html";
+  if (!user || !user.emailVerified) {
+    if (user && !user.emailVerified) {
+      console.log("🔒 User email not verified, signing out and redirecting to login...");
+      // Sign out unverified user
+      try {
+        const authService = await import('./auth-service.js');
+        await authService.signOutUser();
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    } else {
+      console.log("🔒 User not logged in, redirecting to login...");
+    }
+    window.location.href = "/login";
     return;
   }
   
-  console.log("✅ User authenticated:", user.email);
+  console.log("✅ User authenticated and email verified:", user.email);
+  
+  // Show page content only after verification passes
+  document.body.style.visibility = "visible";
+  
   /* =====================
      1) Constants
   ===================== */
@@ -793,11 +809,16 @@ import {
       });
     }
 
-    // ✅ Show UI feedback immediately (non-blocking)
+    // ✅ Show UI feedback immediately
     state.selectedOptionIndex = null;
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     renderOptions(q, true, correctIndex);
+
+    // ✅ MUST await bumpLifetime before updateQuestionStats so stats are current
+    await bumpLifetime(q, isCorrect).catch(err => {
+      console.error("Failed to save answer to database:", err);
+    });
 
     updateScore();
     updateQuestionStats(q);
@@ -823,11 +844,6 @@ import {
     }
     
     updateKpiVisibility();
-    
-    // ✅ Run database writes in background without blocking UI
-    bumpLifetime(q, isCorrect).catch(err => {
-      console.error("Failed to save answer to database:", err);
-    });
     
     // ✅ Log to Firestore (non-blocking)
     if (window.dbService && window.dbService.logQuestionResponse) {

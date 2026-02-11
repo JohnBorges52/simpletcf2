@@ -861,7 +861,7 @@ body.plans .hero__overlay {
 body.plans .hero__center {
   position: relative;
   z-index: 2;
-  max-width: 700px;
+  max-width: 80%;
   padding: 24px;
   margin: 0 auto;
   text-align: center;
@@ -1110,7 +1110,8 @@ body.plans .hero__title-big {
 ========================================== */
 
 /* The dropdown panel */
-body.plans .quiz--nav__dropdown-menu {
+body.plans .quiz--nav__dropdown-menu,
+body.practice .quiz--nav__dropdown-menu {
   background: rgba(255, 255, 255, 0.98) !important;
   border: 1px solid rgba(15, 23, 42, 0.12) !important;
   box-shadow: 0 18px 50px rgba(2, 6, 23, 0.10) !important;
@@ -1118,17 +1119,21 @@ body.plans .quiz--nav__dropdown-menu {
 
 /* Dropdown links */
 body.plans .quiz--nav__dropdown-menu .quiz--nav__link,
-body.plans .quiz--nav__dropdown-menu .quiz--nav__link:visited {
+body.plans .quiz--nav__dropdown-menu .quiz--nav__link:visited,
+body.practice .quiz--nav__dropdown-menu .quiz--nav__link,
+body.practice .quiz--nav__dropdown-menu .quiz--nav__link:visited {
   color: rgba(15, 23, 42, 0.92) !important;
 }
 
 /* Hover state inside dropdown */
-body.plans .quiz--nav__dropdown-menu .quiz--nav__link:hover {
+body.plans .quiz--nav__dropdown-menu .quiz--nav__link:hover,
+body.practice .quiz--nav__dropdown-menu .quiz--nav__link:hover {
   background: rgba(15, 23, 42, 0.06) !important;
   color: rgba(15, 23, 42, 1) !important;
 }
 
 /* If your dark background is on the dropdown container itself */
-body.plans .quiz--nav__dropdown {
+body.plans .quiz--nav__dropdown,
+body.practice .quiz--nav__dropdown {
   background: transparent !important;
 }

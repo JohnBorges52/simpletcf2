@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TCF Reading Practice</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
     <!-- App styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="listening.css" />
@@ -59,11 +63,11 @@
     </style>
   </head>
 
-  <body class="quiz--light">
+  <body class="quiz--light" style="visibility: hidden;">
     <!-- Header -->
     <header class="quiz--main_h quiz--sticky" id="mainHeader">
       <div class="quiz--row">
-        <a class="quiz--logo" href="/index.html">Simple.TCF</a>
+        <a class="quiz--logo" href="/">Simple.TCF</a>
 
         <button
           class="quiz--mobile-toggle"
@@ -78,12 +82,13 @@
 
         <nav id="site-nav" aria-label="Primary">
           <ul>
-            <li><a href="/index.html" class="quiz--nav__link">Home</a></li>
+            <li><a href="/" class="quiz--nav__link">Home</a></li>
             <li>
-              <a href="/tcf-exam.html" class="quiz--nav__link">TCF Exam</a>
+              <a href="/tcf-exam" class="quiz--nav__link">TCF Exam</a>
             </li>
             <li class="quiz--nav__item quiz--nav__dropdown">
               <a
+                href="/practice"
                 class="quiz--nav__link quiz--nav__dropdown-toggle"
                 aria-haspopup="true"
                 aria-expanded="false"
@@ -96,7 +101,7 @@
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/listening.html"
+                    href="/listening"
                     class="quiz--nav__link"
                     >Listening</a
                   >
@@ -104,7 +109,7 @@
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/reading.html"
+                    href="/reading"
                     class="quiz--nav__link"
                     >Reading</a
                   >
@@ -112,7 +117,7 @@
                 <li role="none">
                   <a
                     role="menuitem"
-                    href="/writing.html"
+                    href="/writing"
                     class="quiz--nav__link"
                     >Writing</a
                   >
@@ -120,9 +125,9 @@
               </ul>
             </li>
 
-            <li><a href="/plan.html" class="quiz--nav__link">Plans</a></li>
+            <li><a href="/pricing" class="quiz--nav__link">Pricing</a></li>
             <li>
-              <a href="/index.html#contact-section" class="quiz--nav__link"
+              <a href="/#contact-section" class="quiz--nav__link"
                 >Contact</a
               >
             </li>
@@ -130,7 +135,7 @@
             <li id="auth-item">
               <a
                 id="auth-link"
-                href="/login.html"
+                href="/login"
                 class="quiz--nav__link bold-text"
                 >Sign In</a
               >
@@ -149,16 +154,11 @@
       >
         <h2 id="filters-title" class="quiz--hidden">Filters</h2>
 
-        <div class="quiz--controls-top">
-          <label class="quiz--toggle" for="onlyUnansweredChk">
-            <input type="checkbox" id="onlyUnansweredChk" />
-            <span>Never responded questions only</span>
-          </label>
-        </div>
-
+        <!-- Weight Selection -->
+        <h3 class="quiz--section-header">Weight Selection</h3>
         <div
           id="filtersToolbar"
-          class="quiz--toolbar"
+          class="quiz--toolbar quiz--toolbar-weights"
           role="toolbar"
           aria-label="Question weight filters"
         >
@@ -225,16 +225,40 @@
           >
             Weight-03
           </button>
+        </div>
 
-          <button
-            type="button"
-            id="deservesBtn"
-            class="quiz--btn quiz--pill"
-            aria-pressed="false"
-          >
-            📚 Deserves Attention (0)
-          </button>
+        <hr class="quiz--divider" />
 
+        <!-- Filters -->
+        <h3 class="quiz--section-header">Filters</h3>
+        <div class="quiz--toolbar quiz--toolbar-filters">
+          <label class="quiz--toggle" for="onlyUnansweredChk">
+            <input type="checkbox" id="onlyUnansweredChk" />
+            <span>Never responded questions only</span>
+          </label>
+
+          <div class="quiz--deserves-wrapper">
+            <button
+              type="button"
+              id="deservesBtn"
+              class="quiz--btn quiz--pill"
+              aria-pressed="false"
+            >
+              📚 Deserves Attention (0)
+            </button>
+            <div class="quiz--deserves-tooltip">
+              <strong>Deserves Attention</strong><br>
+              Shows questions with:<br>
+              • Spread ≥ 50% (answered 2+ times)<br>
+              • And score less than 2<br>
+            </div>
+          </div>
+        </div>
+
+        <hr class="quiz--divider" />
+
+        <!-- Real Test -->
+        <div class="quiz--toolbar quiz--toolbar-realtest">
           <button type="button" id="realTestBtn" class="quiz--btn quiz--pill">
             🧪 Real Test
           </button>
@@ -426,8 +450,23 @@
 
       <!-- Firebase initialization -->
       <script type="module" src="config.js"></script>
+      <script type="module" src="auth-service.js"></script>
       <script type="module" src="db-service.js"></script>
       <script src="subscription-service.js"></script>
+
+      <!-- Check if user is logged in -->
+      <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+          // Wait a moment for AuthService to initialize
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const user = window.AuthService?.getCurrentUser?.();
+          if (!user) {
+            alert('You need to be logged in to access the practice section.');
+            window.location.href = '/login';
+          }
+        });
+      </script>
 
       <!-- App scripts -->
       <script src="script.js" defer></script>

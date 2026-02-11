@@ -196,6 +196,8 @@ function fmtPct(n) {
     console.log("📦 Loading orders for user:", userId);
     
     const ordersTableBody = document.querySelector('.orders-table tbody');
+    const ordersCountPill = document.getElementById('ordersCountPill');
+    const loadMoreBtn = document.getElementById('loadMoreOrdersBtn');
     if (!ordersTableBody) {
       console.warn("Orders table tbody not found");
       return;
@@ -230,31 +232,145 @@ function fmtPct(n) {
       }
       
       const rows = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const orderId = doc.id.substring(0, 8).toUpperCase();
-        const date = data.createdAt?.toDate?.() || new Date();
-        const formattedDate = date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
+      const docs = querySnapshot.docs;
+      const tierDurations = {
+        "quick-study": 10,
+        "30-day": 30,
+        "full-prep": 60,
+      };
+
+      // Load user document to get actual subscription end date
+      let userDoc = null;
+      try {
+        const db = await window.__firestoreReady;
+        if (db && window.firestoreExports) {
+          const { doc, getDoc } = window.firestoreExports;
+          const userDocRef = doc(db, 'users', userId);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            userDoc = userDocSnap.data();
+            console.log(`📄 User document loaded:`, userDoc);
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to load user document for orders status", error);
+      }
+
+      let latestPaidOrderId = null;
+      let latestPaidOrderTier = null;
+      for (const docSnap of docs) {
+        const data = docSnap.data();
+        const tierKey = String(data.tier || "").toLowerCase();
+        const priceNum = Number(data.price || 0);
+        const isPaid = tierKey && tierKey !== "free" && priceNum > 0;
+        if (isPaid) {
+          latestPaidOrderId = docSnap.id;
+          latestPaidOrderTier = tierKey;
+          const orderId = docSnap.id.substring(0, 8).toUpperCase();
+          console.log(`🎯 Latest paid order found: ${orderId} (${tierKey})`);
+          break;
+        }
+      }
+
+      docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        const orderId = docSnap.id.substring(0, 8).toUpperCase();
+        const createdAt = data.createdAt?.toDate?.() || new Date();
+        const formattedDate = createdAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
-        const plan = data.plan || data.tier || '-';
-        const price = data.price === 0 ? 'Free' : `$${data.price.toFixed(2)}`;
-        const status = data.status || 'Completed';
-        
+        const tierKey = String(data.tier || "").toLowerCase();
+        const plan = data.plan || data.tier || "-";
+        const priceNum = Number(data.price || 0);
+        const price = priceNum === 0 ? "Free" : `$${priceNum.toFixed(2)}`;
+
+        let statusLabel = data.status || "Completed";
+        let statusClass = String(statusLabel).toLowerCase();
+
+        if (priceNum === 0 || tierKey === "free") {
+          statusLabel = "Free";
+          statusClass = "free";
+        } else {
+          const isLatestPaid =
+            docSnap.id === latestPaidOrderId && latestPaidOrderTier === tierKey;
+          let endDate = null;
+          
+          if (data.subscriptionEndDate) {
+            endDate = data.subscriptionEndDate.toDate
+              ? data.subscriptionEndDate.toDate()
+              : new Date(data.subscriptionEndDate);
+            console.log(`  📋 Order ${orderId}: Using order's own subscriptionEndDate: ${endDate.toISOString()}`);
+          } else if (
+            isLatestPaid &&
+            userDoc?.subscriptionEndDate
+          ) {
+            // For the latest paid order, use the actual subscription end date from user document
+            endDate = userDoc.subscriptionEndDate.toDate
+              ? userDoc.subscriptionEndDate.toDate()
+              : new Date(userDoc.subscriptionEndDate);
+            console.log(`  📋 Order ${orderId}: Using userDoc.subscriptionEndDate (actual expiration): ${endDate.toISOString()}`);
+          } else if (tierDurations[tierKey]) {
+            endDate = new Date(
+              createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
+            );
+            console.log(`  📋 Order ${orderId}: Calculated from tier duration (createdAt=${createdAt.toISOString()}, tier=${tierKey}): ${endDate.toISOString()}`);
+            if (isLatestPaid) {
+              console.log(`    ⚠️  This is the LATEST PAID order but userDoc is ${!!userDoc}, has subscriptionEndDate=${!!userDoc?.subscriptionEndDate}`);
+            }
+          }
+
+          console.log(`📋 Order ${orderId} (${tierKey}): isLatestPaid=${isLatestPaid}, docSnap.id=${docSnap.id.substring(0, 8)}, latestPaidOrderId=${latestPaidOrderId?.substring(0, 8)}, endDate=${endDate?.toISOString()}, now=${new Date().toISOString()}`);
+
+          if (isLatestPaid && endDate && Date.now() < endDate.getTime()) {
+            statusLabel = "Ongoing";
+            statusClass = "ongoing";
+          } else {
+            statusLabel = "Expired";
+            statusClass = "expired";
+          }
+        }
+
+        statusClass = statusClass.replace(/\s+/g, "-");
+
         rows.push(`
           <tr>
             <td>${orderId}</td>
             <td>${formattedDate}</td>
             <td>${plan}</td>
             <td>${price}</td>
-            <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+            <td><span class="status-badge status-${statusClass}">${statusLabel}</span></td>
           </tr>
         `);
       });
-      
-      ordersTableBody.innerHTML = rows.join('');
+
+      const initialCount = 5;
+      const loadMoreCount = 3;
+      let visibleCount = Math.min(initialCount, rows.length);
+
+      const renderRows = () => {
+        ordersTableBody.innerHTML = rows.slice(0, visibleCount).join('');
+
+        if (ordersCountPill) {
+          ordersCountPill.textContent = `Showing ${Math.min(visibleCount, rows.length)} of ${rows.length}`;
+        }
+
+        if (loadMoreBtn) {
+          const remaining = rows.length - visibleCount;
+          loadMoreBtn.style.display = remaining > 0 ? '' : 'none';
+          loadMoreBtn.textContent = `Show older (+${Math.min(loadMoreCount, remaining)})`;
+        }
+      };
+
+      if (loadMoreBtn) {
+        loadMoreBtn.onclick = () => {
+          visibleCount = Math.min(visibleCount + loadMoreCount, rows.length);
+          renderRows();
+        };
+      }
+
+      renderRows();
       console.log(`✅ Loaded ${rows.length} orders`);
       
     } catch (error) {
@@ -635,7 +751,7 @@ function fmtPct(n) {
       }
 
       // Redirect to login
-      window.location.href = "/login.html";
+      window.location.href = "/login";
     });
   }
 
@@ -702,14 +818,28 @@ function fmtPct(n) {
     const user = await waitForAuthUser();
     console.log("Auth user result:", user);
 
-    // Require authentication
-    if (!user) {
-      console.log("❌ No user found, redirecting to login");
-      window.location.href = "/login.html";
+    // Require authentication AND email verification
+    // Treat unverified users the same as logged-out users
+    if (!user || !user.emailVerified) {
+      if (user && !user.emailVerified) {
+        console.log("❌ User email not verified, signing out and redirecting to login");
+        // Sign out unverified user
+        try {
+          await window.AuthService.signOutUser();
+        } catch (error) {
+          console.error("Error signing out:", error);
+        }
+      } else {
+        console.log("❌ No user found, redirecting to login");
+      }
+      window.location.href = "/login";
       return;
     }
 
-    console.log("✅ User authenticated:", user.email);
+    console.log("✅ User authenticated and email verified:", user.email);
+    
+    // Show page content only after verification passes
+    document.body.style.visibility = "visible";
     
     // Check for payment success redirect
     const urlParams = new URLSearchParams(window.location.search);
@@ -720,7 +850,7 @@ function fmtPct(n) {
       console.log("💳 Payment success detected, waiting for tier update...");
     } else if (urlParams.get('payment') === 'cancelled') {
       alert('Payment was cancelled. You can try again anytime.');
-      window.history.replaceState({}, document.title, '/profile.html');
+      window.history.replaceState({}, document.title, '/profile');
     }
     
     // Setup tabs with userId for orders loading
@@ -828,6 +958,83 @@ function fmtPct(n) {
       // Add the correct badge class
       const badgeClass = tierBadgeClasses[tier] || "order-summary-badge--free";
       acctPlan.classList.add(badgeClass);
+    }
+
+    // Update plan expiration date
+    const acctExpiration = $("acctExpiration");
+    if (acctExpiration) {
+      if (tier === "free" || !userDoc?.subscriptionEndDate) {
+        acctExpiration.textContent = "—";
+        acctExpiration.classList.remove("warning", "critical");
+      } else {
+        // Calculate time remaining
+        const endDate = userDoc.subscriptionEndDate.toDate ? 
+          userDoc.subscriptionEndDate.toDate() : 
+          new Date(userDoc.subscriptionEndDate);
+        const now = new Date();
+        const diffMs = endDate - now;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+        
+        let expirationText = "";
+        let className = "";
+        
+        if (diffMs <= 0) {
+          expirationText = "Expired";
+          className = "critical";
+        } else if (diffMs < 60 * 60 * 1000) {
+          expirationText = "< 1 hour left";
+          className = "critical";
+        } else if (diffMs < 24 * 60 * 60 * 1000) {
+          expirationText = `${diffHours} hour${diffHours === 1 ? "" : "s"} left`;
+          className = "critical";
+        } else {
+          expirationText = `${diffDays} day${diffDays === 1 ? "" : "s"} left`;
+          if (diffDays <= 3) {
+            className = "critical";
+          } else if (diffDays <= 9) {
+            className = "warning";
+          }
+        }
+        
+        acctExpiration.textContent = expirationText;
+        acctExpiration.classList.remove("warning", "critical");
+        if (className) {
+          acctExpiration.classList.add(className);
+        }
+      }
+    }
+
+    // Setup password reset button
+    const profileResetBtn = $("profileResetBtn");
+    if (profileResetBtn) {
+      profileResetBtn.addEventListener("click", async () => {
+        const userEmail = user.email;
+        
+        if (!userEmail) {
+          alert("No email found for this account.");
+          return;
+        }
+
+        const confirmed = confirm(`Send password reset email to ${userEmail}?`);
+        if (!confirmed) return;
+
+        try {
+          profileResetBtn.disabled = true;
+          profileResetBtn.textContent = "Sending...";
+
+          await window.AuthService.resetPassword(userEmail);
+
+          alert(`✅ Password reset email sent to ${userEmail}. Check your inbox!`);
+        } catch (error) {
+          console.error("Password reset error:", error);
+          const msg = window.AuthService.formatAuthError(error);
+          alert(`Failed to send password reset email: ${msg}`);
+        } finally {
+          profileResetBtn.disabled = false;
+          profileResetBtn.textContent = "Send Password Reset Email";
+        }
+      });
     }
 
     // Load overview stats (all categories combined)
