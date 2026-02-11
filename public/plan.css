@@ -841,6 +841,8 @@ body.plans .hero-wrap .hero {
 
 .color-blue-span{
   color: cornflowerblue;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  text-decoration: none;
 }
 
 /* ================= HERO (PHOTO ONLY) ================= */
