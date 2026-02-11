@@ -334,7 +334,7 @@ li {
 }
 
 .hero> :not(.hero__bg) {
-  position: relative;
+  position: absolute;
   z-index: 2;
 }
 
