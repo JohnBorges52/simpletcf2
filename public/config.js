@@ -114,6 +114,10 @@ AuthService.initAuth(app).then(() => {
   // Update nav on auth state changes
   AuthService.onAuthChange((user) => {
     AuthService.updateAuthNav(user);
+
+    if (user) {
+      syncAuthenticatedUserRecord(user);
+    }
   });
 });
 
@@ -202,6 +206,36 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     eyeOff.classList.toggle("hidden", isPassword);
     toggleBtn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
   });
+}
+
+async function waitForDbService(timeoutMs = 5000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (window.dbService?.saveUser) return window.dbService;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  return null;
+}
+
+async function syncAuthenticatedUserRecord(user) {
+  if (!user?.uid) return;
+
+  try {
+    const dbService = await waitForDbService();
+    if (!dbService) {
+      console.warn("dbService not ready; user profile sync skipped.");
+      return;
+    }
+
+    await dbService.saveUser(user.uid, {
+      email: user.email || "",
+      displayName: user.displayName || "User",
+    });
+  } catch (error) {
+    console.error("Failed to sync authenticated user to Firestore:", error);
+  }
 }
 
 // ===============================
