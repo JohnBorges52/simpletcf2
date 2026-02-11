@@ -980,7 +980,7 @@ body.plans .hero__title-big {
 }
 
 .plan__features li.feature--excluded {
-  text-decoration: line-through;
+  
   color: #64748b;
 }
 
