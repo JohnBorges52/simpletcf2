@@ -1869,8 +1869,7 @@ img {
   padding: 0;
 }
 
-.quiz--main_h nav > ul > li > .quiz--nav__link,
-.quiz--main_h nav > ul > li > .quiz--nav__dropdown-toggle {
+.quiz--main_h nav > ul > li > .quiz--nav__link {
   position: relative;
   color: #ffffff;
   text-decoration: none;
@@ -1933,8 +1932,11 @@ img {
   background: var(--accent);
 }
 
-.quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__link,
-.quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__dropdown-toggle {
+.quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__link {
+  color: #2b2b2b;
+}
+
+.quiz--main_h.quiz--sticky nav > ul > li > .quiz--nav__link:hover {
   color: var(--accent);
 }
 
