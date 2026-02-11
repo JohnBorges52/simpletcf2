@@ -700,5 +700,4 @@ window.dbService = {
   getTestResults,
   listenToAnswerHistory,
 };
-
-console.log("✅ Database service loaded");
+// ...removed log...

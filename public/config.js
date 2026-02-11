@@ -822,4 +822,4 @@ function showVerificationMessage(email, name) {
   }
 })();
 
-console.log("✅ Config loaded - Firebase initialized with clean auth service");
+// ...removed log...
