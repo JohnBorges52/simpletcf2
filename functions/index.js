@@ -35,6 +35,13 @@ const VALID_PRICE_IDS = {
     price: 36.02,
     durationDays: 60,
   },
+  "price_TEST_LIVE_ID": {
+    tier: "test",
+    name: "Internal Test (Live)",
+    price: 1.0,
+    durationDays: 1,
+    internalOnly: true,
+  },
 };
 
 /**
@@ -385,6 +392,10 @@ exports.createCheckoutSession = onRequest(
         return res.status(400).json({ error: "Invalid plan selected" });
       }
 
+      if (planDetails.internalOnly && decodedToken.email !== "jrborges52@gmail.com") {
+        return res.status(403).json({ error: "Not allowed" });
+      }
+
       const userId = decodedToken.uid;
       const userEmail = decodedToken.email;
 
@@ -420,6 +431,7 @@ exports.createCheckoutSession = onRequest(
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
+        allow_promotion_codes: true,
         line_items: [{ price: priceId, quantity: 1 }],
         mode: "payment",
         success_url: successUrl,
