@@ -697,8 +697,8 @@ li {
 .carousel {
   position: relative;
   overflow: hidden;
-  padding: 10px 14px 20px;
-  margin: -10px -14px -20px;
+  padding: 10px 0 20px;
+  margin: -10px 0 -20px;
 }
 
 .carousel__viewport {
@@ -763,6 +763,7 @@ li {
   grid-template-rows: auto auto;
   gap: 14px;
   padding: 24px;
+  min-height: 100%;
   border-radius: var(--radius);
   background: #fff;
   box-shadow: 0 14px 30px rgba(16, 24, 42, 0.14), 0 4px 10px rgba(16, 24, 42, 0.08);
