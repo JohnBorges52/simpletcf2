@@ -2056,7 +2056,7 @@ li {
   min-width: 280px;
   justify-content: center;
 
-  background: var(--card, #fff);
+  background: var( #fff);
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 12px;
 
