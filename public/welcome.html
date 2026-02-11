@@ -120,8 +120,17 @@
       
       document.addEventListener('DOMContentLoaded', async () => {
         try {
-          // Check if we have a verified email from the verification link
+          // Handle Firebase password reset links that may be configured to /welcome
           const urlParams = new URLSearchParams(window.location.search);
+          const mode = urlParams.get('mode');
+
+          if (mode === 'resetPassword') {
+            const redirectToReset = `/passwordReset${window.location.search || ''}`;
+            window.location.replace(redirectToReset);
+            return;
+          }
+
+          // Check if we have a verified email from the verification link
           const verifiedEmail = urlParams.get('verified_email');
           
           // Wait for auth to be ready
