@@ -956,15 +956,42 @@ body.plans .hero__title-big {
   color: rgb(31, 69, 104);
 }
 
-.plan ul {
-  padding-left: 18px;
+.plan ul,
+.plan__features {
+  list-style: none;
+  padding-left: 0;
   margin: 16px 0 22px;
-  color: rgb(31, 69, 104)
+  color: rgb(31, 69, 104);
 }
 
-/* .plan ul il {
-  list-style: none;
-} */
+.plan__features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.plan__features li::before {
+  content: "✓";
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.plan__features li.feature--excluded {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.plan__features li.feature--excluded::before {
+  content: "✕";
+  color: #dc2626;
+}
+
+.plan__features li.feature--underlined strong {
+  text-decoration: underline;
+}
 
 .plan--featured {
   border-color: rgba(124, 92, 255, 0.45);
