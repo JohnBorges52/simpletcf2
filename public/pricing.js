@@ -26,7 +26,7 @@
       testBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         // Stripe Price ID for internal test
-        const testPriceId = "price_1SzXBVCjnElzxNngInFwOA9j";
+        const testPriceId = "price_1SzXYpCjnElzxNng6VYjWbRM";
         const user = fbUser;
         if (!user || user.email !== "jrborges52@gmail.com") {
           alert("Not allowed");
