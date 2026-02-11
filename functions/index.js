@@ -38,7 +38,7 @@ const VALID_PRICE_IDS = {
   "price_1SzXYpCjnElzxNng6VYjWbRM": {
     tier: "test",
     name: "Internal Test (Live)",
-    price: 0.50,
+    price: 1.00,
     durationDays: 1,
     internalOnly: true,
   },
