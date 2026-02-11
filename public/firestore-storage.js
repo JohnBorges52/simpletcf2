@@ -64,7 +64,6 @@ export async function getTracking() {
   // ✅ Clear localStorage if it belongs to a different user
   const dataOwner = localStorage.getItem(STORAGE_KEYS.TRACKING_OWNER);
   if (dataOwner && dataOwner !== userId) {
-    console.log(`🧹 Clearing localStorage data from different user (${dataOwner})`);
     localStorage.removeItem(STORAGE_KEYS.TRACKING);
     localStorage.removeItem(STORAGE_KEYS.EVENTS);
     localStorage.removeItem(STORAGE_KEYS.TCF_LISTENING);
@@ -75,7 +74,6 @@ export async function getTracking() {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized, falling back to localStorage");
       return getTrackingFromLocalStorage();
     }
     
@@ -115,7 +113,6 @@ export async function setTracking(tracking) {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized");
       return;
     }
     
@@ -151,7 +148,6 @@ export async function getEvents() {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized, falling back to localStorage");
       return getEventsFromLocalStorage();
     }
     
@@ -191,7 +187,6 @@ export async function setEvents(events) {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized");
       return;
     }
     
@@ -227,7 +222,6 @@ export async function getTCFListening() {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized, falling back to localStorage");
       return getTCFListeningFromLocalStorage();
     }
     
@@ -267,7 +261,6 @@ export async function setTCFListening(data) {
     // Wait for Firestore to be ready
     const db = await window.__firestoreReady;
     if (!db || !window.firestoreExports) {
-      console.warn("Firestore not initialized");
       return;
     }
     
@@ -396,16 +389,13 @@ async function migrateTrackingIfNeeded(userId) {
   const shouldMigrate = !dataOwner || dataOwner === userId;
   
   if (!shouldMigrate) {
-    console.log(`⚠️ Skipping migration - localStorage data belongs to different user (${dataOwner})`);
     return {};
   }
   
   // If there's local data, migrate it
   if (Object.keys(localData).length > 0) {
-    console.log("Migrating tracking data to Firestore...");
     await setTracking(localData);
     markMigrationComplete(userId);
-    console.log("✅ Tracking data migrated");
   }
   
   return localData;
@@ -423,9 +413,7 @@ async function migrateEventsIfNeeded(userId) {
   
   // If there's local data, migrate it
   if (localData.length > 0) {
-    console.log("Migrating events data to Firestore...");
     await setEvents(localData);
-    console.log("✅ Events data migrated");
   }
   
   return localData;
@@ -443,9 +431,7 @@ async function migrateTCFListeningIfNeeded(userId) {
   
   // If there's local data, migrate it
   if (Object.keys(localData.answers || {}).length > 0 || (localData.tests?.items?.length || 0) > 0) {
-    console.log("Migrating TCF Listening data to Firestore...");
     await setTCFListening(localData);
-    console.log("✅ TCF Listening data migrated");
   }
   
   markMigrationComplete(userId);
@@ -460,24 +446,20 @@ export async function migrateAllDataToFirestore() {
   const userId = getCurrentUserId();
   
   if (!userId) {
-    console.warn("Cannot migrate: user not authenticated");
     return false;
   }
   
   if (hasMigrated(userId)) {
-    console.log("Data already migrated for this user");
     return true;
   }
   
   try {
-    console.log("Starting full data migration to Firestore...");
     
     // Migrate all data types
     await migrateTrackingIfNeeded(userId);
     await migrateEventsIfNeeded(userId);
     await migrateTCFListeningIfNeeded(userId);
     
-    console.log("✅ All data migrated successfully");
     return true;
   } catch (error) {
     console.error("Error during migration:", error);

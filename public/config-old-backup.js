@@ -300,21 +300,18 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
   try {
     // Initialize Firebase with config from firebase-config.js
     const app = initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized");
 
     // Auth
     const auth = getAuth(app);
     await setPersistence(auth, browserLocalPersistence);
     window.__auth = auth;
     resolveAuthReady(auth);
-    console.log("✅ Auth ready");
 
     // Storage
     const storage = getStorage(app);
     window.__storage = storage;
     window.firebaseStorageExports = { ref, getDownloadURL, getBytes };
     resolveStorageReady(storage);
-    console.log("✅ Storage ready");
 
     // Firestore
     const db = getFirestore(app);
@@ -334,7 +331,6 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
       Timestamp 
     };
     resolveFirestoreReady(db);
-    console.log("✅ Firestore ready");
 
     // Remote Config (optional, doesn't break if offline)
     try {
@@ -344,9 +340,7 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
       await fetchAndActivate(remoteConfig);
       window.__remoteConfig = remoteConfig;
       resolveRemoteConfigReady(remoteConfig);
-      console.log("✅ Remote Config ready");
     } catch (err) {
-      console.warn("⚠️ Remote Config unavailable:", err.message);
       resolveRemoteConfigReady(null);
     }
 
@@ -354,7 +348,6 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
     try {
       if (await isSupported()) {
         getAnalytics(app);
-        console.log("📈 Analytics enabled");
       }
     } catch {
       /* ignore */
@@ -397,13 +390,11 @@ function wirePasswordToggle({ buttonId, inputId, eyeOnId, eyeOffId }) {
             return;
           }
         } catch (e) {
-          console.warn("Reload after verification failed:", e);
         }
       }
 
       window.location.replace("/login.html?verified=1");
     } catch (err) {
-      console.warn("verifyEmail handling failed:", err);
       window.location.replace("/login.html?verify_error=1");
     }
   }
@@ -589,7 +580,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         await sendEmailVerification(cred.user, actionCodeSettings);
       } catch (e) {
-        console.warn("⚠️ Failed to send verification email:", e);
       }
 
       await signOut(authNow);
@@ -814,7 +804,6 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           await sendEmailVerification(user);
         } catch (e) {
-          console.warn("Could not send verification email:", e);
         }
         await signOut(auth);
 
@@ -1020,7 +1009,6 @@ window.getFirebaseStorageUrl = async (path) => {
     const fileRef = ref(storage, cleanPath);
     return await getDownloadURL(fileRef);
   } catch (err) {
-    console.warn(`Storage URL failed for ${path}`);
     return null;
   }
 };

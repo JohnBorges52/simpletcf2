@@ -101,7 +101,6 @@
         checkoutUrl.searchParams.set("badge", badge);
 
         if (!isLoggedIn()) {
-          console.log("🔒 Not logged in → redirect to login");
           goToLoginThenReturn(checkoutUrl);
           return;
         }
@@ -113,7 +112,6 @@
           return;
         }
 
-        console.log("➡️ Redirecting to:", checkoutUrl.toString());
         window.location.href = checkoutUrl.toString();
       });
     });
@@ -136,7 +134,6 @@
         );
 
         if (!isLoggedIn()) {
-          console.log("🔒 Not logged in → redirect to login");
           goToLoginThenReturn(checkoutUrl);
           return;
         }

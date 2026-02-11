@@ -23,7 +23,6 @@ import {
   
   if (!user || !user.emailVerified) {
     if (user && !user.emailVerified) {
-      console.log("🔒 User email not verified, signing out and redirecting to login...");
       // Sign out unverified user
       try {
         const authService = await import('./auth-service.js');
@@ -31,14 +30,11 @@ import {
       } catch (error) {
         console.error("Error signing out:", error);
       }
-    } else {
-      console.log("🔒 User not logged in, redirecting to login...");
-    }
+    } 
     window.location.href = "/login";
     return;
   }
   
-  console.log("✅ User authenticated and email verified:", user.email);
   
   // Show page content only after verification passes
   document.body.style.visibility = "visible";
@@ -397,7 +393,6 @@ import {
       try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) {
-          console.warn("JSON candidate returned non-ok status", url, res.status);
           continue;
         }
         const ct = res.headers.get("content-type") || "";
@@ -406,13 +401,11 @@ import {
           try {
             return JSON.parse(text);
           } catch {
-            console.warn("Not JSON at", url, "body starts:", text.slice(0, 120));
             continue;
           }
         }
         return await res.json();
       } catch (err) {
-        console.warn("fetchJsonFirstWorking failed for", url, err?.message || err);
         continue;
       }
     }
@@ -481,7 +474,6 @@ import {
         const storageUrl = await window.getFirebaseStorageUrl(url);
         if (storageUrl) url = storageUrl;
       } catch (err) {
-        console.warn("Storage URL failed for PDF:", err);
       }
     }
 
@@ -857,7 +849,6 @@ import {
         selectedOption: selectedLetter,
         isCorrect: isCorrect,
       }).catch(err => {
-        console.warn("Failed to log reading response to Firestore:", err);
       });
     }
   }
@@ -1563,13 +1554,11 @@ import {
   async function initializeSubscription() {
     try {
       if (!window.SubscriptionService) {
-        console.warn('SubscriptionService not available');
         return;
       }
       
       const userData = await window.SubscriptionService.init();
       state.userSubscription = userData;
-      console.log('🔍 [DEBUG] Reading - Subscription initialized, full data:', JSON.stringify(userData, null, 2));
 
       // ✅ Migrate existing answered questions to subscription usage counter
       await migrateExistingAnswers();
@@ -1585,13 +1574,11 @@ import {
     try {
       const user = window.AuthService?.getCurrentUser();
       if (!user || !window.SubscriptionService) {
-        console.log('🔍 [DEBUG] Migration skipped - no user or service');
         return;
       }
 
       // ✅ Ensure user has subscription data with usage object
       if (!state.userSubscription || !state.userSubscription.usage) {
-        console.log('⚠️ No subscription data yet, skipping migration');
         return;
       }
 
@@ -1602,11 +1589,9 @@ import {
       // Get current subscription usage
       const currentUsage = state.userSubscription.usage.readingQuestionsAnswered || 0;
 
-      console.log('🔍 [DEBUG] Migration check - tracked:', answeredCount, 'subscriptionUsage:', currentUsage);
 
       // If old tracking has more answers than subscription counter, sync them
       if (answeredCount > currentUsage && answeredCount > 0) {
-        console.log(`📊 Migrating ${answeredCount} existing reading answers to subscription system`);
         
         await window.SubscriptionService.updateUserSubscriptionData(user.uid, {
           usage: {
@@ -1617,10 +1602,7 @@ import {
 
         // Refresh subscription data
         state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
-        console.log('✅ Reading usage synced:', answeredCount);
-      } else {
-        console.log('🔍 [DEBUG] No migration needed');
-      }
+      } 
     } catch (error) {
       console.error('Error migrating existing answers:', error);
     }
@@ -1633,21 +1615,16 @@ import {
   async function checkReadingAccess() {
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
-      console.log('No user logged in');
       return true; // Allow access when not logged in (or redirect to login)
     }
 
     if (!window.SubscriptionService || !state.userSubscription) {
-      console.warn('Subscription service not initialized');
       return true; // Fail open
     }
 
-    console.log('🔍 [DEBUG] checkReadingAccess - state.userSubscription:', JSON.stringify(state.userSubscription, null, 2));
     const canAccess = window.SubscriptionService.canAccess('reading', state.userSubscription);
-    console.log('🔍 [DEBUG] canAccess result:', canAccess);
     
     if (!canAccess) {
-      console.log('❌ Access denied - showing upgrade modal');
       const remaining = window.SubscriptionService.getRemainingUsage(state.userSubscription);
       window.SubscriptionService.showUpgradeModal(
         `You've used all ${15} free reading questions! Keep enjoying SimpleTCF by selecting a plan.`
@@ -1659,7 +1636,6 @@ import {
       return false;
     }
 
-    console.log('✅ Access granted to reading practice');
     return true;
   }
 
@@ -1673,7 +1649,6 @@ import {
     // ✅ Track for ALL users (limits are checked separately)
     try {
       await window.SubscriptionService.incrementUsage(user.uid, 'reading');
-      console.log('✅ Reading usage incremented');
       
       // Refresh subscription data
       state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
@@ -1730,7 +1705,6 @@ import {
   async function init() {
     // ✅ Wait for Firebase to initialize before using subscription service
     await window.AuthService?.waitForAuth();
-    console.log('✅ Firebase ready, initializing reading page...');
     
     // ✅ Initialize subscription service and check access
     await initializeSubscription();

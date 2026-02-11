@@ -117,21 +117,17 @@ function fmtPct(n) {
    * Load user statistics from Firestore (for Overview - all categories combined)
    */
   async function loadOverview(userId) {
-    console.log("📊 Loading overview statistics for user:", userId);
     if (!window.dbService) {
-      console.warn("dbService not available");
       return;
     }
 
     try {
       const stats = await window.dbService.getUserStatistics(userId);
-      console.log("📊 User statistics loaded:", stats);
       const total = stats.totalResponses || 0;
       const correct = stats.correctResponses || 0;
       const wrong = total - correct;
       const accuracy = total > 0 ? (correct / total) * 100 : 0;
 
-      console.log(`Stats: Total=${total}, Correct=${correct}, Wrong=${wrong}, Accuracy=${accuracy.toFixed(2)}%`);
 
       // Overview KPIs (combined listening + reading)
       const accuracyEl = $("kpiAccuracy");
@@ -153,9 +149,7 @@ function fmtPct(n) {
    * Load progress statistics for a specific category
    */
   async function loadProgress(userId, category = "listening") {
-    console.log(`📊 Loading progress for ${category}`);
     if (!window.dbService) {
-      console.warn("dbService not available");
       return;
     }
 
@@ -193,13 +187,11 @@ function fmtPct(n) {
    * Load and display order history
    */
   async function loadOrders(userId) {
-    console.log("📦 Loading orders for user:", userId);
     
     const ordersTableBody = document.querySelector('.orders-table tbody');
     const ordersCountPill = document.getElementById('ordersCountPill');
     const loadMoreBtn = document.getElementById('loadMoreOrdersBtn');
     if (!ordersTableBody) {
-      console.warn("Orders table tbody not found");
       return;
     }
 
@@ -249,11 +241,9 @@ function fmtPct(n) {
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
             userDoc = userDocSnap.data();
-            console.log(`📄 User document loaded:`, userDoc);
           }
         }
       } catch (error) {
-        console.warn("Failed to load user document for orders status", error);
       }
 
       let latestPaidOrderId = null;
@@ -267,7 +257,6 @@ function fmtPct(n) {
           latestPaidOrderId = docSnap.id;
           latestPaidOrderTier = tierKey;
           const orderId = docSnap.id.substring(0, 8).toUpperCase();
-          console.log(`🎯 Latest paid order found: ${orderId} (${tierKey})`);
           break;
         }
       }
@@ -301,7 +290,6 @@ function fmtPct(n) {
             endDate = data.subscriptionEndDate.toDate
               ? data.subscriptionEndDate.toDate()
               : new Date(data.subscriptionEndDate);
-            console.log(`  📋 Order ${orderId}: Using order's own subscriptionEndDate: ${endDate.toISOString()}`);
           } else if (
             isLatestPaid &&
             userDoc?.subscriptionEndDate
@@ -310,18 +298,14 @@ function fmtPct(n) {
             endDate = userDoc.subscriptionEndDate.toDate
               ? userDoc.subscriptionEndDate.toDate()
               : new Date(userDoc.subscriptionEndDate);
-            console.log(`  📋 Order ${orderId}: Using userDoc.subscriptionEndDate (actual expiration): ${endDate.toISOString()}`);
           } else if (tierDurations[tierKey]) {
             endDate = new Date(
               createdAt.getTime() + tierDurations[tierKey] * 24 * 60 * 60 * 1000,
             );
-            console.log(`  📋 Order ${orderId}: Calculated from tier duration (createdAt=${createdAt.toISOString()}, tier=${tierKey}): ${endDate.toISOString()}`);
             if (isLatestPaid) {
-              console.log(`    ⚠️  This is the LATEST PAID order but userDoc is ${!!userDoc}, has subscriptionEndDate=${!!userDoc?.subscriptionEndDate}`);
             }
           }
 
-          console.log(`📋 Order ${orderId} (${tierKey}): isLatestPaid=${isLatestPaid}, docSnap.id=${docSnap.id.substring(0, 8)}, latestPaidOrderId=${latestPaidOrderId?.substring(0, 8)}, endDate=${endDate?.toISOString()}, now=${new Date().toISOString()}`);
 
           if (isLatestPaid && endDate && Date.now() < endDate.getTime()) {
             statusLabel = "Ongoing";
@@ -371,7 +355,6 @@ function fmtPct(n) {
       }
 
       renderRows();
-      console.log(`✅ Loaded ${rows.length} orders`);
       
     } catch (error) {
       console.error("Failed to load orders:", error);
@@ -392,7 +375,6 @@ function fmtPct(n) {
     const weightBars = $("weightBars");
     if (!weightBars) return;
 
-    console.log("📊 Weight data:", byWeight);
 
     const weights = Object.entries(byWeight)
       .map(([w, obj]) => {
@@ -403,7 +385,6 @@ function fmtPct(n) {
       })
       .sort((a, b) => a.weight - b.weight);
 
-    console.log("📊 Processed weights:", weights);
 
     if (weights.length === 0) {
       weightBars.innerHTML = '<div class="progress-note muted">No data yet. Start practicing!</div>';
@@ -427,7 +408,6 @@ function fmtPct(n) {
    * Render accuracy over time chart
    */
   async function renderAccuracyChart(userId, category, mode = "weekly") {
-    console.log(`📈 Rendering ${mode} chart for ${category}`);
     
     const canvas = $("progressLineChart");
     if (!canvas) return;
@@ -443,7 +423,6 @@ function fmtPct(n) {
         data = await window.dbService.getWeeklyStats(userId, { questionType: category, weeks: 12 });
       }
 
-      console.log(`Chart data (${mode}):`, data);
 
       // Update pill text
       const pill = $("pRangePill");
@@ -622,15 +601,12 @@ function fmtPct(n) {
    * Load real test results for a specific test type
    */
   async function loadRealTests(userId, testType = "listening") {
-    console.log(`🧪 Loading real tests for ${testType}`);
     if (!window.dbService) {
-      console.warn("dbService not available");
       return;
     }
 
     try {
       const stats = await window.dbService.getTestResults(userId, { testType });
-      console.log("🧪 Test results loaded:", stats);
 
       // Update KPIs
       const rtTotal = $("rtTotal");
@@ -764,16 +740,13 @@ function fmtPct(n) {
    * @returns {Promise<Object|null>} Updated user data object or null if timeout
    */
   async function waitForTierUpdate(userId, maxAttempts = 20, intervalMs = 1500) {
-    console.log("⏳ Waiting for tier update from webhook...");
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      console.log(`Polling attempt ${attempt + 1}/${maxAttempts}...`);
       
       try {
         // Fetch fresh user data from Firestore
         const db = await window.__firestoreReady;
         if (!db || !window.firestoreExports) {
-          console.warn("Firestore not available");
           return null;
         }
 
@@ -787,7 +760,6 @@ function fmtPct(n) {
           
           // Check if tier has been updated to a paid tier
           if (tier !== 'free') {
-            console.log(`✅ Tier updated to: ${tier}`);
             return data;
           }
         }
@@ -801,7 +773,6 @@ function fmtPct(n) {
       }
     }
     
-    console.warn("⚠️ Tier update timeout - webhook may still be processing");
     return null;
   }
 
@@ -809,34 +780,26 @@ function fmtPct(n) {
   // Init
   // ----------------------------
   document.addEventListener("DOMContentLoaded", async () => {
-    console.log("🔍 Profile page loading...");
-    console.log("AuthService available:", !!window.AuthService);
     
     await bindLogout();
 
-    console.log("⏳ Waiting for auth user...");
     const user = await waitForAuthUser();
-    console.log("Auth user result:", user);
 
     // Require authentication AND email verification
     // Treat unverified users the same as logged-out users
     if (!user || !user.emailVerified) {
       if (user && !user.emailVerified) {
-        console.log("❌ User email not verified, signing out and redirecting to login");
         // Sign out unverified user
         try {
           await window.AuthService.signOutUser();
         } catch (error) {
           console.error("Error signing out:", error);
         }
-      } else {
-        console.log("❌ No user found, redirecting to login");
-      }
+      } 
       window.location.href = "/login";
       return;
     }
 
-    console.log("✅ User authenticated and email verified:", user.email);
     
     // Show page content only after verification passes
     document.body.style.visibility = "visible";
@@ -847,7 +810,6 @@ function fmtPct(n) {
     
     if (isPaymentSuccess) {
       // Don't show alert yet - wait for tier update first
-      console.log("💳 Payment success detected, waiting for tier update...");
     } else if (urlParams.get('payment') === 'cancelled') {
       alert('Payment was cancelled. You can try again anytime.');
       window.history.replaceState({}, document.title, '/profile');
@@ -860,10 +822,8 @@ function fmtPct(n) {
     try {
       if (window.SubscriptionService) {
         await window.SubscriptionService.init();
-        console.log("✅ Subscription service initialized");
       }
     } catch (error) {
-      console.warn("Failed to initialize subscription service:", error);
     }
 
     // Load user document from Firestore (if available)
@@ -892,7 +852,6 @@ function fmtPct(n) {
           userDoc = await window.dbService.getUser(user.uid);
         }
       } catch (error) {
-        console.warn("Failed to load user document:", error);
       }
     }
 
@@ -906,15 +865,12 @@ function fmtPct(n) {
     if (isPaymentSuccess && window.SubscriptionService) {
       try {
         await window.SubscriptionService.init();
-        console.log("✅ Subscription service refreshed after payment");
         
         // Get the refreshed user data from SubscriptionService
         if (window.SubscriptionService.currentUserData) {
           userDoc = window.SubscriptionService.currentUserData;
-          console.log("✅ Using refreshed user data from SubscriptionService");
         }
       } catch (error) {
-        console.warn("Failed to refresh subscription service:", error);
       }
     }
     
