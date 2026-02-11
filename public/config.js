@@ -68,13 +68,13 @@ let firestore = null;
   const supported = await isSupported();
   if (supported) {
     analytics = getAnalytics(app);
-    console.log("✅ Analytics initialized");
+    // ...removed log...
   }
 })();
 
 // Initialize Storage
 storage = getStorage(app);
-console.log("✅ Storage initialized");
+// ...removed log...
 
 // Initialize Firestore
 firestore = getFirestore(app);
@@ -95,7 +95,7 @@ window.firestoreExports = {
   onSnapshot
 };
 resolveFirestoreReady(firestore);
-console.log("✅ Firestore initialized");
+// ...removed log...
 
 // Initialize Remote Config
 remoteConfig = getRemoteConfig(app);
@@ -105,13 +105,12 @@ remoteConfig.settings = {
 };
 
 fetchAndActivate(remoteConfig)
-  .then(() => console.log("✅ Remote Config activated"))
-  .catch((err) => console.warn("Remote Config fetch failed:", err));
+  .then(() => {/* ...removed log... */})
+  .catch((err) => {/* ...removed log... */});
 
 // Initialize Auth
 AuthService.initAuth(app).then(() => {
-  console.log("✅ Authentication initialized");
-  
+  // ...removed log...
   // Update nav on auth state changes
   AuthService.onAuthChange((user) => {
     AuthService.updateAuthNav(user);

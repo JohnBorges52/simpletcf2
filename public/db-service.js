@@ -67,9 +67,7 @@ async function saveUser(userId, userData) {
   
   try {
     await setDoc(userRef, userDoc, { merge: true });
-    if (DEBUG_MODE) {
-      console.log("✅ User synced to Firestore:", userId);
-    }
+    // ...removed log...
   } catch (error) {
     console.error("❌ Error saving user to Firestore:", error);
     throw error;

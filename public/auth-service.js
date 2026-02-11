@@ -53,7 +53,7 @@ export async function initAuth(app) {
       currentUser = user;
       hasReceivedInitialState = true;
       
-      console.log("🔐 Auth state changed:", user ? `Logged in as ${user.email}` : "Logged out");
+      // ...removed log...
       
       // Notify all subscribers
       authStateCallbacks.forEach(callback => {
@@ -110,15 +110,14 @@ export function onAuthChange(callback) {
 export function waitForAuth() {
   // Only return immediately if we've received the initial auth state
   if (hasReceivedInitialState) {
-    console.log("🔐 Auth already initialized, current user:", currentUser?.email || "none");
+    // ...removed log...
     return Promise.resolve(currentUser);
   }
-  
-  console.log("⏳ Waiting for initial auth state...");
+  // ...removed log...
   // Wait for the first auth state callback
   return new Promise((resolve) => {
     const unsubscribe = onAuthChange((user) => {
-      console.log("🔐 Auth state received:", user?.email || "none");
+      // ...removed log...
       unsubscribe();
       resolve(user);
     });
