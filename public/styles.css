@@ -38,6 +38,10 @@ img {
   display: block;
 }
 
+li {
+  color: #2b2b2b !important;
+}
+
 /* Layout helpers */
 .container {
   max-width: var(--container);
