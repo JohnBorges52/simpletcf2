@@ -52,17 +52,31 @@ async function getFirestore() {
  */
 async function saveUser(userId, userData) {
   const db = await getFirestore();
-  const { doc, setDoc, serverTimestamp } = window.firestoreExports;
+  const { doc, getDoc, setDoc, serverTimestamp } = window.firestoreExports;
   
   const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  const existingData = userSnap.exists() ? userSnap.data() : null;
+
+  const hasExistingSubscriptionStartDate = existingData
+    ? Object.prototype.hasOwnProperty.call(existingData, "subscriptionStartDate")
+    : false;
+  const hasExistingSubscriptionEndDate = existingData
+    ? Object.prototype.hasOwnProperty.call(existingData, "subscriptionEndDate")
+    : false;
   
   const userDoc = {
     email: userData.email,
     displayName: userData.displayName || "User",
-    createdAt: userData.createdAt || serverTimestamp(),
+    createdAt: userData.createdAt || existingData?.createdAt || serverTimestamp(),
     lastLoginAt: serverTimestamp(),
-    plan: userData.plan || "free",
-    renewalDate: userData.renewalDate || null,
+    tier: userData.tier || existingData?.tier || "free",
+    plan: userData.plan || existingData?.plan || "free",
+    renewalDate: userData.renewalDate || existingData?.renewalDate || null,
+    subscriptionStartDate: userData.subscriptionStartDate
+      || (hasExistingSubscriptionStartDate ? existingData.subscriptionStartDate : null),
+    subscriptionEndDate: userData.subscriptionEndDate
+      || (hasExistingSubscriptionEndDate ? existingData.subscriptionEndDate : null),
   };
   
   try {
