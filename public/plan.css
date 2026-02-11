@@ -171,7 +171,7 @@ code {
 
 .btn--primary:hover {
   transform: translateY(-1px);
-  linear-gradient(177deg, rgb(37 37 37 / 76%), #8a3aff);
+  background: linear-gradient(177deg, rgb(37 37 37 / 76%), #8a3aff);
 }
 
 .btn--ghost {
