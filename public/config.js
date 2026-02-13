@@ -229,9 +229,14 @@ async function syncAuthenticatedUserRecord(user) {
       return;
     }
 
+    const providerId = user.providerData?.[0]?.providerId || "password";
+
     await dbService.saveUser(user.uid, {
       email: user.email || "",
       displayName: user.displayName || "User",
+      emailVerified: !!user.emailVerified,
+      authProvider: providerId,
+      photoURL: user.photoURL || null,
     });
   } catch (error) {
     console.error("Failed to sync authenticated user to Firestore:", error);
