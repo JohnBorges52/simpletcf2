@@ -98,23 +98,20 @@
       // Shared function to complete setup
       async function completeSetup(user) {
         await window.__firestoreReady;
-        const firestore = window.__firestore;
-        const { doc, setDoc, serverTimestamp, getDoc } = window.firestoreExports;
 
-        if (firestore && user) {
-          const userRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-          if (!userDoc.exists()) {
-            await setDoc(userRef, {
-              email: user.email,
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
-              createdAt: serverTimestamp(),
-              emailVerified: true,
-              tier: 'free',
-              subscriptionStatus: 'free'
-            });
-          } 
+        if (user?.uid && window.dbService?.saveUser) {
+          const providerId = user.providerData?.[0]?.providerId || 'password';
+          await window.dbService.saveUser(user.uid, {
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'User',
+            emailVerified: !!user.emailVerified,
+            authProvider: providerId,
+            photoURL: user.photoURL || null,
+            tier: 'free',
+            plan: 'free'
+          });
         }
+
         window.location.href = '/';
       }
       

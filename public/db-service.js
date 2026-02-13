@@ -15,6 +15,9 @@ const DEBUG_MODE = false;
  *   - displayName: string
  *   - createdAt: timestamp
  *   - lastLoginAt: timestamp
+ *   - emailVerified: boolean
+ *   - authProvider: string ("password" | "google.com" | etc.)
+ *   - photoURL: string | null
  *   - plan: string (optional)
  *   - renewalDate: string (optional)
  * 
@@ -65,11 +68,29 @@ async function saveUser(userId, userData) {
     ? Object.prototype.hasOwnProperty.call(existingData, "subscriptionEndDate")
     : false;
   
+  const hasExistingEmailVerified = existingData
+    ? Object.prototype.hasOwnProperty.call(existingData, "emailVerified")
+    : false;
+  const hasExistingAuthProvider = existingData
+    ? Object.prototype.hasOwnProperty.call(existingData, "authProvider")
+    : false;
+  const hasExistingPhotoURL = existingData
+    ? Object.prototype.hasOwnProperty.call(existingData, "photoURL")
+    : false;
+
   const userDoc = {
     email: userData.email,
     displayName: userData.displayName || "User",
     createdAt: userData.createdAt || existingData?.createdAt || serverTimestamp(),
     lastLoginAt: serverTimestamp(),
+    emailVerified: typeof userData.emailVerified === "boolean"
+      ? userData.emailVerified
+      : (hasExistingEmailVerified ? existingData.emailVerified : false),
+    authProvider: userData.authProvider
+      || (hasExistingAuthProvider ? existingData.authProvider : "password"),
+    photoURL: userData.photoURL !== undefined
+      ? userData.photoURL
+      : (hasExistingPhotoURL ? existingData.photoURL : null),
     tier: userData.tier || existingData?.tier || "free",
     plan: userData.plan || existingData?.plan || "free",
     renewalDate: userData.renewalDate || existingData?.renewalDate || null,
