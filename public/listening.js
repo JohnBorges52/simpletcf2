@@ -691,7 +691,7 @@ import {
     const picWrap = els.picture();
     if (!picWrap) return;
 
-    if (q.question_number >= 1 && q.question_number <= 10 && isPictureTrue(q)) {
+    if (isPictureTrue(q)) {
       const imgSrc = resolveImageSrc(q);
       if (imgSrc) {
         const numForAlt = displayNumStr || fmt2or3(getHeaderNumber(q));

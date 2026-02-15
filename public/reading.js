@@ -111,6 +111,7 @@ import {
     qNumber: () => $("#questionNumber"),
     pictureContainer: () => $("#pictureContainer"),
     pdfInner: () => $("#pdfInner"),
+    qPrompt: () => $("#questionPrompt"),
     qText: () => $("#questionText"),
     options: () => $("#alternatives"),
     confirmBtn: () => $("#confirmBtn"),
@@ -732,11 +733,27 @@ import {
     const headerNum = getHeaderNumber(q);
     safeText(els.qNumber(), `Question ${fmt2or3(headerNum)}`);
 
+    const qpEl = els.qPrompt();
+    if (qpEl) {
+      const prompt = (
+        q.question ??
+        q.Question ??
+        q.prompt ??
+        q.statement ??
+        q.enonce ??
+        ""
+      )
+        .toString()
+        .trim();
+      qpEl.textContent = prompt;
+      qpEl.style.display = prompt ? "" : "none";
+    }
+
     const qtEl = els.qText();
     if (qtEl) {
-      const txt = (q.text ?? q.question ?? "").toString().trim();
-      qtEl.textContent = txt;
-      qtEl.style.display = txt ? "" : "none";
+      const passage = (q.text ?? "").toString().trim();
+      qtEl.textContent = passage;
+      qtEl.style.display = passage ? "" : "none";
       collapseReadingText();
     }
 
