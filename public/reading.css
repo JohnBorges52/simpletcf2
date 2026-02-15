@@ -10,7 +10,11 @@
   font-family: "Montserrat", sans-serif;
   font-size: 19px;
   font-weight: 700;
-  color: #0b0f17;
+  color: #1a1818;
+  padding: 15px;
+  border-radius: 15px;
+  text-align: center;
+  background-color: #a7d6fd;
 }
 
 .quiz--question {
