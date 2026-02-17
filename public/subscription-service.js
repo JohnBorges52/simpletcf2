@@ -49,6 +49,28 @@ const TIER_LIMITS = {
   }
 };
 
+function normalizeUsage(data = {}) {
+  const existingUsage = data.usage || {};
+
+  return {
+    listeningQuestionsAnswered: Number(
+        existingUsage.listeningQuestionsAnswered ??
+        data.listeningQuestionsAnswered ??
+        0,
+    ) || 0,
+    readingQuestionsAnswered: Number(
+        existingUsage.readingQuestionsAnswered ??
+        data.readingQuestionsAnswered ??
+        0,
+    ) || 0,
+    writingPromptsUsed: Number(
+        existingUsage.writingPromptsUsed ??
+        data.writingPromptsUsed ??
+        0,
+    ) || 0,
+  };
+}
+
 class SubscriptionService {
   constructor() {
     this.currentUserData = null;
@@ -94,14 +116,20 @@ class SubscriptionService {
 
     if (userSnap.exists()) {
       const data = userSnap.data();
+      const hadUsageObject = Boolean(data.usage);
+      const normalizedUsage = normalizeUsage(data);
       
-      // ✅ Ensure usage object exists with default values
-      if (!data.usage) {
-        data.usage = {
-          listeningQuestionsAnswered: 0,
-          readingQuestionsAnswered: 0,
-          writingPromptsUsed: 0
-        };
+      // ✅ Ensure usage object exists with all expected fields.
+      // Also migrates legacy root-level counters for existing users.
+      data.usage = normalizedUsage;
+
+      if (
+        !hadUsageObject ||
+        data.listeningQuestionsAnswered !== undefined ||
+        data.readingQuestionsAnswered !== undefined ||
+        data.writingPromptsUsed !== undefined
+      ) {
+        await this.updateUserSubscriptionData(userId, {usage: normalizedUsage});
       }
       
       // ✅ Ensure tier exists
