@@ -228,6 +228,7 @@
     "û",
     "ù",
     "œ",
+    "ç",
   ];
 
   const COMBINING_MARKS_REGEX = /[\u0300-\u036f]/g;
