@@ -1717,6 +1717,8 @@ import {
         if (adShown) {
           // Reset server-side counter after showing ad
           await window.SubscriptionService.resetAdCounter(user.uid);
+          // Track total ads viewed in Firebase
+          await window.SubscriptionService.incrementAdsViewed(user.uid);
         }
       }
     } catch (error) {
