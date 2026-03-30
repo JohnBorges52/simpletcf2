@@ -4,7 +4,7 @@
  *
  * Features:
  *  - Fixed bottom ad bar (refreshes on each navigation)
- *  - Vignette interstitial ad every 10 questions answered
+ *  - Internal support / upsell overlay every 10 questions answered
  *  - Ad-blocker detection with overlay message
  *  - Skips ads for ad-free tier users
  *
@@ -14,12 +14,13 @@
  * 1. Sign up at https://www.google.com/adsense/ and get approved.
  * 2. Replace ADSENSE_PUBLISHER_ID below with your real publisher ID
  *    (e.g. 'ca-pub-1234567890123456').
- * 3. In your AdSense dashboard, create two ad units:
- *    a. A "Display ad" (728×90) for the bottom bar → paste its slot ID
+ * 3. In your AdSense dashboard, create one manual ad unit:
+ *    a. A "Display ad" for the bottom bar → paste its slot ID
  *       into AD_SLOT_BOTTOM_BAR.
- *    b. A "Display ad" (336×280) for the vignette → paste its slot ID
- *       into AD_SLOT_VIGNETTE.
- * 4. Deploy. AdSense will automatically serve real ads once the site is
+ * 4. For real Vignette ads, enable them in AdSense under:
+ *    Ads > your site > Overlay formats > Vignette ads
+ *    Do NOT use a manual data-ad-slot for vignette.
+ * 5. Deploy. AdSense will automatically serve real ads once the site is
  *    approved and the correct IDs are in place.
  * -----------------------------------------------------------------------
  */
@@ -27,24 +28,22 @@
 // -----------------------------------------------------------------------
 // CONFIGURATION — replace with your real AdSense publisher ID & slot IDs
 // -----------------------------------------------------------------------
-const ADSENSE_PUBLISHER_ID = 'ca-pub-XXXXXXXXXXXXXXXXX'; // TODO: replace with real publisher ID from AdSense
-const AD_SLOT_BOTTOM_BAR   = '1234567890';               // TODO: replace with real ad unit slot ID
-const AD_SLOT_VIGNETTE     = '0987654321';               // TODO: replace with real ad unit slot ID
-const QUESTIONS_PER_AD     = 10;
+const ADSENSE_PUBLISHER_ID = 'ca-pub-3540516083991428';
+const AD_SLOT_BOTTOM_BAR = '7383588658';
+const QUESTIONS_PER_AD = 10;
 
 // -----------------------------------------------------------------------
 
 class AdService {
   constructor() {
     this._adBlockDetected = false;
-    this._vignetteShownAt = 0; // session-level counter reset
+    this._questionsSincePrompt = 0;
   }
 
   /**
    * Bootstrap ads — call once on DOMContentLoaded
    */
   async init() {
-    // Check user tier; if ad-free, skip everything
     if (await this._isAdFreeUser()) return;
 
     this._detectAdBlocker();
@@ -57,21 +56,21 @@ class AdService {
   // -----------------------------------------------------------------------
 
   _detectAdBlocker() {
-    // Use a bait element approach: if the bait div has zero height the ad
-    // network stylesheet was blocked.
     const bait = document.createElement('div');
     bait.className = 'adsbygoogle ad-bait';
-    bait.style.cssText = 'width:1px;height:1px;position:absolute;left:-9999px;top:-9999px;';
+    bait.style.cssText =
+      'width:1px;height:1px;position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(bait);
 
-    // Give the browser a moment to apply or block styles
     setTimeout(() => {
       const blocked =
         bait.offsetHeight === 0 ||
         window.getComputedStyle(bait).display === 'none' ||
         bait.offsetParent === null;
 
-      document.body.removeChild(bait);
+      if (bait.parentNode) {
+        bait.parentNode.removeChild(bait);
+      }
 
       if (blocked) {
         this._adBlockDetected = true;
@@ -100,9 +99,10 @@ class AdService {
     document.body.appendChild(overlay);
     document.body.classList.add('adblock-overlay-open');
 
-    // Move focus to the overlay for accessibility
     const btn = overlay.querySelector('button');
-    if (btn) setTimeout(() => btn.focus(), 100);
+    if (btn) {
+      setTimeout(() => btn.focus(), 100);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -110,7 +110,8 @@ class AdService {
   // -----------------------------------------------------------------------
 
   _injectAdSenseScript() {
-    if (document.querySelector('script[data-ad-client]')) return; // already loaded
+    if (document.querySelector('script[data-ad-client]')) return;
+
     const script = document.createElement('script');
     script.async = true;
     script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`;
@@ -137,15 +138,20 @@ class AdService {
              style="display:inline-block;width:728px;height:90px"
              data-ad-client="${ADSENSE_PUBLISHER_ID}"
              data-ad-slot="${AD_SLOT_BOTTOM_BAR}"></ins>
-        <button class="bottom-ad-bar__remove-btn" onclick="window.location.href='/plan.html'" title="Go Ad-Free">
+        <button
+          class="bottom-ad-bar__remove-btn"
+          onclick="window.location.href='/plan.html'"
+          title="Go Ad-Free"
+        >
           ✕ Remove Ads – CAD $10
         </button>
       </div>
     `;
+
     document.body.appendChild(bar);
     document.body.style.paddingBottom = 'var(--bottom-ad-bar-height, 110px)';
 
-    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (_) {}
+    this._pushAdsbygoogle();
   }
 
   /**
@@ -153,11 +159,13 @@ class AdService {
    */
   refreshBottomAd() {
     if (this._adBlockDetected) return;
+
     const ins = document.querySelector('#bottom-ad-bar .bottom-ad-bar__ad');
     if (!ins) return;
 
-    // Remove and re-create the ins element to force a new ad request
-    const bar = ins.parentElement;
+    const barInner = ins.parentElement;
+    if (!barInner) return;
+
     ins.remove();
 
     const fresh = document.createElement('ins');
@@ -165,75 +173,98 @@ class AdService {
     fresh.style.cssText = 'display:inline-block;width:728px;height:90px';
     fresh.setAttribute('data-ad-client', ADSENSE_PUBLISHER_ID);
     fresh.setAttribute('data-ad-slot', AD_SLOT_BOTTOM_BAR);
-    bar.insertBefore(fresh, bar.querySelector('.bottom-ad-bar__remove-btn'));
 
-    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (_) {}
+    const removeBtn = barInner.querySelector('.bottom-ad-bar__remove-btn');
+    if (removeBtn) {
+      barInner.insertBefore(fresh, removeBtn);
+    } else {
+      barInner.appendChild(fresh);
+    }
+
+    this._pushAdsbygoogle();
   }
 
   // -----------------------------------------------------------------------
-  // Vignette / interstitial ad (every QUESTIONS_PER_AD questions)
+  // Prompt overlay every QUESTIONS_PER_AD answered
   // -----------------------------------------------------------------------
 
   /**
    * Call after each question is answered.
-   * Returns true if a vignette was shown.
+   * Returns true if the support overlay was shown.
    */
   async onQuestionAnswered() {
     if (await this._isAdFreeUser()) return false;
     if (this._adBlockDetected) return false;
 
-    this._vignetteShownAt++;
-    if (this._vignetteShownAt < QUESTIONS_PER_AD) return false;
+    this._questionsSincePrompt += 1;
 
-    this._vignetteShownAt = 0;
-    this._showVignette();
+    if (this._questionsSincePrompt < QUESTIONS_PER_AD) {
+      return false;
+    }
+
+    this._questionsSincePrompt = 0;
+    this._showSupportOverlay();
     return true;
   }
 
-  _showVignette() {
+  _showSupportOverlay() {
     if (document.getElementById('vignette-ad-overlay')) return;
 
     const overlay = document.createElement('div');
     overlay.id = 'vignette-ad-overlay';
     overlay.innerHTML = `
-      <div class="vignette-ad__box">
+      <div class="vignette-ad__box" role="dialog" aria-modal="true" aria-label="Support SimpleTCF">
         <div class="vignette-ad__header">
-          <span class="vignette-ad__label">Advertisement</span>
-          <span class="vignette-ad__countdown" id="vignette-countdown">10</span>
+          <span class="vignette-ad__label">Support SimpleTCF</span>
+          <span class="vignette-ad__countdown" id="vignette-countdown">5</span>
         </div>
-        <ins class="adsbygoogle vignette-ad__ins"
-             style="display:block;width:336px;height:280px"
-             data-ad-client="${ADSENSE_PUBLISHER_ID}"
-             data-ad-slot="${AD_SLOT_VIGNETTE}"></ins>
+
+        <div class="vignette-ad__body">
+          <h3>SimpleTCF is free thanks to ads</h3>
+          <p>
+            Thanks for using SimpleTCF. You can continue in a few seconds,
+            or go ad-free for a smoother experience.
+          </p>
+        </div>
+
         <div class="vignette-ad__footer">
-          <p>Enjoying SimpleTCF? Remove ads for just <strong>CAD $10 / 30 days</strong>.</p>
           <div class="vignette-ad__actions">
-            <button id="vignette-close-btn" class="btn btn--ghost" disabled>Continue (10s)</button>
+            <button id="vignette-close-btn" class="btn btn--ghost" disabled>
+              Continue (5s)
+            </button>
             <a href="/plan.html" class="btn btn--primary">Go Ad-Free</a>
           </div>
         </div>
       </div>
     `;
+
     document.body.appendChild(overlay);
+    document.body.classList.add('vignette-ad-open');
 
-    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (_) {}
-
-    // Countdown timer — user must wait 10 seconds before dismissing
-    let seconds = 10;
+    let seconds = 5;
     const closeBtn = overlay.querySelector('#vignette-close-btn');
     const countdownEl = overlay.querySelector('#vignette-countdown');
 
+    const cleanup = () => {
+      overlay.remove();
+      document.body.classList.remove('vignette-ad-open');
+    };
+
     const tick = setInterval(() => {
-      seconds--;
-      if (countdownEl) countdownEl.textContent = seconds;
-      if (closeBtn) closeBtn.textContent = seconds > 0 ? `Continue (${seconds}s)` : 'Continue';
+      seconds -= 1;
+
+      if (countdownEl) countdownEl.textContent = String(seconds);
+      if (closeBtn) {
+        closeBtn.textContent = seconds > 0 ? `Continue (${seconds}s)` : 'Continue';
+      }
+
       if (seconds <= 0) {
         clearInterval(tick);
+
         if (closeBtn) {
           closeBtn.disabled = false;
-          closeBtn.addEventListener('click', () => {
-            overlay.remove();
-          }, { once: true });
+          closeBtn.addEventListener('click', cleanup, { once: true });
+          closeBtn.focus();
         }
       }
     }, 1000);
@@ -243,14 +274,20 @@ class AdService {
   // Helpers
   // -----------------------------------------------------------------------
 
+  _pushAdsbygoogle() {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (_) {}
+  }
+
   async _isAdFreeUser() {
     try {
       if (window.SubscriptionService) {
-        // Use already-loaded data if available
         const tier = window.SubscriptionService.getCurrentTier();
         return tier === 'ad-free';
       }
     } catch (_) {}
+
     return false;
   }
 }
