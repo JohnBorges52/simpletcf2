@@ -86,7 +86,8 @@ class SubscriptionService {
         data.usage = {
           listeningQuestionsAnswered: 0,
           readingQuestionsAnswered: 0,
-          writingPromptsUsed: 0
+          writingPromptsUsed: 0,
+          totalAdsViewed: 0
         };
       }
       
@@ -110,7 +111,8 @@ class SubscriptionService {
           listeningQuestionsAnswered: 0,
           readingQuestionsAnswered: 0,
           writingPromptsUsed: 0,
-          questionsAnsweredSinceLastAd: 0
+          questionsAnsweredSinceLastAd: 0,
+          totalAdsViewed: 0
         }
       };
       
@@ -229,7 +231,8 @@ class SubscriptionService {
       listeningQuestionsAnswered: 0,
       readingQuestionsAnswered: 0,
       writingPromptsUsed: 0,
-      questionsAnsweredSinceLastAd: 0
+      questionsAnsweredSinceLastAd: 0,
+      totalAdsViewed: 0
     };
 
     const oldValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
@@ -259,6 +262,17 @@ class SubscriptionService {
   async resetAdCounter(userId) {
     const userData = this.currentUserData || await this.getUserSubscriptionData(userId);
     const usage = { ...(userData.usage || {}), questionsAnsweredSinceLastAd: 0 };
+    await this.updateUserSubscriptionData(userId, { usage });
+    this.currentUserData = await this.getUserSubscriptionData(userId);
+  }
+
+  /**
+   * Increment the total ads viewed counter (called each time a vignette ad is shown)
+   */
+  async incrementAdsViewed(userId) {
+    const userData = this.currentUserData || await this.getUserSubscriptionData(userId);
+    const usage = { ...(userData.usage || {}) };
+    usage.totalAdsViewed = (usage.totalAdsViewed || 0) + 1;
     await this.updateUserSubscriptionData(userId, { usage });
     this.currentUserData = await this.getUserSubscriptionData(userId);
   }

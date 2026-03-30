@@ -7,14 +7,29 @@
  *  - Vignette interstitial ad every 10 questions answered
  *  - Ad-blocker detection with overlay message
  *  - Skips ads for ad-free tier users
+ *
+ * -----------------------------------------------------------------------
+ * HOW TO CONNECT REAL GOOGLE ADSENSE ADS
+ * -----------------------------------------------------------------------
+ * 1. Sign up at https://www.google.com/adsense/ and get approved.
+ * 2. Replace ADSENSE_PUBLISHER_ID below with your real publisher ID
+ *    (e.g. 'ca-pub-1234567890123456').
+ * 3. In your AdSense dashboard, create two ad units:
+ *    a. A "Display ad" (728×90) for the bottom bar → paste its slot ID
+ *       into AD_SLOT_BOTTOM_BAR.
+ *    b. A "Display ad" (336×280) for the vignette → paste its slot ID
+ *       into AD_SLOT_VIGNETTE.
+ * 4. Deploy. AdSense will automatically serve real ads once the site is
+ *    approved and the correct IDs are in place.
+ * -----------------------------------------------------------------------
  */
 
 // -----------------------------------------------------------------------
-// CONFIGURATION — replace with your real AdSense publisher ID
+// CONFIGURATION — replace with your real AdSense publisher ID & slot IDs
 // -----------------------------------------------------------------------
-const ADSENSE_PUBLISHER_ID = 'ca-pub-XXXXXXXXXXXXXXXXX'; // TODO: replace with real ID
-const AD_SLOT_BOTTOM_BAR   = '1234567890';               // TODO: replace with real slot
-const AD_SLOT_VIGNETTE     = '0987654321';               // TODO: replace with real slot
+const ADSENSE_PUBLISHER_ID = 'ca-pub-XXXXXXXXXXXXXXXXX'; // TODO: replace with real publisher ID from AdSense
+const AD_SLOT_BOTTOM_BAR   = '1234567890';               // TODO: replace with real ad unit slot ID
+const AD_SLOT_VIGNETTE     = '0987654321';               // TODO: replace with real ad unit slot ID
 const QUESTIONS_PER_AD     = 10;
 
 // -----------------------------------------------------------------------
@@ -184,7 +199,7 @@ class AdService {
       <div class="vignette-ad__box">
         <div class="vignette-ad__header">
           <span class="vignette-ad__label">Advertisement</span>
-          <span class="vignette-ad__countdown" id="vignette-countdown">5</span>
+          <span class="vignette-ad__countdown" id="vignette-countdown">10</span>
         </div>
         <ins class="adsbygoogle vignette-ad__ins"
              style="display:block;width:336px;height:280px"
@@ -193,7 +208,7 @@ class AdService {
         <div class="vignette-ad__footer">
           <p>Enjoying SimpleTCF? Remove ads for just <strong>CAD $10 / 30 days</strong>.</p>
           <div class="vignette-ad__actions">
-            <button id="vignette-close-btn" class="btn btn--ghost" disabled>Continue (5s)</button>
+            <button id="vignette-close-btn" class="btn btn--ghost" disabled>Continue (10s)</button>
             <a href="/plan.html" class="btn btn--primary">Go Ad-Free</a>
           </div>
         </div>
@@ -203,8 +218,8 @@ class AdService {
 
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (_) {}
 
-    // Countdown timer — user must wait 5 seconds before dismissing
-    let seconds = 5;
+    // Countdown timer — user must wait 10 seconds before dismissing
+    let seconds = 10;
     const closeBtn = overlay.querySelector('#vignette-close-btn');
     const countdownEl = overlay.querySelector('#vignette-countdown');
 
