@@ -44,11 +44,23 @@ class AdService {
    * Bootstrap ads — call once on DOMContentLoaded
    */
   async init() {
-    if (await this._isAdFreeUser()) return;
+    if (await this._isAdFreeUser()) {
+      this._pauseAutoAds();
+      return;
+    }
 
     this._detectAdBlocker();
     this._injectAdSenseScript();
     this._initBottomAdBar();
+  }
+
+  /**
+   * Pause all AdSense auto-ads for ad-free users.
+   * Called when the statically-loaded AdSense script is present but the
+   * user has an active ad-free subscription.
+   */
+  _pauseAutoAds() {
+    (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
   }
 
   // -----------------------------------------------------------------------
