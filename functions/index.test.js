@@ -66,19 +66,19 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
       console.log("   → Sistema deve verificar que o Price ID é válido (não foi manipulado)");
       console.log("   → Sistema deve criar sessão de checkout no Stripe");
 
-      const priceId = "price_ADFREE_PLACEHOLDER";
+      const priceId = "price_1TGnnGCjnElzxNngZ69HlkoL";
 
       // Verificação: O que esperamos que aconteça
       console.log("\n✅ RESULTADO ESPERADO:");
       console.log("   ✓ Token de autenticação é verificado");
-      console.log("   ✓ Price ID \"price_ADFREE_PLACEHOLDER\" é válido");
+      console.log("   ✓ Price ID \"price_1TGnnGCjnElzxNngZ69HlkoL\" é válido");
       console.log("   ✓ Novo cliente Stripe é criado");
       console.log("   ✓ Sessão de checkout é criada com sucesso");
       console.log("   ✓ Usuário é redirecionado para página de pagamento Stripe");
 
       // Verificar validação de Price ID
       const VALID_PRICE_IDS = {
-        "price_ADFREE_PLACEHOLDER": {tier: "ad-free", price: 10.00},
+        "price_1TGnnGCjnElzxNngZ69HlkoL": {tier: "ad-free", price: 10.00},
       };
 
       const isValidPrice = Object.prototype.hasOwnProperty.call(
@@ -106,7 +106,7 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
 
       // Validação de Price ID
       const VALID_PRICE_IDS = {
-        "price_ADFREE_PLACEHOLDER": {tier: "ad-free", price: 10.00},
+        "price_1TGnnGCjnElzxNngZ69HlkoL": {tier: "ad-free", price: 10.00},
       };
 
       const isValid = Object.prototype.hasOwnProperty.call(
@@ -201,7 +201,7 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
   describe("📊 CENÁRIO 3: Plano Ad-Free e duração", () => {
     test("✅ Plano \"Ad-Free\" ($10 CAD) - 30 dias de acesso sem anúncios", () => {
       console.log("\n📝 TESTE: Usuário seleciona plano \"Ad-Free\"");
-      console.log("   → Price ID: price_ADFREE_PLACEHOLDER");
+      console.log("   → Price ID: price_1TGnnGCjnElzxNngZ69HlkoL");
       console.log("   → Preço cobrado: $10 CAD");
       console.log("   → Duração: 30 dias");
 

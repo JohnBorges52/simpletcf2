@@ -17,7 +17,7 @@ admin.initializeApp();
 // Update these values from your Stripe Dashboard
 // ============================================================================
 const VALID_PRICE_IDS = {
-  // Ad-Free plan: $10 CAD / 30 days — replace with your real Stripe Price ID
+  // Ad-Free plan: $10 CAD / 30 days
   "price_1TGnnGCjnElzxNngZ69HlkoL": {
     tier: "ad-free",
     name: "Ad-Free (30 days)",
