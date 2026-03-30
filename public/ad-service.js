@@ -88,9 +88,12 @@ class AdService {
   // -----------------------------------------------------------------------
 
   /**
-   * Run all detection layers in parallel and resolve `true` as soon as any
-   * layer reports a blocker.  Uses Promise.race() so the result comes back
-   * as fast as possible.
+   * Run all detection layers in parallel and apply a consensus strategy:
+   * - If fetch detection reports a block, return `true` immediately (network
+   *   blocks are the most reliable signal).
+   * - Otherwise, require at least 2 out of 3 layers to agree before
+   *   concluding that an ad blocker is present.  This prevents the single
+   *   bait-detection false positive from suppressing ads on first load.
    * @returns {Promise<boolean>}
    */
   async _runDetection() {
@@ -103,29 +106,31 @@ class AdService {
 
     console.debug('[AdService] Running multi-layer ad-blocker detection…');
 
-    const layers = [
+    // Run all layers in parallel and wait for all of them to settle.
+    // Fetch detection is the most reliable (network-level block), so we
+    // give it priority: if fetch says "blocked", we trust it immediately.
+    // Without a fetch block, both bait AND script must agree before we
+    // conclude an ad blocker is present — this prevents a single
+    // false-positive bait result from suppressing ads on first load.
+    const [baitBlocked, scriptBlocked, fetchBlocked] = await Promise.all([
       this._detectWithBaits(),
       this._detectWithScript(),
       this._detectWithFetch(),
-    ];
+    ]);
 
-    // If ANY layer fires true, the user is blocked.
-    // Wrap each layer so only a "true" result resolves the race promise;
-    // "false" results also resolve (with false) so all promises settle and
-    // no unresolved promises are left behind.
-    const raceTrue = layers.map(
-      (p) => new Promise((resolve) => p.then((v) => v ? resolve(true) : resolve(false)))
-    );
+    console.debug('[AdService] Layer results — bait:', baitBlocked, '| script:', scriptBlocked, '| fetch:', fetchBlocked);
 
-    // Fallback: wait for all layers to finish and take the logical OR.
-    const allSettled = Promise.all(layers).then((results) =>
-      results.some(Boolean)
-    );
+    // Fetch is primary: a network-level block is the strongest signal.
+    if (fetchBlocked) {
+      console.debug('[AdService] Detection result: true (fetch confirmed)');
+      return true;
+    }
 
-    // Whichever resolves first — a definitive "true" OR all layers done.
-    const result = await Promise.race([...raceTrue, allSettled]);
-    console.debug('[AdService] Detection result:', result);
-    return !!result;
+    // Without a fetch block, require at least two of the remaining layers
+    // to agree (bait + script both flagged) before concluding blocked.
+    const result = baitBlocked && scriptBlocked;
+    console.debug('[AdService] Detection result:', result, `(bait:${baitBlocked}, script:${scriptBlocked})`);
+    return result;
   }
 
   // ── Layer 1: Bait elements ──────────────────────────────────────────────
@@ -161,7 +166,9 @@ class AdService {
 
       document.body.appendChild(container);
 
-      // Give ad blockers up to 400 ms to act, then inspect.
+      // Give ad blockers up to 800 ms to act, then inspect.
+      // 400 ms was insufficient — CSS timing and browser rendering
+      // inconsistencies caused false positives on first load.
       setTimeout(() => {
         let blocked = false;
 
@@ -183,7 +190,7 @@ class AdService {
         container.remove();
         console.debug('[AdService] Bait detection:', blocked);
         resolve(blocked);
-      }, 400);
+      }, 800);
     });
   }
 
