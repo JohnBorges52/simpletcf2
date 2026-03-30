@@ -59,28 +59,26 @@ jest.mock("stripe", () => {
 
 describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
   describe("📋 CENÁRIO 1: Usuário escolhe um plano e clica em \"Subscribe\"", () => {
-    test("✅ Deve criar uma sessão de checkout válida quando usuário seleciona Quick Study", async () => {
+    test("✅ Deve criar uma sessão de checkout válida quando usuário seleciona Ad-Free", async () => {
       // CONTEXTO: Usuário autenticado clica no botão "Subscribe" do plano Quick Study
-      console.log("\n📝 TESTE: Usuário clica em \"Subscribe\" no plano Quick Study ($9.99)");
+      console.log("\n📝 TESTE: Usuário clica em \"Go Ad-Free\" ($10 CAD / 30 dias)");
       console.log("   → Sistema deve validar autenticação");
       console.log("   → Sistema deve verificar que o Price ID é válido (não foi manipulado)");
       console.log("   → Sistema deve criar sessão de checkout no Stripe");
 
-      const priceId = "price_1SzMjMCwya11CpgZcBhEiHFB";
+      const priceId = "price_ADFREE_PLACEHOLDER";
 
       // Verificação: O que esperamos que aconteça
       console.log("\n✅ RESULTADO ESPERADO:");
       console.log("   ✓ Token de autenticação é verificado");
-      console.log("   ✓ Price ID \"price_1SzMjMCwya11CpgZcBhEiHFB\" é válido");
+      console.log("   ✓ Price ID \"price_ADFREE_PLACEHOLDER\" é válido");
       console.log("   ✓ Novo cliente Stripe é criado");
       console.log("   ✓ Sessão de checkout é criada com sucesso");
       console.log("   ✓ Usuário é redirecionado para página de pagamento Stripe");
 
       // Verificar validação de Price ID
       const VALID_PRICE_IDS = {
-        "price_1SzMjMCwya11CpgZcBhEiHFB": {tier: "quick-study", price: 10.28},
-        "price_1SzMk5Cwya11CpgZzWSCLQwM": {tier: "30-day", price: 20.58},
-        "price_1SzMm0Cwya11CpgZSRwNAt31": {tier: "full-prep", price: 36.02},
+        "price_ADFREE_PLACEHOLDER": {tier: "ad-free", price: 10.00},
       };
 
       const isValidPrice = Object.prototype.hasOwnProperty.call(
@@ -108,9 +106,7 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
 
       // Validação de Price ID
       const VALID_PRICE_IDS = {
-        "price_1SzMjMCwya11CpgZcBhEiHFB": {tier: "quick-study", price: 10.28},
-        "price_1SzMk5Cwya11CpgZzWSCLQwM": {tier: "30-day", price: 20.58},
-        "price_1SzMm0Cwya11CpgZSRwNAt31": {tier: "full-prep", price: 36.02},
+        "price_ADFREE_PLACEHOLDER": {tier: "ad-free", price: 10.00},
       };
 
       const isValid = Object.prototype.hasOwnProperty.call(
@@ -133,7 +129,7 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
           // Sem authorization header
         },
         body: {
-          priceId: "price_1SzMjMCwya11CpgZcBhEiHFB",
+          priceId: "price_ADFREE_PLACEHOLDER",
         },
       };
 
@@ -161,21 +157,21 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
       console.log("\n✅ RESULTADO ESPERADO:");
       console.log("   ✓ Webhook verificado (assinatura Stripe válida)");
       console.log("   ✓ Usuário \"user123\" atualizado:");
-      console.log("      - tier: \"quick-study\"");
+      console.log("      - tier: \"ad-free\"");
       console.log("      - subscriptionStartDate: hoje");
-      console.log("      - subscriptionEndDate: hoje + 10 dias");
+      console.log("      - subscriptionEndDate: hoje + 30 dias");
       console.log("      - stripeCustomerId: \"cus_123456\"");
       console.log("   ✓ Pedido criado na coleção \"orders\"");
       console.log("   ✓ Invoice enviado por email");
       console.log("   ✓ Email de confirmação enviado");
-      console.log("   ✓ Usuário agora tem acesso ao plano Quick Study por 10 dias");
+      console.log("   ✓ Usuário agora tem acesso ao plano Ad-Free por 30 dias");
 
       // Validação de Stripe Payment Status
       const paymentStatus = "paid";
-      const tier = "quick-study";
+      const tier = "ad-free";
 
       expect(paymentStatus).toBe("paid");
-      expect(tier).toBe("quick-study");
+      expect(tier).toBe("ad-free");
     });
 
     test("🔒 Deve rejeitar webhook com assinatura inválida (previne fraude)", async () => {
@@ -202,49 +198,45 @@ describe("🧪 TESTES DAS CLOUD FUNCTIONS - BACKEND", () => {
     });
   });
 
-  describe("📊 CENÁRIO 3: Diferentes planos e durações", () => {
-    test("✅ Plano \"30-Day Intensive\" ($19.99) - 30 dias de acesso", () => {
-      console.log("\n📝 TESTE: Usuário seleciona plano \"30-Day Intensive\"");
-      console.log("   → Price ID: price_1SzMk5Cwya11CpgZzWSCLQwM");
-      console.log("   → Preço cobrado: $20.58 CAD (inclui 2.95% platform fee)");
+  describe("📊 CENÁRIO 3: Plano Ad-Free e duração", () => {
+    test("✅ Plano \"Ad-Free\" ($10 CAD) - 30 dias de acesso sem anúncios", () => {
+      console.log("\n📝 TESTE: Usuário seleciona plano \"Ad-Free\"");
+      console.log("   → Price ID: price_ADFREE_PLACEHOLDER");
+      console.log("   → Preço cobrado: $10 CAD");
       console.log("   → Duração: 30 dias");
 
       const planMetadata = {
-        tier: "30-day",
-        price: "20.58",
+        tier: "ad-free",
+        price: "10.00",
         durationDays: "30",
       };
 
       console.log("\n✅ RESULTADO ESPERADO:");
-      console.log("   ✓ Usuário paga $20.58");
-      console.log("   ✓ Tier atualizado para \"30-day\"");
-      console.log("   ✓ Acesso válido por 30 dias a partir de hoje");
-      console.log("   ✓ Email confirma: \"30-Day Intensive - Access for 30 days\"");
+      console.log("   ✓ Usuário paga $10.00");
+      console.log("   ✓ Tier atualizado para \"ad-free\"");
+      console.log("   ✓ Acesso sem anúncios por 30 dias a partir de hoje");
+      console.log("   ✓ Email confirma: \"Ad-Free - Access for 30 days\"");
 
-      expect(planMetadata.tier).toBe("30-day");
+      expect(planMetadata.tier).toBe("ad-free");
       expect(parseInt(planMetadata.durationDays)).toBe(30);
     });
 
-    test("✅ Plano \"Full Preparation\" ($34.99) - 60 dias de acesso", () => {
-      console.log("\n📝 TESTE: Usuário seleciona plano \"Full Preparation\"");
-      console.log("   → Price ID: price_1SzMm0Cwya11CpgZSRwNAt31");
-      console.log("   → Preço cobrado: $36.02 CAD (inclui 2.95% platform fee)");
-      console.log("   → Duração: 60 dias");
+    test("✅ Usuário free vê anúncios mas tem acesso total ao conteúdo", () => {
+      console.log("\n📝 TESTE: Usuário free tem acesso ilimitado com anúncios");
 
-      const planMetadata = {
-        tier: "full-prep",
-        price: "36.02",
-        durationDays: "60",
+      const freeUserData = {
+        tier: "free",
+        hasAds: true,
+        listeningQuestions: Infinity,
+        readingQuestions: Infinity,
       };
 
       console.log("\n✅ RESULTADO ESPERADO:");
-      console.log("   ✓ Usuário paga $36.02");
-      console.log("   ✓ Tier atualizado para \"full-prep\"");
-      console.log("   ✓ Acesso válido por 60 dias a partir de hoje");
-      console.log("   ✓ Email confirma: \"Full Preparation - Access for 60 days\"");
+      console.log("   ✓ Tier \"free\" tem acesso ilimitado");
+      console.log("   ✓ Anúncios são exibidos a cada 10 perguntas");
 
-      expect(planMetadata.tier).toBe("full-prep");
-      expect(parseInt(planMetadata.durationDays)).toBe(60);
+      expect(freeUserData.tier).toBe("free");
+      expect(freeUserData.hasAds).toBe(true);
     });
   });
 });

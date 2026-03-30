@@ -107,8 +107,8 @@
 
         // ✅ Check if user already has a paid plan
         const currentTier = await checkUserPlanStatus();
-        if (currentTier && currentTier !== 'free') {
-          alert('You already have an active plan. You cannot purchase another plan while your current subscription is active. Please wait for it to expire or contact support.');
+        if (currentTier && currentTier === 'ad-free') {
+          alert('You already have an active Ad-Free plan. Please wait for it to expire before purchasing again.');
           return;
         }
 
@@ -233,10 +233,6 @@
 
     // Show internal test plan only for admin
     const fbUser = getFirebaseAuthUser();
-    if (fbUser && fbUser.email === "jrborges52@gmail.com") {
-      const testPlan = document.getElementById("internalTestPlan");
-      if (testPlan) testPlan.style.display = "block";
-    }
 
     // Handle test payment button
     const testBtn = document.querySelector(".test-payment-btn");

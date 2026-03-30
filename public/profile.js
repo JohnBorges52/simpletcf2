@@ -226,9 +226,7 @@ function fmtPct(n) {
       const rows = [];
       const docs = querySnapshot.docs;
       const tierDurations = {
-        "quick-study": 10,
-        "30-day": 30,
-        "full-prep": 60,
+        "ad-free": 30,
       };
 
       // Load user document to get actual subscription end date
@@ -880,17 +878,13 @@ function fmtPct(n) {
     // Map tier to friendly names
     const tierNames = {
       "free": "Free Tier",
-      "quick-study": "Quick Study (10 days)",
-      "30-day": "30-Day Intensive",
-      "full-prep": "Full Preparation"
+      "ad-free": "Ad-Free (30 days)"
     };
     
     // Map tier to badge classes
     const tierBadgeClasses = {
       "free": "order-summary-badge--free",
-      "quick-study": "order-summary-badge--bronze",
-      "30-day": "order-summary-badge--silver",
-      "full-prep": "order-summary-badge--gold"
+      "ad-free": "order-summary-badge--silver"
     };
     
     // Update sidebar member pill

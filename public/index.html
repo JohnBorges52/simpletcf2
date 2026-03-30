@@ -162,166 +162,78 @@
         <header class="section-head">
           <h3 class="section-head__title">Pricing</h3>
           <p class="section-head__sub">
-            Select the option that best fits your needs?
+            All content is free — supported by ads. Go Ad-Free for a distraction-free experience.
           </p>
         </header>
-      </div>
 
-      <!-- ✅ Pricing carousel (outside container for proper spacing) -->
-      <div class="plan-carousel" aria-label="Plans carousel">
-        <button
-          class="plan-carousel__btn plan-carousel__btn--prev"
-          type="button"
-          aria-label="Previous plans"
-          data-dir="-1"
-        >
-          ‹
-        </button>
+        <div class="plan-grid plan-grid--two">
+          <!-- FREE (with ads) -->
+          <article class="plan" data-badge="Free">
+            <h3>Free</h3>
+            <p class="plan__desc">Full access — supported by ads</p>
 
-        <div class="plan-carousel__viewport" id="planCarouselViewport">
-          <div class="plan-grid plan-grid--carousel" id="planCarouselTrack">
-                <!-- ✅ FREE TIER -->
-                <article class="plan" data-badge="Free">
-                  <h3>Free Tier</h3>
-                  <p class="plan__desc">Try SimpleTCF for free</p>
+            <div class="plan__price">CAD $0<span>/forever</span></div>
 
-                  <div class="plan__price">CAD $0<span>/free</span></div>
+            <ul class="plan__features">
+              <li>✅ Unlimited Listening practice</li>
+              <li>✅ Unlimited Reading practice</li>
+              <li>✅ Full Real Test simulations</li>
+              <li>✅ Progress tracking</li>
+              <li>✅ Writing guidance</li>
+              <li>📢 Ads displayed</li>
+            </ul>
 
-                  <ul class="plan__features">
-                    <li>15 Listening questions</li>
-                    <li>15 Reading questions</li>
-                    <li>3 Writing prompts (templates only)</li>
-                  </ul>
+            <a href="/register" class="btn btn--ghost btn--full">Get Started Free</a>
+          </article>
 
-                  <button
-                    type="button"
-                    class="btn btn--ghost btn--full start-free-btn"
-                    data-plan="Free"
-                    data-price="0"
-                    data-duration="Free"
-                  >
-                    Start free
-                  </button>
-                </article>
+          <!-- AD-FREE -->
+          <article class="plan plan--featured" data-badge="AdFree">
+            <svg
+              class="plan-border"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                class="plan-border__rect"
+                x="1"
+                y="1"
+                width="98"
+                height="98"
+                rx="6"
+                ry="6"
+              ></rect>
+            </svg>
 
-                <!-- Quick -->
-                <article class="plan" data-badge="Bronze">
-                  <h3>Quick Study</h3>
-                  <p class="plan__desc">Last-minute preparation</p>
-
-                  <div class="plan__price">CAD $9.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li><strong>10 days access</strong></li>
-                    <li class="feature--excluded">
-                      Full Real Test simulations
-                    </li>
-                    <li class="feature--excluded">
-                      “Deserves Attention” mode
-                    </li>
-                    <li class="feature--excluded">
-                      Progress tracking over time
-                    </li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--ghost btn--full price__cta"
-                    data-price="9.99"
-                    data-duration="10 days"
-                    data-badge="Bronze"
-                  >
-                    Start Now
-                  </a>
-                </article>
-
-                <!-- 30-Day -->
-                <article class="plan plan--featured" data-badge="Silver">
-                  <svg
-                    class="plan-border"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      class="plan-border__rect"
-                      x="1"
-                      y="1"
-                      width="98"
-                      height="98"
-                      rx="6"
-                      ry="6"
-                    ></rect>
-                  </svg>
-
-                  <div class="badge__container">
-                    <div class="plan__badge">Most Popular</div>
-                  </div>
-
-                  <h3>30-Day Intensive</h3>
-                  <p class="plan__desc">Best for CLB 7–8</p>
-
-                  <div class="plan__price">CAD $19.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li><strong>30 days access</strong></li>
-                    <li><strong>Full Real Test simulations</strong></li>
-                    <li><strong>“Deserves Attention” mode</strong></li>
-                    <li><strong>Progress tracking over time</strong></li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--primary btn--full price__cta"
-                    data-price="19.99"
-                    data-duration="30 days"
-                    data-badge="Silver"
-                  >
-                    Start Now
-                  </a>
-                </article>
-
-                <!-- Full -->
-                <article class="plan" data-badge="Gold">
-                  <h3>Full Preparation</h3>
-                  <p class="plan__desc">Maximum confidence</p>
-
-                  <div class="plan__price">CAD $34.99<span></span></div>
-
-                  <ul class="plan__features">
-                    <li><strong>Listening & Reading practice</strong></li>
-                    <li><strong>Weight-based questions</strong></li>
-                    <li class="feature--underlined"><strong>60 days access</strong></li>
-                    <li><strong>Full Real Test simulations</strong></li>
-                    <li><strong>“Deserves Attention” mode</strong></li>
-                    <li><strong>Progress tracking over time</strong></li>
-                  </ul>
-
-                  <a
-                    href="/checkout"
-                    class="btn btn--ghost btn--full price__cta"
-                    data-price="34.99"
-                    data-duration="60 days"
-                    data-badge="Gold"
-                  >
-                    Start Now
-                  </a>
-                </article>
-              </div>
+            <div class="badge__container">
+              <div class="plan__badge">Best Experience</div>
             </div>
 
-        <button
-          class="plan-carousel__btn plan-carousel__btn--next"
-          type="button"
-          aria-label="Next plans"
-          data-dir="1"
-        >
-          ›
-        </button>
+            <h3>Ad-Free</h3>
+            <p class="plan__desc">Same full access — zero ads</p>
+
+            <div class="plan__price">CAD $10<span>/30 days</span></div>
+
+            <ul class="plan__features">
+              <li>✅ Unlimited Listening practice</li>
+              <li>✅ Unlimited Reading practice</li>
+              <li>✅ Full Real Test simulations</li>
+              <li>✅ Progress tracking</li>
+              <li>✅ Writing guidance</li>
+              <li>🚫 No ads whatsoever</li>
+            </ul>
+
+            <a
+              href="/checkout"
+              class="btn btn--primary btn--full price__cta"
+              data-price="10"
+              data-duration="30 days"
+              data-badge="AdFree"
+            >
+              Go Ad-Free – CAD $10
+            </a>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -535,6 +447,7 @@
     <script type="module" src="auth-service.js"></script>
     <script type="module" src="db-service.js"></script>
     <script src="subscription-service.js"></script>
+    <script src="ad-service.js"></script>
     <!-- Then other modules -->
     <script type="module" src="script.js"></script>
     <script src="plan.js"></script>

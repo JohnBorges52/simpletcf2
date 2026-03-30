@@ -17,23 +17,12 @@ admin.initializeApp();
 // Update these values from your Stripe Dashboard
 // ============================================================================
 const VALID_PRICE_IDS = {
-  "price_1SzOPyCjnElzxNngxs0lvgQv": {
-    tier: "quick-study",
-    name: "Quick Study (10 days)",
-    price: 10.28,
-    durationDays: 10,
-  },
-  "price_1SzOQyCjnElzxNngf4vtCnTC": {
-    tier: "30-day",
-    name: "30-Day Intensive",
-    price: 20.58,
+  // Ad-Free plan: $10 CAD / 30 days — replace with your real Stripe Price ID
+  "price_ADFREE_PLACEHOLDER": {
+    tier: "ad-free",
+    name: "Ad-Free (30 days)",
+    price: 10.00,
     durationDays: 30,
-  },
-  "price_1SzOSLCjnElzxNngwqqTwHal": {
-    tier: "full-prep",
-    name: "Full Preparation",
-    price: 36.02,
-    durationDays: 60,
   },
   "price_1SzXYpCjnElzxNng6VYjWbRM": {
     tier: "test",

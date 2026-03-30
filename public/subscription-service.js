@@ -1,51 +1,37 @@
 /**
  * subscription-service.js
  * Manages user subscription tiers and access control
+ *
+ * Model:
+ *  - FREE  : unlimited access to all content, with ads
+ *  - AD_FREE: $10 CAD / 30 days — removes all ads
  */
 
 const TIERS = {
   FREE: 'free',
-  QUICK_STUDY: 'quick-study',
-  INTENSIVE_30: '30-day',
-  FULL_PREP: 'full-prep'
+  AD_FREE: 'ad-free'
 };
 
 const TIER_LIMITS = {
   [TIERS.FREE]: {
-    listeningQuestions: 15,
-    readingQuestions: 15,
-    writingPrompts: 3,
-    hasRealTests: false,
-    hasDeservesAttention: false,
-    hasWriting: true, // limited to 3 prompts
+    listeningQuestions: Infinity,
+    readingQuestions: Infinity,
+    writingPrompts: Infinity,
+    hasRealTests: true,
+    hasDeservesAttention: true,
+    hasWriting: true,
+    hasAds: true,
     durationDays: null
   },
-  [TIERS.QUICK_STUDY]: {
-    listeningQuestions: Infinity,
-    readingQuestions: Infinity,
-    writingPrompts: 0,
-    hasRealTests: false,
-    hasDeservesAttention: false,
-    hasWriting: false,
-    durationDays: 10
-  },
-  [TIERS.INTENSIVE_30]: {
+  [TIERS.AD_FREE]: {
     listeningQuestions: Infinity,
     readingQuestions: Infinity,
     writingPrompts: Infinity,
     hasRealTests: true,
     hasDeservesAttention: true,
     hasWriting: true,
+    hasAds: false,
     durationDays: 30
-  },
-  [TIERS.FULL_PREP]: {
-    listeningQuestions: Infinity,
-    readingQuestions: Infinity,
-    writingPrompts: Infinity,
-    hasRealTests: true,
-    hasDeservesAttention: true,
-    hasWriting: true,
-    durationDays: 60
   }
 };
 
@@ -123,13 +109,14 @@ class SubscriptionService {
         usage: {
           listeningQuestionsAnswered: 0,
           readingQuestionsAnswered: 0,
-          writingPromptsUsed: 0
+          writingPromptsUsed: 0,
+          questionsAnsweredSinceLastAd: 0
         }
       };
       
       await this.updateUserSubscriptionData(userId, defaultData);
       
-      // Create initial free tier order
+      // Create initial free tier record
       await this.createOrder(userId, TIERS.FREE, 0);
       
       return defaultData;
@@ -150,10 +137,8 @@ class SubscriptionService {
       
       // Map tier to friendly plan names
       const planNames = {
-        'free': 'Free Tier',
-        'quick-study': 'Quick Study (10 days)',
-        '30-day': '30-Day Intensive',
-        'full-prep': 'Full Preparation'
+        'free': 'Free (with Ads)',
+        'ad-free': 'Ad-Free (30 days)'
       };
       
       const orderData = {
@@ -235,7 +220,7 @@ class SubscriptionService {
   }
 
   /**
-   * Increment usage counter for free tier
+   * Increment usage counter and track questions for ad triggering
    */
   async incrementUsage(userId, type) {
     const userData = this.currentUserData || await this.getUserSubscriptionData(userId);
@@ -243,7 +228,8 @@ class SubscriptionService {
     const usage = userData.usage || {
       listeningQuestionsAnswered: 0,
       readingQuestionsAnswered: 0,
-      writingPromptsUsed: 0
+      writingPromptsUsed: 0,
+      questionsAnsweredSinceLastAd: 0
     };
 
     const oldValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
@@ -256,12 +242,35 @@ class SubscriptionService {
       usage.writingPromptsUsed++;
     }
 
-    const newValue = usage[type === 'listening' ? 'listeningQuestionsAnswered' : type === 'reading' ? 'readingQuestionsAnswered' : 'writingPromptsUsed'];
+    // Track questions since last ad (for vignette every 10)
+    if (type === 'listening' || type === 'reading') {
+      usage.questionsAnsweredSinceLastAd = (usage.questionsAnsweredSinceLastAd || 0) + 1;
+    }
 
     await this.updateUserSubscriptionData(userId, { usage });
     
     // Update current data cache
     this.currentUserData = await this.getUserSubscriptionData(userId);
+  }
+
+  /**
+   * Reset the per-ad question counter (called after showing a vignette ad)
+   */
+  async resetAdCounter(userId) {
+    const userData = this.currentUserData || await this.getUserSubscriptionData(userId);
+    const usage = { ...(userData.usage || {}), questionsAnsweredSinceLastAd: 0 };
+    await this.updateUserSubscriptionData(userId, { usage });
+    this.currentUserData = await this.getUserSubscriptionData(userId);
+  }
+
+  /**
+   * Check if user should see ads (free tier)
+   */
+  hasAds(userData = null) {
+    const data = userData || this.currentUserData;
+    if (!data) return true;
+    const tierLimits = TIER_LIMITS[data.tier] || TIER_LIMITS[TIERS.FREE];
+    return tierLimits.hasAds !== false;
   }
 
   /**
@@ -342,27 +351,25 @@ class SubscriptionService {
   }
 
   /**
-   * Create upgrade modal if it doesn't exist
+   * Create remove-ads / upgrade modal
    */
   createUpgradeModal(message = null) {
-    const defaultMessage = message || 'Keep enjoying SimpleTCF by selecting a plan!';
+    const defaultMessage = message || 'Enjoy SimpleTCF ad-free — remove all ads for just CAD $10 / 30 days.';
     
     const modalHTML = `
       <div id="upgradeModal" class="upgrade-modal">
         <div class="upgrade-modal__backdrop"></div>
         <div class="upgrade-modal__content">
-          <div class="upgrade-modal__icon">🔒</div>
-          <h2 class="upgrade-modal__title">Upgrade Required</h2>
+          <div class="upgrade-modal__icon">🚫📢</div>
+          <h2 class="upgrade-modal__title">Remove Ads</h2>
           <p class="upgrade-modal__message">${defaultMessage}</p>
-          <a href="/plan.html" class="btn btn--primary upgrade-modal__cta">View Plans</a>
+          <a href="/plan.html" class="btn btn--primary upgrade-modal__cta">Go Ad-Free – CAD $10</a>
+          <button class="btn btn--ghost upgrade-modal__dismiss" onclick="document.getElementById('upgradeModal').classList.add('quiz--hidden')">Continue with Ads</button>
         </div>
       </div>
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    // ✅ NO event listeners - modal is non-dismissable
-    // User MUST click "View Plans" to proceed
   }
 }
 

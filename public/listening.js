@@ -1689,55 +1689,35 @@ import {
    * Shows upgrade modal if limit reached
    */
   async function checkListeningAccess() {
+    // All users have unlimited access; just ensure they are logged in
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
-      return true; // Allow access when not logged in (or redirect to login)
+      return true; // Will be handled by auth redirect at page load
     }
-
-    if (!window.SubscriptionService || !state.userSubscription) {
-      return true; // Fail open
-    }
-
-    const canAccess = window.SubscriptionService.canAccess('listening', state.userSubscription);
-    
-    if (!canAccess) {
-      const remaining = window.SubscriptionService.getRemainingUsage(state.userSubscription);
-      window.SubscriptionService.showUpgradeModal(
-        `You've used all ${15} free listening questions! Keep enjoying SimpleTCF by selecting a plan.`
-      );
-      
-      // Hide main quiz content
-      els.quiz()?.classList.add(CLS.hidden);
-      
-      return false;
-    }
-
     return true;
   }
 
   /**
-   * Increment usage counter after answering a question
+   * Increment usage counter after answering a question and trigger ads
    */
   async function trackListeningUsage() {
     const user = window.AuthService?.getCurrentUser();
     if (!user || !window.SubscriptionService) return;
 
-    // ✅ Track for ALL users (limits are checked separately)
+    // Track for ALL users
     try {
       await window.SubscriptionService.incrementUsage(user.uid, 'listening');
       
       // Refresh subscription data
       state.userSubscription = await window.SubscriptionService.getUserSubscriptionData(user.uid);
-      
-      // Check if limit reached after this answer
-      const canAccessNext = window.SubscriptionService.canAccess('listening', state.userSubscription);
-      if (!canAccessNext) {
-        // Show modal after short delay to let user see result
-        setTimeout(() => {
-          window.SubscriptionService.showUpgradeModal(
-            `You've reached your free listening question limit! Keep enjoying SimpleTCF by selecting a plan.`
-          );
-        }, 1500);
+
+      // Show vignette ad every 10 questions (free tier only)
+      if (window.AdService) {
+        const adShown = await window.AdService.onQuestionAnswered();
+        if (adShown) {
+          // Reset server-side counter after showing ad
+          await window.SubscriptionService.resetAdCounter(user.uid);
+        }
       }
     } catch (error) {
       console.error('Error tracking listening usage:', error);
