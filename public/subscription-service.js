@@ -360,7 +360,7 @@ class SubscriptionService {
       <div id="upgradeModal" class="upgrade-modal">
         <div class="upgrade-modal__backdrop"></div>
         <div class="upgrade-modal__content">
-          <div class="upgrade-modal__icon">🚫📢</div>
+          <div class="upgrade-modal__icon" aria-hidden="true">🚫📢</div>
           <h2 class="upgrade-modal__title">Remove Ads</h2>
           <p class="upgrade-modal__message">${defaultMessage}</p>
           <a href="/plan.html" class="btn btn--primary upgrade-modal__cta">Go Ad-Free – CAD $10</a>

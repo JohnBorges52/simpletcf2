@@ -83,7 +83,11 @@ class AdService {
       </div>
     `;
     document.body.appendChild(overlay);
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('adblock-overlay-open');
+
+    // Move focus to the overlay for accessibility
+    const btn = overlay.querySelector('button');
+    if (btn) setTimeout(() => btn.focus(), 100);
   }
 
   // -----------------------------------------------------------------------

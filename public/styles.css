@@ -2747,3 +2747,8 @@ li:hover::after {
   max-width: 700px;
   margin: 0 auto;
 }
+
+/* Prevent scroll when ad-blocker overlay is open */
+body.adblock-overlay-open {
+  overflow: hidden;
+}
