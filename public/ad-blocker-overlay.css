@@ -1,0 +1,149 @@
+/**
+ * ad-blocker-overlay.css
+ * Robust styles for the ad-blocker detection overlay.
+ * Uses high z-index and position:fixed so the overlay cannot be scrolled away.
+ * Inline fallbacks are also injected by ad-service.js for extra resilience.
+ */
+
+/* ── Fullscreen backdrop ── */
+#adblock-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important; /* extremely high z-index to ensure overlay appears above all content */
+  background: rgba(10, 20, 40, 0.97) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Modal box ── */
+#adblock-overlay .aob-box {
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  padding: 44px 36px !important;
+  max-width: 500px !important;
+  width: 92% !important;
+  text-align: center !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55) !important;
+  position: relative !important;
+  animation: aobFadeIn 0.35s ease-out both;
+}
+
+@keyframes aobFadeIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+/* ── Icon ── */
+#adblock-overlay .aob-icon {
+  font-size: 52px !important;
+  line-height: 1 !important;
+  margin-bottom: 18px !important;
+  display: block !important;
+}
+
+/* ── Heading ── */
+#adblock-overlay .aob-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #1e3a5f !important;
+  margin: 0 0 14px !important;
+  line-height: 1.3 !important;
+}
+
+/* ── Body text ── */
+#adblock-overlay .aob-body {
+  font-size: 15px !important;
+  color: #374151 !important;
+  line-height: 1.65 !important;
+  margin: 0 0 10px !important;
+}
+
+/* ── Countdown badge ── */
+#adblock-overlay .aob-countdown {
+  display: inline-block !important;
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fbbf24 !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  margin: 12px 0 20px !important;
+}
+
+/* ── Action buttons row ── */
+#adblock-overlay .aob-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-top: 20px !important;
+}
+
+/* Primary button – "Disable Ad Blocker & Refresh" */
+#adblock-overlay .aob-btn-primary {
+  display: block !important;
+  width: 100% !important;
+  padding: 14px 20px !important;
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  transition: background 0.18s ease;
+}
+
+#adblock-overlay .aob-btn-primary:hover {
+  background: #1e40af !important;
+}
+
+/* Secondary button – "Go Ad-Free" */
+#adblock-overlay .aob-btn-secondary {
+  display: block !important;
+  width: 100% !important;
+  padding: 13px 20px !important;
+  background: transparent !important;
+  color: #1d4ed8 !important;
+  border: 2px solid #1d4ed8 !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+#adblock-overlay .aob-btn-secondary:hover {
+  background: #eff6ff !important;
+}
+
+/* ── Fine print ── */
+#adblock-overlay .aob-note {
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  margin: 16px 0 0 !important;
+  line-height: 1.5 !important;
+}
+
+/* ── Prevent page scroll while overlay is open ── */
+body.adblock-wall-open {
+  overflow: hidden !important;
+}
+
+/* ── Responsive tweaks ── */
+@media (max-width: 480px) {
+  #adblock-overlay .aob-box {
+    padding: 32px 20px !important;
+  }
+
+  #adblock-overlay .aob-title {
+    font-size: 19px !important;
+  }
+}
