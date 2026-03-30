@@ -22,10 +22,9 @@ class StripeService {
     // SECURITY: Map tier names to Stripe Price IDs
     // These are used for display purposes only
     // Backend validates against its own whitelist
+    // TODO: Replace price_ADFREE_PLACEHOLDER with your real Stripe Price ID
     this.priceIds = {
-      "quick-study": "price_1SzOPyCjnElzxNngxs0lvgQv",
-      "30-day": "price_1SzOQyCjnElzxNngf4vtCnTC",
-      "full-prep": "price_1SzOSLCjnElzxNngwqqTwHal",
+      "ad-free": "price_ADFREE_PLACEHOLDER",
     };
 
     // Cloud Function endpoint (deployed URL)

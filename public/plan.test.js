@@ -11,97 +11,75 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
   
   describe('💰 CENÁRIO 1: Usuário vê os planos e preços', () => {
     
-    test('✅ Deve exibir 3 planos com preços corretos', () => {
+    test('✅ Deve exibir 2 opções: Free (com anúncios) e Ad-Free ($10)', () => {
       console.log('\n📝 TESTE: Usuário abre página "plan.html"');
       console.log('');
       console.log('   O que o usuário vê:');
-      console.log('   ┌─────────────────────────────────────────────────┐');
-      console.log('   │  SIMPLETCF - ESCOLHA SEU PLANO                  │');
-      console.log('   ├─────────────────────────────────────────────────┤');
-      console.log('   │ 🟦 QUICK STUDY │ 🟩 30-DAY │ 🟨 FULL PREP      │');
-      console.log('   ├──────────────────────────────────────────────────┤');
-      console.log('   │ CAD $9.99      │  CAD $19.99 │ CAD $34.99       │');
-      console.log('   │ 10 dias        │  30 dias    │ 60 dias          │');
-      console.log('   │ ✓ Unlimited    │  ✓ Unlimited│ ✓ Unlimited      │');
-      console.log('   │ [Subscribe]    │  [Subscribe]│ [Subscribe]      │');
-      console.log('   └──────────────────────────────────────────────────┘');
+      console.log('   ┌─────────────────────────────────────────┐');
+      console.log('   │  SIMPLETCF - GO AD-FREE                 │');
+      console.log('   ├────────────────────┬────────────────────┤');
+      console.log('   │ 🆓 FREE            │ 🚫📢 AD-FREE       │');
+      console.log('   ├────────────────────┼────────────────────┤');
+      console.log('   │ CAD $0 / forever   │ CAD $10 / 30 days  │');
+      console.log('   │ ✓ Full content     │ ✓ Full content     │');
+      console.log('   │ 📢 Ads displayed   │ 🚫 No ads          │');
+      console.log('   │ [Get Started Free] │ [Go Ad-Free]       │');
+      console.log('   └────────────────────┴────────────────────┘');
       console.log('');
-      console.log('   → Sistema carrega dados de planos');
-      console.log('   → Sistema renderiza 3 cards de planos');
-      console.log('   → Cada card mostra:');
-      console.log('      - Nome do plano');
-      console.log('      - Preço em CAD (formato: $X.XX)');
-      console.log('      - Duração em dias');
-      console.log('      - Lista de features');
-      console.log('      - Botão "Subscribe"');
       
       const plans = [
         {
-          name: 'Quick Study',
-          badge: 'bronze',
-          price: '9.99',
-          days: 10,
-          priceId: 'price_1SzMjMCwya11CpgZcBhEiHFB',
+          name: 'Free',
+          badge: 'free',
+          price: '0',
+          days: null,
+          hasAds: true,
         },
         {
-          name: '30-Day',
-          badge: 'silver',
-          price: '19.99',
+          name: 'Ad-Free',
+          badge: 'adfree',
+          price: '10',
           days: 30,
-          priceId: 'price_1SzMk5Cwya11CpgZzWSCLQwM',
-        },
-        {
-          name: 'Full Prep',
-          badge: 'gold',
-          price: '34.99',
-          days: 60,
-          priceId: 'price_1SzMm0Cwya11CpgZSRwNAt31',
+          hasAds: false,
+          priceId: 'price_ADFREE_PLACEHOLDER',
         },
       ];
       
       console.log('\n✅ RESULTADO ESPERADO:');
-      console.log('   ✓ Quick Study: CAD $9.99 (10 dias)');
-      console.log('   ✓ 30-Day: CAD $19.99 (30 dias)');
-      console.log('   ✓ Full Prep: CAD $34.99 (60 dias)');
-      console.log('   ✓ Todos os planos têm badge de cor');
-      console.log('   ✓ Todos os planos têm botão "Subscribe"');
+      console.log('   ✓ Free: CAD $0 (forever, com anúncios)');
+      console.log('   ✓ Ad-Free: CAD $10 (30 dias, sem anúncios)');
+      console.log('   ✓ Ambos têm acesso ilimitado ao conteúdo');
       
-      expect(plans).toHaveLength(3);
-      expect(plans[0].price).toBe('9.99');
-      expect(plans[1].price).toBe('19.99');
-      expect(plans[2].price).toBe('34.99');
+      expect(plans).toHaveLength(2);
+      expect(plans[0].price).toBe('0');
+      expect(plans[1].price).toBe('10');
+      expect(plans[0].hasAds).toBe(true);
+      expect(plans[1].hasAds).toBe(false);
     });
 
-    test('✅ Deve destacar o plano mais popular (30-Day)', () => {
-      console.log('\n📝 TESTE: Plano 30-Day debe estar destacado');
+    test('✅ Deve destacar o plano Ad-Free como melhor experiência', () => {
+      console.log('\n📝 TESTE: Plano Ad-Free deve estar destacado');
       console.log('');
       console.log('   O que o usuário vê:');
       console.log('   ┌────────────────────────────┐');
-      console.log('   │  🏆 RECOMENDADO 🏆         │');
-      console.log('   │  30-DAY INTENSIVE          │');
-      console.log('   │  CAD $19.99                │');
-      console.log('   │  (Melhor custo-benefício) │');
-      console.log('   │  [Subscribe]               │');
+      console.log('   │  🏆 BEST EXPERIENCE 🏆     │');
+      console.log('   │  AD-FREE                   │');
+      console.log('   │  CAD $10 / 30 days         │');
+      console.log('   │  🚫 No ads whatsoever      │');
+      console.log('   │  [Go Ad-Free – CAD $10]    │');
       console.log('   └────────────────────────────┘');
-      console.log('');
-      console.log('   → Card é maior que outros');
-      console.log('   → Tem badge "RECOMENDADO" ou "POPULAR"');
-      console.log('   → Tem cor de destaque (fundo diferente)');
-      console.log('   → Botão tem cor diferente/mais proeminente');
       
-      const popularPlan = {
-        name: '30-Day',
-        isPopular: true,
-        badge: 'RECOMENDADO',
+      const featuredPlan = {
+        name: 'Ad-Free',
+        isFeatured: true,
+        badge: 'Best Experience',
       };
       
       console.log('\n✅ RESULTADO ESPERADO:');
-      console.log('   ✓ Plano 30-Day é marcado como popular');
-      console.log('   ✓ Badge "RECOMENDADO" é exibido');
-      console.log('   ✓ Card tem destaque visual (cor, sombra, tamanho)');
-      console.log('   ✓ Usuário é guiado para escolher o melhor custo-benefício');
+      console.log('   ✓ Plano Ad-Free tem badge "Best Experience"');
+      console.log('   ✓ Card tem destaque visual');
       
-      expect(popularPlan.isPopular).toBe(true);
+      expect(featuredPlan.isFeatured).toBe(true);
     });
   });
 
@@ -111,8 +89,8 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('\n📝 TESTE: Usuário seleciona plano e clica "Subscribe"');
       console.log('');
       console.log('   Sequência:');
-      console.log('   1️⃣  Usuário vê o plano Quick Study ($9.99)');
-      console.log('   2️⃣  Usuário clica no botão "Subscribe"');
+      console.log('   1️⃣  Usuário vê o plano Ad-Free ($10)');
+      console.log('   2️⃣  Usuário clica no botão "Go Ad-Free"');
       console.log('');
       console.log('   → Sistema obtém Price ID do plano');
       console.log('   → Sistema verifica se usuário está autenticado');
@@ -123,7 +101,7 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('   → Stripe retorna URL de checkout');
       console.log('   → Usuário é redirecionado para Stripe Checkout');
       
-      const mockPriceId = 'price_1SzMjMCwya11CpgZcBhEiHFB';
+      const mockPriceId = 'price_ADFREE_PLACEHOLDER';
       
       const mockStripeSession = {
         id: 'cs_test_session123',
@@ -180,14 +158,10 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('   ┌────────────────────────────────┐');
       console.log('   │ RESUMO DO SEU PEDIDO            │');
       console.log('   ├────────────────────────────────┤');
-      console.log('   │ Plano: Quick Study             │');
-      console.log('   │ Duração: 10 dias               │');
+      console.log('   │ Plano: Ad-Free                 │');
+      console.log('   │ Duração: 30 dias               │');
       console.log('   │                                │');
-      console.log('   │ Preço do Pacote:  CAD $9.99    │');
-      console.log('   │ Taxa de Plataforma (2.95%):    │');
-      console.log('   │                   CAD +$0.29   │');
-      console.log('   │ ────────────────────────────    │');
-      console.log('   │ TOTAL:            CAD $10.28   │');
+      console.log('   │ TOTAL:            CAD $10.00   │');
       console.log('   │                                │');
       console.log('   │ [Proceder para Stripe]         │');
       console.log('   └────────────────────────────────┘');
@@ -197,22 +171,18 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('   → Informações são exibidas');
       
       const checkoutData = {
-        tier: 'quick-study',
-        packagePrice: 9.99,
-        platformFeePercent: 2.95,
-        platformFeeAmount: 0.29,
-        total: 10.28,
+        tier: 'ad-free',
+        packagePrice: 10.00,
+        total: 10.00,
       };
       
       console.log('\n✅ RESULTADO ESPERADO:');
       console.log('   ✓ Plano correto exibido: ' + checkoutData.tier);
       console.log('   ✓ Preço: CAD $' + checkoutData.packagePrice.toFixed(2));
-      console.log('   ✓ Taxa (2.95%): CAD +$' + checkoutData.platformFeeAmount.toFixed(2));
-      console.log('   ✓ Total: CAD $' + checkoutData.total.toFixed(2));
       console.log('   ✓ Usuário pode revisar antes de pagar');
-      console.log('   ✓ Botão "Proceder para Stripe" está ativo');
+      console.log('   ✓ Botão "Go Ad-Free" está ativo');
       
-      expect(checkoutData.total).toBe(10.28);
+      expect(checkoutData.total).toBe(10.00);
     });
   });
 
@@ -226,8 +196,8 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('   ┌──────────────────────────────┐');
       console.log('   │ STRIPE CHECKOUT PAGE         │');
       console.log('   ├──────────────────────────────┤');
-      console.log('   │ Quick Study Plan             │');
-      console.log('   │ CAD $10.28                   │');
+      console.log('   │ Ad-Free Plan                 │');
+      console.log('   │ CAD $10.00                   │');
       console.log('   │                              │');
       console.log('   │ Email: usuario@example.com   │');
       console.log('   │ [Pré-preenchido]             │');
@@ -282,13 +252,13 @@ describe('🧪 TESTES DE SELEÇÃO DE PLANOS - Plan Page', () => {
       console.log('   ✓ Pagamento processado com sucesso');
       console.log('   ✓ Stripe webhook recebido: checkout.session.completed');
       console.log('   ✓ Usuário atualizado em Firestore:');
-      console.log('      - tier: quick-study');
+      console.log('      - tier: ad-free');
       console.log('      - subscriptionStartDate: agora');
-      console.log('      - subscriptionEndDate: agora + 10 dias');
+      console.log('      - subscriptionEndDate: agora + 30 dias');
       console.log('   ✓ Email de confirmação enviado');
       console.log('   ✓ Pedido registrado em collection "orders"');
       console.log('   ✓ Página welcome.html exibe sucesso');
-      console.log('   ✓ Usuário vê: "Bem-vindo! Seu plano está ativo por 10 dias"');
+      console.log('   ✓ Usuário vê: "Bem-vindo! Seu plano Ad-Free está ativo por 30 dias"');
       
       expect(true).toBe(true); // placeholder
     });

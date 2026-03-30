@@ -53,9 +53,7 @@
 
     // Map color badges to plan display names
     const badgeDisplayMap = {
-      bronze: "Quick-Study",
-      silver: "30-Day Preparation",
-      gold: "Full Preparation",
+      adfree: "Ad-Free (30 days)",
       free: "Free",
     };
 
@@ -83,12 +81,8 @@
       "order-summary-badge--gold",
     );
 
-    if (tier.includes("bronze")) {
-      badgeEl.classList.add("order-summary-badge--bronze");
-    } else if (tier.includes("silver")) {
+    if (tier.includes("adfree") || tier.includes("ad-free")) {
       badgeEl.classList.add("order-summary-badge--silver");
-    } else if (tier.includes("gold")) {
-      badgeEl.classList.add("order-summary-badge--gold");
     } else {
       badgeEl.classList.add("order-summary-badge--free");
     }
@@ -245,23 +239,13 @@
     const badge = (badgeStr || '').toLowerCase();
     const duration = (durationStr || '').toLowerCase();
 
-    // Quick Study: Bronze badge, 10 days
-    if (badge.includes('bronze') || duration.includes('10')) {
-      return { tier: 'quick-study', days: 10 };
+    // Ad-Free plan: 30 days
+    if (badge.includes('adfree') || badge.includes('ad-free') || duration.includes('30')) {
+      return { tier: 'ad-free', days: 30 };
     }
 
-    // 30-day Intensive: Silver badge, 30 days
-    if (badge.includes('silver') || duration.includes('30')) {
-      return { tier: '30-day', days: 30 };
-    }
-
-    // Full Preparation: Gold badge, 60 days
-    if (badge.includes('gold') || duration.includes('60')) {
-      return { tier: 'full-prep', days: 60 };
-    }
-
-  // Default to 30-day if unclear
-    return { tier: '30-day', days: 30 };
+    // Default to ad-free if unclear
+    return { tier: 'ad-free', days: 30 };
   }
 
   document.addEventListener("DOMContentLoaded", async () => {

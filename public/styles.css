@@ -2566,3 +2566,189 @@ li:hover::after {
   color: #3b82f6 !important;
   border-color: #3b82f6 !important;
 }
+
+/* ============================================================
+   AD SERVICE STYLES
+   ============================================================ */
+
+/* CSS variable for bottom bar height used to push content up */
+:root {
+  --bottom-ad-bar-height: 110px;
+}
+
+/* ---- Fixed bottom ad bar ---- */
+#bottom-ad-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9000;
+  background: #fff;
+  border-top: 2px solid #e5e7eb;
+  box-shadow: 0 -2px 12px rgba(0,0,0,.12);
+  padding: 8px 12px;
+}
+
+.bottom-ad-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 900px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.bottom-ad-bar__label {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.bottom-ad-bar__ad {
+  flex-shrink: 0;
+}
+
+.bottom-ad-bar__remove-btn {
+  background: none;
+  border: 1px solid var(--brand, #3a9fff);
+  color: var(--brand, #3a9fff);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.bottom-ad-bar__remove-btn:hover {
+  background: var(--brand, #3a9fff);
+  color: #fff;
+}
+
+/* ---- Vignette ad overlay ---- */
+#vignette-ad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vignette-ad__box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  text-align: center;
+}
+
+.vignette-ad__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.vignette-ad__label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.vignette-ad__countdown {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink, #1f4568);
+  background: #f3f4f6;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vignette-ad__ins {
+  margin: 0 auto 16px;
+}
+
+.vignette-ad__footer p {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 14px;
+}
+
+.vignette-ad__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---- Ad-blocker overlay ---- */
+#adblock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(15,23,42,.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adblock-overlay__box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 36px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,.4);
+}
+
+.adblock-overlay__icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.adblock-overlay__box h2 {
+  font-size: 24px;
+  color: var(--ink, #1f4568);
+  margin-bottom: 12px;
+}
+
+.adblock-overlay__box p {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+/* ---- Upgrade / remove-ads modal extras ---- */
+.upgrade-modal__dismiss {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ---- Plan grid — two-column layout ---- */
+.plan-grid--two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Prevent scroll when ad-blocker overlay is open */
+body.adblock-overlay-open {
+  overflow: hidden;
+}
