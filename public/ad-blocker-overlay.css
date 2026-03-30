@@ -1,34 +1,14 @@
-/**
- * ad-blocker-overlay.css
- * Includes:
- * - Ad blocker overlay
- * - Fixed bottom ad bar
- * - Safe page spacing so the ad does not cover footer/content
- */
-
-/* =========================================================
-   GLOBAL VARIABLES
-========================================================= */
 :root {
-  --bottom-ad-bar-height: 140px;
-  --bottom-ad-bar-height-mobile: 170px;
+  --bottom-ad-bar-height: 100px;
+  --bottom-ad-bar-height-mobile: 90px;
 }
 
-/* Reserve space for the fixed bottom ad bar */
+/* reserva só o espaço necessário para o ad fixo */
 body {
   padding-bottom: var(--bottom-ad-bar-height) !important;
 }
 
-/* Optional: if your site has a main wrapper, this helps too */
-main,
-.site-content,
-.page-wrapper {
-  box-sizing: border-box;
-}
-
-/* =========================================================
-   BOTTOM AD BAR
-========================================================= */
+/* barra fixa inferior */
 #bottom-ad-bar {
   position: fixed;
   left: 0;
@@ -36,51 +16,54 @@ main,
   bottom: 0;
   z-index: 9999;
   width: 100%;
-  min-height: var(--bottom-ad-bar-height);
+  height: var(--bottom-ad-bar-height);
   background: #f3f4f6;
   border-top: 1px solid #d1d5db;
-  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
 }
 
+/* conteúdo interno mais compacto */
 .bottom-ad-bar__inner {
-  min-height: var(--bottom-ad-bar-height);
+  height: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 18px 16px 14px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
+  justify-content: center;
+  gap: 6px;
   box-sizing: border-box;
   text-align: center;
 }
 
 .bottom-ad-bar__label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #9ca3af;
   line-height: 1;
+  margin: 0;
 }
 
 .bottom-ad-bar__ad {
+  display: block;
   max-width: 100%;
-  overflow: hidden;
+  line-height: 0;
 }
 
 .bottom-ad-bar__remove-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  border: 1.5px solid #3b82f6;
+  padding: 6px 14px;
+  border: 1px solid #3b82f6;
   border-radius: 999px;
-  background: #ffffff;
+  background: #fff;
   color: #3b82f6;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -94,196 +77,27 @@ main,
   color: #2563eb;
 }
 
-/* Extra protection in case footer still feels too close */
-footer {
-  position: relative;
-  z-index: 1;
-}
-
-/* =========================================================
-   MOBILE AD BAR
-========================================================= */
+/* mobile */
 @media (max-width: 768px) {
   body {
     padding-bottom: var(--bottom-ad-bar-height-mobile) !important;
   }
 
   #bottom-ad-bar {
-    min-height: var(--bottom-ad-bar-height-mobile);
+    height: var(--bottom-ad-bar-height-mobile);
   }
 
   .bottom-ad-bar__inner {
-    min-height: var(--bottom-ad-bar-height-mobile);
-    padding: 16px 12px 12px;
-    gap: 10px;
+    padding: 6px 8px;
+    gap: 5px;
   }
 
   .bottom-ad-bar__label {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .bottom-ad-bar__remove-btn {
-    width: auto;
-    max-width: 100%;
-    font-size: 13px;
-    padding: 9px 14px;
-  }
-
-  /* Helps if your ad width is too large on mobile */
-  .bottom-ad-bar__ad[style*="728px"] {
-    width: 320px !important;
-    height: 50px !important;
-  }
-}
-
-/* =========================================================
-   FULLSCREEN ADBLOCK OVERLAY
-========================================================= */
-#adblock-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483647 !important;
-  background: rgba(10, 20, 40, 0.97) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Modal box */
-#adblock-overlay .aob-box {
-  background: #ffffff !important;
-  border-radius: 18px !important;
-  padding: 44px 36px !important;
-  max-width: 500px !important;
-  width: 92% !important;
-  text-align: center !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55) !important;
-  position: relative !important;
-  animation: aobFadeIn 0.35s ease-out both;
-  box-sizing: border-box !important;
-}
-
-@keyframes aobFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Icon */
-#adblock-overlay .aob-icon {
-  font-size: 52px !important;
-  line-height: 1 !important;
-  margin-bottom: 18px !important;
-  display: block !important;
-}
-
-/* Heading */
-#adblock-overlay .aob-title {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  color: #1e3a5f !important;
-  margin: 0 0 14px !important;
-  line-height: 1.3 !important;
-}
-
-/* Body text */
-#adblock-overlay .aob-body {
-  font-size: 15px !important;
-  color: #374151 !important;
-  line-height: 1.65 !important;
-  margin: 0 0 10px !important;
-}
-
-/* Countdown badge */
-#adblock-overlay .aob-countdown {
-  display: inline-block !important;
-  background: #fef3c7 !important;
-  color: #92400e !important;
-  border: 1px solid #fbbf24 !important;
-  border-radius: 8px !important;
-  padding: 6px 14px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  margin: 12px 0 20px !important;
-}
-
-/* Actions */
-#adblock-overlay .aob-actions {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  margin-top: 20px !important;
-}
-
-/* Primary button */
-#adblock-overlay .aob-btn-primary {
-  display: block !important;
-  width: 100% !important;
-  padding: 14px 20px !important;
-  background: #1d4ed8 !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 10px !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  box-sizing: border-box !important;
-  transition: background 0.18s ease;
-}
-
-#adblock-overlay .aob-btn-primary:hover {
-  background: #1e40af !important;
-}
-
-/* Secondary button */
-#adblock-overlay .aob-btn-secondary {
-  display: block !important;
-  width: 100% !important;
-  padding: 13px 20px !important;
-  background: transparent !important;
-  color: #1d4ed8 !important;
-  border: 2px solid #1d4ed8 !important;
-  border-radius: 10px !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  text-decoration: none !important;
-  box-sizing: border-box !important;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-#adblock-overlay .aob-btn-secondary:hover {
-  background: #eff6ff !important;
-}
-
-/* Fine print */
-#adblock-overlay .aob-note {
-  font-size: 12px !important;
-  color: #9ca3af !important;
-  margin: 16px 0 0 !important;
-  line-height: 1.5 !important;
-}
-
-/* Prevent background scroll */
-body.adblock-wall-open {
-  overflow: hidden !important;
-}
-
-/* Responsive overlay */
-@media (max-width: 480px) {
-  #adblock-overlay .aob-box {
-    padding: 32px 20px !important;
-  }
-
-  #adblock-overlay .aob-title {
-    font-size: 19px !important;
+    font-size: 12px;
+    padding: 5px 12px;
   }
 }
