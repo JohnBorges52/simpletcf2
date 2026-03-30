@@ -24,7 +24,7 @@ class StripeService {
     // Backend validates against its own whitelist
     // TODO: Replace price_ADFREE_PLACEHOLDER with your real Stripe Price ID
     this.priceIds = {
-      "ad-free": "price_ADFREE_PLACEHOLDER",
+      "ad-free": "price_1TGnnGCjnElzxNngZ69HlkoL",
     };
 
     // Cloud Function endpoint (deployed URL)
