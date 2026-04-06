@@ -38,12 +38,41 @@ const TIER_LIMITS = {
 class SubscriptionService {
   constructor() {
     this.currentUserData = null;
+    this._unsubscribeSnapshot = null;
+    this._tierChangeCallbacks = [];
+  }
+
+  /**
+   * Register a callback to be invoked when the user's tier changes in Firestore.
+   * @param {function(newTier: string, previousTier: string): void} callback
+   */
+  addTierChangeCallback(callback) {
+    this._tierChangeCallbacks.push(callback);
+  }
+
+  /**
+   * Stop the real-time Firestore listener and reset cached state.
+   * Call this when the user logs out.
+   */
+  cleanup() {
+    if (this._unsubscribeSnapshot) {
+      this._unsubscribeSnapshot();
+      this._unsubscribeSnapshot = null;
+    }
+    this.currentUserData = null;
+    this._tierChangeCallbacks = [];
   }
 
   /**
    * Initialize subscription service for current user
    */
   async init() {
+    // Cancel any existing real-time listener before setting up a new one
+    if (this._unsubscribeSnapshot) {
+      this._unsubscribeSnapshot();
+      this._unsubscribeSnapshot = null;
+    }
+
     const user = window.AuthService?.getCurrentUser();
     if (!user) {
       return null;
@@ -55,6 +84,9 @@ class SubscriptionService {
       
       // Check if subscription has expired (this may update currentUserData)
       await this.checkAndUpdateExpiredSubscription(user.uid, userData);
+
+      // Set up real-time listener so external Firebase changes are picked up
+      this._setupTierListener(user.uid);
       
       // ✅ Return currentUserData (may have been updated if subscription expired)
       return this.currentUserData;
@@ -62,6 +94,62 @@ class SubscriptionService {
       console.error('Error initializing subscription service:', error);
       return null;
     }
+  }
+
+  /**
+   * Attach an onSnapshot listener to the user document so that manual tier
+   * edits in Firebase are reflected immediately without a page refresh.
+   * @param {string} userId
+   */
+  _setupTierListener(userId) {
+    (async () => {
+      try {
+        const db = await window.__firestoreReady;
+        if (!db || !window.firestoreExports) return;
+
+        const { doc, onSnapshot } = window.firestoreExports;
+        if (!onSnapshot) return;
+
+        const userRef = doc(db, 'users', userId);
+
+        this._unsubscribeSnapshot = onSnapshot(
+          userRef,
+          (snapshot) => {
+            if (!snapshot.exists()) return;
+
+            const data = snapshot.data();
+            if (!data.tier) data.tier = TIERS.FREE;
+            if (!data.usage) {
+              data.usage = this.currentUserData?.usage || {
+                listeningQuestionsAnswered: 0,
+                readingQuestionsAnswered: 0,
+                writingPromptsUsed: 0,
+                totalAdsViewed: 0
+              };
+            }
+
+            const previousTier = this.currentUserData?.tier;
+            const newTier = data.tier;
+
+            this.currentUserData = data;
+
+            // Notify registered callbacks only when the tier actually changes
+            if (previousTier !== undefined && previousTier !== newTier) {
+              this._tierChangeCallbacks.forEach(cb => {
+                try { cb(newTier, previousTier); } catch (err) {
+                  console.error('[SubscriptionService] Tier change callback error:', err);
+                }
+              });
+            }
+          },
+          (error) => {
+            console.error('[SubscriptionService] Snapshot listener error:', error);
+          }
+        );
+      } catch (error) {
+        console.error('[SubscriptionService] Failed to set up tier listener:', error);
+      }
+    })();
   }
 
   /**

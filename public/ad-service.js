@@ -52,6 +52,13 @@ class AdService {
    * Bootstrap ads — call once on DOMContentLoaded
    */
   async init() {
+    // Always register for real-time tier changes, regardless of current tier
+    if (window.SubscriptionService) {
+      window.SubscriptionService.addTierChangeCallback((newTier) => {
+        this.refreshAdVisibility(newTier);
+      });
+    }
+
     if (await this._isAdFreeUser()) {
       this._pauseAutoAds();
       return;
@@ -72,6 +79,51 @@ class AdService {
     }
 
     this._schedulePeriodicRecheck();
+  }
+
+  /**
+   * Refresh ad visibility when the user's subscription tier changes in Firestore.
+   * - Upgrading to ad-free: immediately removes all ads and stops timers.
+   * - Downgrading to free: reloads the page so ads can be initialised normally.
+   * @param {string} newTier
+   */
+  refreshAdVisibility(newTier) {
+    // Note: TIERS constant is defined in subscription-service.js and is not
+    // in scope here, so the string literals 'ad-free' / 'free' are used directly.
+    if (newTier === 'ad-free') {
+      // Pause AdSense auto-ads
+      this._pauseAutoAds();
+
+      // Remove the bottom ad bar
+      const bar = document.getElementById('bottom-ad-bar');
+      if (bar) {
+        bar.remove();
+        document.body.style.paddingBottom = '';
+      }
+
+      // Remove the ad-block overlay if it is currently shown
+      const adBlockOverlay = document.getElementById('adblock-overlay');
+      if (adBlockOverlay) {
+        adBlockOverlay.remove();
+        document.body.classList.remove('adblock-wall-open');
+        this._adBlockDetected = false;
+      }
+
+      // Stop the periodic recheck timer
+      if (this._recheckTimer) {
+        clearInterval(this._recheckTimer);
+        this._recheckTimer = null;
+      }
+
+      // Disconnect the overlay mutation observer
+      if (this._overlayMutationObserver) {
+        this._overlayMutationObserver.disconnect();
+        this._overlayMutationObserver = null;
+      }
+    } else {
+      // Downgraded from ad-free to free — reload so ads initialise properly
+      window.location.reload();
+    }
   }
 
   /**
