@@ -775,6 +775,90 @@ function fmtPct(n) {
   }
 
   // ----------------------------
+  // Tier UI helpers
+  // ----------------------------
+
+  const TIER_NAMES = {
+    "free": "Free Tier",
+    "ad-free": "Ad-Free (30 days)"
+  };
+
+  const TIER_BADGE_CLASSES = {
+    "free": "order-summary-badge--free",
+    "ad-free": "order-summary-badge--silver"
+  };
+
+  /**
+   * Update all tier-related UI elements to reflect the given user data.
+   * Called on initial load and whenever SubscriptionService reports a tier change.
+   * @param {Object|null} userData - User document from Firestore
+   */
+  function updateTierUI(userData) {
+    const tier = userData?.tier || "free";
+
+    const pill = $("memberPill");
+    if (pill) {
+      pill.textContent = TIER_NAMES[tier] || "Free Tier";
+      pill.classList.toggle("pill-green", tier !== "free");
+    }
+
+    const acctPlan = $("acctPlan");
+    if (acctPlan) {
+      acctPlan.textContent = TIER_NAMES[tier] || "Free Tier";
+      acctPlan.classList.remove(
+        "order-summary-badge--free",
+        "order-summary-badge--bronze",
+        "order-summary-badge--silver",
+        "order-summary-badge--gold"
+      );
+      acctPlan.classList.add(TIER_BADGE_CLASSES[tier] || "order-summary-badge--free");
+    }
+
+    const acctExpiration = $("acctExpiration");
+    if (acctExpiration) {
+      if (tier === "free" || !userData?.subscriptionEndDate) {
+        acctExpiration.textContent = "—";
+        acctExpiration.classList.remove("warning", "critical");
+      } else {
+        const endDate = userData.subscriptionEndDate.toDate
+          ? userData.subscriptionEndDate.toDate()
+          : new Date(userData.subscriptionEndDate);
+        const now = new Date();
+        const diffMs = endDate - now;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+
+        let expirationText = "";
+        let className = "";
+
+        if (diffMs <= 0) {
+          expirationText = "Expired";
+          className = "critical";
+        } else if (diffMs < 60 * 60 * 1000) {
+          expirationText = "< 1 hour left";
+          className = "critical";
+        } else if (diffMs < 24 * 60 * 60 * 1000) {
+          expirationText = `${diffHours} hour${diffHours === 1 ? "" : "s"} left`;
+          className = "critical";
+        } else {
+          expirationText = `${diffDays} day${diffDays === 1 ? "" : "s"} left`;
+          if (diffDays <= 3) {
+            className = "critical";
+          } else if (diffDays <= 9) {
+            className = "warning";
+          }
+        }
+
+        acctExpiration.textContent = expirationText;
+        acctExpiration.classList.remove("warning", "critical");
+        if (className) {
+          acctExpiration.classList.add(className);
+        }
+      }
+    }
+  }
+
+  // ----------------------------
   // Init
   // ----------------------------
   document.addEventListener("DOMContentLoaded", async () => {
@@ -820,6 +904,11 @@ function fmtPct(n) {
     try {
       if (window.SubscriptionService) {
         await window.SubscriptionService.init();
+
+        // Keep profile tier UI in sync with real-time Firestore changes
+        window.SubscriptionService.addTierChangeCallback(() => {
+          updateTierUI(window.SubscriptionService.currentUserData);
+        });
       }
     } catch (error) {
     }
@@ -872,88 +961,8 @@ function fmtPct(n) {
       }
     }
     
-    // Get tier from user document (using potentially refreshed data)
-    const tier = userDoc?.tier || "free";
-    
-    // Map tier to friendly names
-    const tierNames = {
-      "free": "Free Tier",
-      "ad-free": "Ad-Free (30 days)"
-    };
-    
-    // Map tier to badge classes
-    const tierBadgeClasses = {
-      "free": "order-summary-badge--free",
-      "ad-free": "order-summary-badge--silver"
-    };
-    
-    // Update sidebar member pill
-    const pill = $("memberPill");
-    if (pill) {
-      pill.textContent = tierNames[tier] || "Free Tier";
-      pill.classList.toggle("pill-green", tier !== "free");
-    }
-    
-    // Update account page plan badge
-    const acctPlan = $("acctPlan");
-    if (acctPlan) {
-      acctPlan.textContent = tierNames[tier] || "Free Tier";
-      // Remove all badge classes first
-      acctPlan.classList.remove(
-        "order-summary-badge--free",
-        "order-summary-badge--bronze",
-        "order-summary-badge--silver",
-        "order-summary-badge--gold"
-      );
-      // Add the correct badge class
-      const badgeClass = tierBadgeClasses[tier] || "order-summary-badge--free";
-      acctPlan.classList.add(badgeClass);
-    }
-
-    // Update plan expiration date
-    const acctExpiration = $("acctExpiration");
-    if (acctExpiration) {
-      if (tier === "free" || !userDoc?.subscriptionEndDate) {
-        acctExpiration.textContent = "—";
-        acctExpiration.classList.remove("warning", "critical");
-      } else {
-        // Calculate time remaining
-        const endDate = userDoc.subscriptionEndDate.toDate ? 
-          userDoc.subscriptionEndDate.toDate() : 
-          new Date(userDoc.subscriptionEndDate);
-        const now = new Date();
-        const diffMs = endDate - now;
-        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-        
-        let expirationText = "";
-        let className = "";
-        
-        if (diffMs <= 0) {
-          expirationText = "Expired";
-          className = "critical";
-        } else if (diffMs < 60 * 60 * 1000) {
-          expirationText = "< 1 hour left";
-          className = "critical";
-        } else if (diffMs < 24 * 60 * 60 * 1000) {
-          expirationText = `${diffHours} hour${diffHours === 1 ? "" : "s"} left`;
-          className = "critical";
-        } else {
-          expirationText = `${diffDays} day${diffDays === 1 ? "" : "s"} left`;
-          if (diffDays <= 3) {
-            className = "critical";
-          } else if (diffDays <= 9) {
-            className = "warning";
-          }
-        }
-        
-        acctExpiration.textContent = expirationText;
-        acctExpiration.classList.remove("warning", "critical");
-        if (className) {
-          acctExpiration.classList.add(className);
-        }
-      }
-    }
+    // Update all tier-related UI elements
+    updateTierUI(userDoc);
 
     // Setup password reset button
     const profileResetBtn = $("profileResetBtn");
