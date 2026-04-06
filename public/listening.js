@@ -288,7 +288,7 @@ import {
   function getHeaderNumber(q) {
     if (!q) return null;
     if (state.realTestMode) return state.index + 1;
-    if (state.currentWeight == null && q.overall_question_number != null)
+    if ((state.currentWeight == null || state.currentWeight === "all") && q.overall_question_number != null)
       return Number(q.overall_question_number);
     const raw = q.question_number;
     if (raw == null) return null;
@@ -541,15 +541,16 @@ import {
 
     await ensureDataLoaded();
 
-    state.currentWeight =
-      weightOrAll === "all" || weightOrAll == null ? null : Number(weightOrAll);
+    if (weightOrAll === "all") state.currentWeight = "all";
+    else if (weightOrAll == null) state.currentWeight = null;
+    else state.currentWeight = Number(weightOrAll);
 
     document
       .querySelectorAll(`.${CLS.weightBtn}`)
       .forEach((btn) => btn.classList.remove(CLS.selectedWeight));
 
     const selectedBtn =
-      state.currentWeight == null
+      state.currentWeight == null || state.currentWeight === "all"
         ? document.querySelector(`.${CLS.weightBtn}[data-all="1"]`)
         : Array.from(document.querySelectorAll(`.${CLS.weightBtn}`)).find(
             (btn) => Number(btn.dataset.weight) === state.currentWeight,
@@ -574,7 +575,7 @@ import {
     if (state.currentWeight == null) return 0;
 
     let pool = state.allData;
-    if (state.currentWeight != null) {
+    if (state.currentWeight != null && state.currentWeight !== "all") {
       pool = pool.filter(
         (q) => Number(q.weight_points) === Number(state.currentWeight),
       );
@@ -628,7 +629,7 @@ import {
 
     let items = state.allData.slice();
 
-    if (state.currentWeight != null) {
+    if (state.currentWeight != null && state.currentWeight !== "all") {
       items = items.filter(
         (q) => Number(q.weight_points) === Number(state.currentWeight),
       );
