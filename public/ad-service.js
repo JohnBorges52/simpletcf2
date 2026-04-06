@@ -124,7 +124,8 @@ class AdService {
       // Downgraded from ad-free to free — reload so ads initialise properly
       window.location.reload();
     }
-    // If previousTier is undefined (initial tier notification for a free user), do nothing
+    // If previousTier is null (initial load notification for an ad-free user already handled above),
+    // or any other non-ad-free previous tier, no action is needed here.
   }
 
   /**

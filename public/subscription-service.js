@@ -88,7 +88,7 @@ class SubscriptionService {
       // reload (via refreshAdVisibility) for free-tier users on every load.
       if (this.currentUserData?.tier === 'ad-free') {
         this._tierChangeCallbacks.forEach(cb => {
-          try { cb('ad-free', undefined); } catch (err) {
+          try { cb('ad-free', null); } catch (err) {
             console.error('[SubscriptionService] Tier init callback error:', err);
           }
         });
