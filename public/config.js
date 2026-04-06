@@ -117,6 +117,11 @@ AuthService.initAuth(app).then(() => {
 
     if (user) {
       syncAuthenticatedUserRecord(user);
+    } else {
+      // User logged out — clean up real-time Firestore listener
+      if (window.SubscriptionService) {
+        window.SubscriptionService.cleanup();
+      }
     }
   });
 });
