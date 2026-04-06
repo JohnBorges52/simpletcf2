@@ -1007,8 +1007,14 @@ import {
     els.confirmBtn()?.classList.add(CLS.hidden);
 
     refreshWeightButtonsLabels();
-    
-    // ✅ MUST await trackAnswerLocally so stats are updated before renderQuestion reads them
+
+    // ✅ Show correct/wrong option colors immediately so the user sees feedback
+    // without waiting for the database writes to complete.
+    if (!state.realTestMode) {
+      renderOptions(q, true, correctIndex);
+    }
+
+    // ✅ Await trackAnswerLocally so stats are updated before renderQuestion reads them
     await trackAnswerLocally(q, isCorrect).catch(err => {
       console.error("Failed to save answer to database:", err);
     });

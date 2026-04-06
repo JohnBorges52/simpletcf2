@@ -82,6 +82,18 @@ class SubscriptionService {
       const userData = await this.getUserSubscriptionData(user.uid);
       this.currentUserData = userData;
       
+      // Notify registered callbacks about the initial tier so that AdService
+      // can remove the bottom ad bar immediately for ad-free users.
+      // We only notify when the tier is 'ad-free' to avoid triggering a page
+      // reload (via refreshAdVisibility) for free-tier users on every load.
+      if (this.currentUserData?.tier === 'ad-free') {
+        this._tierChangeCallbacks.forEach(cb => {
+          try { cb('ad-free', undefined); } catch (err) {
+            console.error('[SubscriptionService] Tier init callback error:', err);
+          }
+        });
+      }
+
       // Check if subscription has expired (this may update currentUserData)
       await this.checkAndUpdateExpiredSubscription(user.uid, userData);
 

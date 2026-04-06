@@ -54,8 +54,8 @@ class AdService {
   async init() {
     // Always register for real-time tier changes, regardless of current tier
     if (window.SubscriptionService) {
-      window.SubscriptionService.addTierChangeCallback((newTier) => {
-        this.refreshAdVisibility(newTier);
+      window.SubscriptionService.addTierChangeCallback((newTier, previousTier) => {
+        this.refreshAdVisibility(newTier, previousTier);
       });
     }
 
@@ -87,7 +87,7 @@ class AdService {
    * - Downgrading to free: reloads the page so ads can be initialised normally.
    * @param {string} newTier
    */
-  refreshAdVisibility(newTier) {
+  refreshAdVisibility(newTier, previousTier) {
     // Note: TIERS constant is defined in subscription-service.js and is not
     // in scope here, so the string literals 'ad-free' / 'free' are used directly.
     if (newTier === 'ad-free') {
@@ -120,10 +120,11 @@ class AdService {
         this._overlayMutationObserver.disconnect();
         this._overlayMutationObserver = null;
       }
-    } else {
+    } else if (previousTier === 'ad-free') {
       // Downgraded from ad-free to free — reload so ads initialise properly
       window.location.reload();
     }
+    // If previousTier is undefined (initial tier notification for a free user), do nothing
   }
 
   /**
@@ -151,12 +152,9 @@ class AdService {
   async _runDetection() {
     const now = Date.now();
     if (now - this._lastDetectionTime < ADBLOCK_DEBOUNCE_MS) {
-      console.debug('[AdService] Detection debounced.');
       return this._adBlockDetected;
     }
     this._lastDetectionTime = now;
-
-    console.debug('[AdService] Running multi-layer ad-blocker detection…');
 
     // Run all layers in parallel and wait for all of them to settle.
     // Fetch detection is the most reliable (network-level block), so we
@@ -170,18 +168,14 @@ class AdService {
       this._detectWithFetch(),
     ]);
 
-    console.debug('[AdService] Layer results — bait:', baitBlocked, '| script:', scriptBlocked, '| fetch:', fetchBlocked);
-
     // Fetch is primary: a network-level block is the strongest signal.
     if (fetchBlocked) {
-      console.debug('[AdService] Detection result: true (fetch confirmed)');
       return true;
     }
 
     // Without a fetch block, require at least two of the remaining layers
     // to agree (bait + script both flagged) before concluding blocked.
     const result = baitBlocked && scriptBlocked;
-    console.debug('[AdService] Detection result:', result, `(bait:${baitBlocked}, script:${scriptBlocked})`);
     return result;
   }
 
@@ -240,7 +234,6 @@ class AdService {
         }
 
         container.remove();
-        console.debug('[AdService] Bait detection:', blocked);
         resolve(blocked);
       }, 800);
     });
@@ -268,7 +261,6 @@ class AdService {
       const poll = setInterval(() => {
         if (checkLoaded()) {
           clearInterval(poll);
-          console.debug('[AdService] Script detection: not blocked');
           resolve(false);
           return;
         }
@@ -276,7 +268,6 @@ class AdService {
           clearInterval(poll);
           // Deadline elapsed without adsbygoogle.loaded being set — blocked.
           const blocked = !checkLoaded();
-          console.debug('[AdService] Script detection:', blocked);
           resolve(blocked);
         }
       }, 100);
@@ -308,18 +299,15 @@ class AdService {
         });
         // In no-cors mode a successful (opaque) response means the request
         // was not blocked.  A blocked request throws before we get here.
-        console.debug('[AdService] Fetch detection: not blocked (got response for', url, ')');
         return false;
       } catch (err) {
         // If the first endpoint threw, try the next one before concluding.
-        console.debug('[AdService] Fetch detection: request failed for', url, err && err.name);
       } finally {
         clearTimeout(timeoutId);
       }
     }
 
     // All endpoints failed → ad blocker is active.
-    console.debug('[AdService] Fetch detection: blocked');
     return true;
   }
 
@@ -342,8 +330,6 @@ class AdService {
    */
   _showAdBlockOverlay() {
     if (document.getElementById('adblock-overlay')) return;
-
-    console.debug('[AdService] Showing ad-block overlay.');
 
     // Inline styles act as a fallback if the external CSS was blocked.
     const inlineOverlayStyle = [
@@ -457,7 +443,6 @@ class AdService {
           // Re-run detection — if the user disabled their blocker, clear overlay.
           const stillBlocked = await this._runDetection();
           if (!stillBlocked) {
-            console.debug('[AdService] Ad blocker gone — removing overlay.');
             this._adBlockDetected = false;
             if (this._overlayMutationObserver) {
               this._overlayMutationObserver.disconnect();
@@ -492,7 +477,6 @@ class AdService {
 
     this._overlayMutationObserver = new MutationObserver(() => {
       if (!document.getElementById('adblock-overlay') && this._adBlockDetected) {
-        console.debug('[AdService] Overlay was removed — re-inserting.');
         document.body.appendChild(overlay);
         document.body.classList.add('adblock-wall-open');
       }
@@ -518,7 +502,6 @@ class AdService {
 
       const blocked = await this._runDetection();
       if (blocked && !this._adBlockDetected) {
-        console.debug('[AdService] Ad blocker detected on periodic recheck.');
         this._adBlockDetected = true;
         this._showAdBlockOverlay();
       }
