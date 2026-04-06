@@ -57,6 +57,21 @@ class AdService {
       window.SubscriptionService.addTierChangeCallback((newTier, previousTier) => {
         this.refreshAdVisibility(newTier, previousTier);
       });
+
+      // Ensure subscription data is loaded before checking the user's tier.
+      // On pages where no other script calls SubscriptionService.init() (e.g.
+      // the home page), currentUserData would remain null and _isAdFreeUser()
+      // would incorrectly return false, causing ads to appear for ad-free users.
+      if (window.SubscriptionService.currentUserData === null) {
+        try {
+          if (window.AuthService) {
+            await window.AuthService.waitForAuth();
+          }
+          await window.SubscriptionService.init();
+        } catch (error) {
+          console.warn('[AdService] Failed to initialize subscription service:', error);
+        }
+      }
     }
 
     if (await this._isAdFreeUser()) {
