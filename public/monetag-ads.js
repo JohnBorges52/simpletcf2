@@ -5,6 +5,8 @@
  * Features:
  *  - Sticky footer banner (always visible, closeable)
  *  - Question-counter modal (shown after every QUESTIONS_PER_MODAL answered)
+ *  - OnClick (Popunder) ad — triggers on user click interactions
+ *  - Vignette Banner ad — displays as a banner overlay
  *  - Skips all ads for ad-free tier users
  *  - Easily disabled for testing via sessionStorage flag
  *
@@ -13,24 +15,32 @@
  * Replace the zone ID placeholders below with your real Monetag zone IDs
  * once you have created the zones in the Monetag dashboard.
  *
- * To temporarily disable ads during testing, run in the browser console:
+ * To temporarily disable sticky/modal ads during testing:
  *   sessionStorage.setItem('disable_monetag', 'true');
+ * To temporarily disable onclick/vignette ads during testing:
+ *   sessionStorage.setItem('disable_monetag_new', 'true');
  * To re-enable:
  *   sessionStorage.removeItem('disable_monetag');
+ *   sessionStorage.removeItem('disable_monetag_new');
  * -----------------------------------------------------------------------
  */
 
 // -----------------------------------------------------------------------
 // CONFIGURATION — replace with your real Monetag zone IDs
 // -----------------------------------------------------------------------
-const MONETAG_STICKY_ZONE_ID  = 'MONETAG_STICKY_ZONE_ID';   // sticky footer
-const MONETAG_MODAL_ZONE_ID   = 'MONETAG_MODAL_ZONE_ID';    // question modal
+const MONETAG_STICKY_ZONE_ID   = 'MONETAG_STICKY_ZONE_ID';   // sticky footer
+const MONETAG_MODAL_ZONE_ID    = 'MONETAG_MODAL_ZONE_ID';    // question modal
+const MONETAG_ONCLICK_ZONE_ID  = '227439';                    // OnClick (Popunder)
+const MONETAG_VIGNETTE_ZONE_ID = '10845759';                  // Vignette Banner
 
 /** How many questions must be answered before the modal ad fires */
 const QUESTIONS_PER_MODAL = 19;
 
 /** Set to false to disable all Monetag ads without touching sessionStorage */
 const MONETAG_ADS_ENABLED = true;
+
+/** Set to false to disable only the OnClick and Vignette ads */
+const MONETAG_NEW_ADS_ENABLED = true;
 
 // -----------------------------------------------------------------------
 
@@ -78,6 +88,31 @@ const MONETAG_ADS_ENABLED = true;
   }
 
   /**
+   * Returns true if OnClick / Vignette ads should be suppressed.
+   * Inherits all the same checks as _adsDisabled() plus its own sessionStorage key.
+   */
+  async function _newAdsDisabled() {
+    if (!MONETAG_NEW_ADS_ENABLED) return true;
+    if (sessionStorage.getItem('disable_monetag_new') === 'true') return true;
+
+    // Respect the ad-free subscription tier (shared with the main check)
+    if (window.SubscriptionService) {
+      try {
+        const user = window.AuthService?.getCurrentUser?.();
+        if (user) {
+          const data = window.SubscriptionService.currentUserData
+            || await window.SubscriptionService.getUserSubscriptionData(user.uid);
+          if (data && data.tier === 'ad-free') return true;
+        }
+      } catch (_) {
+        // If we can't determine the tier, default to showing ads
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Inject a Monetag zone script tag into the given container element.
    * Monetag zones are loaded by appending their script to the page.
    */
@@ -100,6 +135,44 @@ const MONETAG_ADS_ENABLED = true;
     // Monetag inline zone format
     script.src = `//thubanoa.com/${zoneId}`;
     container.appendChild(script);
+  }
+
+  // -----------------------------------------------------------------------
+  // Ad functions
+  // -----------------------------------------------------------------------
+
+  /**
+   * Initialize the OnClick (Popunder) ad.
+   * Injects the Monetag popunder script once per page load.
+   * Call once on DOMContentLoaded for pages where you want this ad type.
+   */
+  async function initOnClickPopunder() {
+    if (await _newAdsDisabled()) return;
+    if (document.getElementById('monetag-onclick-script')) return;
+
+    const script = document.createElement('script');
+    script.id = 'monetag-onclick-script';
+    script.src = 'https://quge5.com/88/tag.min.js';
+    script.setAttribute('data-zone', MONETAG_ONCLICK_ZONE_ID);
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    (document.head || document.body).appendChild(script);
+  }
+
+  /**
+   * Initialize the Vignette Banner ad.
+   * Injects the Monetag vignette script once per page load.
+   * Call once on DOMContentLoaded for pages where you want this ad type.
+   */
+  async function initVignetteBanner() {
+    if (await _newAdsDisabled()) return;
+    if (document.getElementById('monetag-vignette-script')) return;
+
+    const script = document.createElement('script');
+    script.id = 'monetag-vignette-script';
+    script.dataset.zone = MONETAG_VIGNETTE_ZONE_ID;
+    script.src = 'https://n6wxm.com/vignette.min.js';
+    (document.body || document.head).appendChild(script);
   }
 
   // -----------------------------------------------------------------------
@@ -217,12 +290,20 @@ const MONETAG_ADS_ENABLED = true;
     initStickyBanner,
     showQuestionCounterAd,
     trackQuestionAnswer,
+    initOnClickPopunder,
+    initVignetteBanner,
   };
 
-  // Auto-initialize sticky banner when the DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initStickyBanner);
-  } else {
+  // Auto-initialize all ads when the DOM is ready
+  function _autoInit() {
     initStickyBanner();
+    initOnClickPopunder();
+    initVignetteBanner();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _autoInit);
+  } else {
+    _autoInit();
   }
 }());
