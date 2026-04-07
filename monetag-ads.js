@@ -1,0 +1,25 @@
+// Monetag ad scripts
+
+// OnClick/Popunder Script
+(function() {
+    // Configuration for OnClick/Popunder
+    var monetagPopunder = document.createElement('script');
+    monetagPopunder.src = 'https://example.com/monetag/popunder.js';
+    document.head.appendChild(monetagPopunder);
+})();
+
+// Vignette Banner Script
+(function() {
+    // Configuration for Vignette Banner
+    var monetagVignette = document.createElement('script');
+    monetagVignette.src = 'https://example.com/monetag/vignette.js';
+    document.head.appendChild(monetagVignette);
+})();
+
+// Push Notifications Script
+(function() {
+    // Configuration for Push Notifications
+    var monetagNotifications = document.createElement('script');
+    monetagNotifications.src = 'https://example.com/monetag/notifications.js';
+    document.head.appendChild(monetagNotifications);
+})();
