@@ -40,7 +40,7 @@ import * as AuthService from "./auth-service.js";
 // ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyAAQrh2cqH7mgjMOQ5SkoGR3V6nKdYRPm8",
-  authDomain: "simpletcf.firebaseapp.com",
+  authDomain: "simpletcf.com",
   projectId: "simpletcf",
   storageBucket: "simpletcf.firebasestorage.app",
   messagingSenderId: "233851428734",
