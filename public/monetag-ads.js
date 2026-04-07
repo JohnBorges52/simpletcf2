@@ -37,8 +37,17 @@ const MONETAG_ADS_ENABLED = true;
 (function () {
   'use strict';
 
-  let _questionCount = 0;
   let _stickyDismissed = false;
+
+  const MONETAG_COUNT_KEY = 'monetag_question_count';
+
+  function _getCount() {
+    return parseInt(sessionStorage.getItem(MONETAG_COUNT_KEY) || '0', 10);
+  }
+
+  function _setCount(n) {
+    sessionStorage.setItem(MONETAG_COUNT_KEY, String(n));
+  }
 
   // -----------------------------------------------------------------------
   // Helpers
@@ -189,10 +198,12 @@ const MONETAG_ADS_ENABLED = true;
    * Call this from listening.js, reading.js, and writing.js after each answer.
    */
   function trackQuestionAnswer() {
-    _questionCount += 1;
-    if (_questionCount >= QUESTIONS_PER_MODAL) {
-      _questionCount = 0;
+    const count = _getCount() + 1;
+    if (count >= QUESTIONS_PER_MODAL) {
+      _setCount(0);
       showQuestionCounterAd();
+    } else {
+      _setCount(count);
     }
   }
 
