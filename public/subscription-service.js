@@ -137,10 +137,10 @@ class SubscriptionService {
     if (this.currentUserData !== null) {
       return Promise.resolve(this.currentUserData);
     }
-    // An init is currently in flight — wait for it with a safety timeout.
-    // The timeout is cancelled as soon as the init promise settles to avoid
-    // leaving dangling timers.
-    if (this._initPromise) {
+    // Capture the in-flight promise in a local variable before any async work,
+    // so that a concurrent finally block clearing _initPromise doesn't affect us.
+    const inFlight = this._initPromise;
+    if (inFlight) {
       return new Promise(resolve => {
         let settled = false;
         const timer = setTimeout(() => {
@@ -149,7 +149,7 @@ class SubscriptionService {
             resolve(null);
           }
         }, timeoutMs);
-        this._initPromise.then(
+        inFlight.then(
           result => {
             if (!settled) {
               settled = true;
