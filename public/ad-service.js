@@ -571,6 +571,32 @@ class AdService {
     document.body.style.paddingBottom = 'var(--bottom-ad-bar-height, 110px)';
 
     this._pushAdsbygoogle();
+
+    console.log('[AdService] Bottom ad bar inicializado');
+    this._scheduleEmptyBannerCheck(bar);
+  }
+
+  /**
+   * After 5 seconds, check whether Google AdSense rendered a real ad into
+   * the bottom bar. If not, hide the bar so it does not appear empty.
+   * @param {HTMLElement} bar
+   */
+  _scheduleEmptyBannerCheck(bar) {
+    console.log('[AdService] Verificando se anúncio foi renderizado...');
+    setTimeout(() => {
+      const ins = bar.querySelector('.bottom-ad-bar__ad');
+      if (!ins) return;
+
+      // AdSense sets data-ad-status="filled" when a real ad is served.
+      const status = ins.getAttribute('data-ad-status');
+      if (status === 'filled') {
+        console.log('[AdService] Google AdSense renderizado com sucesso - mantendo banner visível');
+      } else {
+        console.log('[AdService] Banner vazio após 5s - Escondido');
+        bar.style.display = 'none';
+        document.body.style.paddingBottom = '';
+      }
+    }, 5000);
   }
 
   /**
@@ -579,7 +605,10 @@ class AdService {
   refreshBottomAd() {
     if (this._adBlockDetected) return;
 
-    const ins = document.querySelector('#bottom-ad-bar .bottom-ad-bar__ad');
+    const bar = document.getElementById('bottom-ad-bar');
+    if (!bar) return;
+
+    const ins = bar.querySelector('.bottom-ad-bar__ad');
     if (!ins) return;
 
     const barInner = ins.parentElement;
@@ -600,7 +629,12 @@ class AdService {
       barInner.appendChild(fresh);
     }
 
+    // Make the bar visible again in case it was hidden on the previous page
+    bar.style.display = '';
+    document.body.style.paddingBottom = 'var(--bottom-ad-bar-height, 110px)';
+
     this._pushAdsbygoogle();
+    this._scheduleEmptyBannerCheck(bar);
   }
 
   // -----------------------------------------------------------------------
