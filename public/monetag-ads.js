@@ -128,12 +128,13 @@ const MONETAG_ADS_ENABLED = true;
 
     // Adjust page bottom padding so content is not hidden behind the banner
     const existingPadding = parseInt(document.body.style.paddingBottom, 10) || 0;
-    const bannerHeight = 70;
+    const bannerHeight = bar.offsetHeight || 70;
     if (existingPadding < bannerHeight) {
       document.body.style.paddingBottom = bannerHeight + 'px';
     }
 
-    _injectZoneScript(MONETAG_STICKY_ZONE_ID, document.getElementById('monetag-sticky-content'));
+    const stickyContent = document.getElementById('monetag-sticky-content');
+    _injectZoneScript(MONETAG_STICKY_ZONE_ID, stickyContent);
 
     bar.querySelector('.monetag-sticky__close').addEventListener('click', function () {
       bar.classList.add('monetag-banner--hidden');
@@ -147,9 +148,10 @@ const MONETAG_ADS_ENABLED = true;
    */
   async function showQuestionCounterAd() {
     if (await _adsDisabled()) return;
-    if (document.getElementById('monetag-modal-overlay')) {
+    const existingOverlay = document.getElementById('monetag-modal-overlay');
+    if (existingOverlay) {
       // Already visible — remove it first so we can show a fresh one
-      document.getElementById('monetag-modal-overlay').remove();
+      existingOverlay.remove();
     }
 
     const overlay = document.createElement('div');
@@ -173,6 +175,7 @@ const MONETAG_ADS_ENABLED = true;
 
     function close() {
       overlay.classList.add('monetag-modal--hidden');
+      document.removeEventListener('keydown', onKeyDown);
       setTimeout(() => overlay.remove(), 300);
     }
 
@@ -187,7 +190,6 @@ const MONETAG_ADS_ENABLED = true;
     function onKeyDown(e) {
       if (e.key === 'Escape') {
         close();
-        document.removeEventListener('keydown', onKeyDown);
       }
     }
     document.addEventListener('keydown', onKeyDown);
