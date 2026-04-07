@@ -573,7 +573,6 @@ class AdService {
 
     this._pushAdsbygoogle();
 
-    console.log('[AdService] Bottom ad bar inicializado');
     this._scheduleEmptyBannerCheck(bar);
   }
 
@@ -583,17 +582,13 @@ class AdService {
    * @param {HTMLElement} bar
    */
   _scheduleEmptyBannerCheck(bar) {
-    console.log('[AdService] Verificando se anúncio foi renderizado...');
     setTimeout(() => {
       const ins = bar.querySelector('.bottom-ad-bar__ad');
       if (!ins) return;
 
       // AdSense sets data-ad-status="filled" when a real ad is served.
       const status = ins.getAttribute('data-ad-status');
-      if (status === 'filled') {
-        console.log('[AdService] Google AdSense renderizado com sucesso - mantendo banner visível');
-      } else {
-        console.log('[AdService] Banner vazio após 5s - Escondido');
+      if (status !== 'filled') {
         bar.style.display = 'none';
         document.body.style.paddingBottom = '';
       }
