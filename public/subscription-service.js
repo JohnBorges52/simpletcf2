@@ -40,6 +40,8 @@ class SubscriptionService {
     this.currentUserData = null;
     this._unsubscribeSnapshot = null;
     this._tierChangeCallbacks = [];
+    /** @type {Promise<object|null>|null} In-flight init promise for deduplication */
+    this._initPromise = null;
   }
 
   /**
@@ -61,51 +63,87 @@ class SubscriptionService {
     }
     this.currentUserData = null;
     this._tierChangeCallbacks = [];
+    this._initPromise = null;
   }
 
   /**
-   * Initialize subscription service for current user
+   * Initialize subscription service for current user.
+   * Concurrent calls are deduplicated: if an init is already in flight the
+   * same Promise is returned so all callers share the single network request.
    */
   async init() {
+    // Deduplicate: return the in-flight promise if one already exists
+    if (this._initPromise) {
+      return this._initPromise;
+    }
+
     // Cancel any existing real-time listener before setting up a new one
     if (this._unsubscribeSnapshot) {
       this._unsubscribeSnapshot();
       this._unsubscribeSnapshot = null;
     }
 
-    const user = window.AuthService?.getCurrentUser();
-    if (!user) {
-      return null;
-    }
-
-    try {
-      const userData = await this.getUserSubscriptionData(user.uid);
-      this.currentUserData = userData;
-      
-      // Notify registered callbacks about the initial tier so that AdService
-      // can remove the bottom ad bar immediately for ad-free users.
-      // We only notify when the tier is 'ad-free' to avoid triggering a page
-      // reload (via refreshAdVisibility) for free-tier users on every load.
-      if (this.currentUserData?.tier === 'ad-free') {
-        this._tierChangeCallbacks.forEach(cb => {
-          try { cb('ad-free', null); } catch (err) {
-            console.error('[SubscriptionService] Tier init callback error:', err);
-          }
-        });
+    this._initPromise = (async () => {
+      const user = window.AuthService?.getCurrentUser();
+      if (!user) {
+        return null;
       }
 
-      // Check if subscription has expired (this may update currentUserData)
-      await this.checkAndUpdateExpiredSubscription(user.uid, userData);
+      try {
+        const userData = await this.getUserSubscriptionData(user.uid);
+        this.currentUserData = userData;
+        
+        // Notify registered callbacks about the initial tier so that AdService
+        // can remove the bottom ad bar immediately for ad-free users.
+        // We only notify when the tier is 'ad-free' to avoid triggering a page
+        // reload (via refreshAdVisibility) for free-tier users on every load.
+        if (this.currentUserData?.tier === 'ad-free') {
+          this._tierChangeCallbacks.forEach(cb => {
+            try { cb('ad-free', null); } catch (err) {
+              console.error('[SubscriptionService] Tier init callback error:', err);
+            }
+          });
+        }
 
-      // Set up real-time listener so external Firebase changes are picked up
-      this._setupTierListener(user.uid);
-      
-      // ✅ Return currentUserData (may have been updated if subscription expired)
-      return this.currentUserData;
-    } catch (error) {
-      console.error('Error initializing subscription service:', error);
-      return null;
+        // Check if subscription has expired (this may update currentUserData)
+        await this.checkAndUpdateExpiredSubscription(user.uid, userData);
+
+        // Set up real-time listener so external Firebase changes are picked up
+        this._setupTierListener(user.uid);
+        
+        // ✅ Return currentUserData (may have been updated if subscription expired)
+        return this.currentUserData;
+      } catch (error) {
+        console.error('Error initializing subscription service:', error);
+        return null;
+      } finally {
+        this._initPromise = null;
+      }
+    })();
+
+    return this._initPromise;
+  }
+
+  /**
+   * Wait for subscription data to be available, resolving as soon as init
+   * completes.  Resolves immediately if data has already been loaded.
+   * @param {number} [timeoutMs=5000] Maximum time to wait in milliseconds.
+   *   After the timeout the promise resolves with `null` so callers degrade
+   *   gracefully rather than waiting forever.
+   * @returns {Promise<object|null>}
+   */
+  waitForInit(timeoutMs = 5000) {
+    // Data is already available — nothing to wait for
+    if (this.currentUserData !== null) {
+      return Promise.resolve(this.currentUserData);
     }
+    // An init is currently in flight — race it against the timeout
+    if (this._initPromise) {
+      const timeout = new Promise(resolve => setTimeout(() => resolve(null), timeoutMs));
+      return Promise.race([this._initPromise, timeout]);
+    }
+    // No init in progress and no data (user not logged in)
+    return Promise.resolve(null);
   }
 
   /**
