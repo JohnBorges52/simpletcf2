@@ -137,10 +137,35 @@ class SubscriptionService {
     if (this.currentUserData !== null) {
       return Promise.resolve(this.currentUserData);
     }
-    // An init is currently in flight — race it against the timeout
+    // An init is currently in flight — wait for it with a safety timeout.
+    // The timeout is cancelled as soon as the init promise settles to avoid
+    // leaving dangling timers.
     if (this._initPromise) {
-      const timeout = new Promise(resolve => setTimeout(() => resolve(null), timeoutMs));
-      return Promise.race([this._initPromise, timeout]);
+      return new Promise(resolve => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            resolve(null);
+          }
+        }, timeoutMs);
+        this._initPromise.then(
+          result => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve(result);
+            }
+          },
+          () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve(null);
+            }
+          }
+        );
+      });
     }
     // No init in progress and no data (user not logged in)
     return Promise.resolve(null);
