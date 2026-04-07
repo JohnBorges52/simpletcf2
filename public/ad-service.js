@@ -62,7 +62,8 @@ class AdService {
       // On pages where no other script calls SubscriptionService.init() (e.g.
       // the home page), currentUserData would remain null and _isAdFreeUser()
       // would incorrectly return false, causing ads to appear for ad-free users.
-      if (window.SubscriptionService.currentUserData === null) {
+      // We also check _initPromise to avoid starting a duplicate concurrent load.
+      if (window.SubscriptionService.currentUserData === null && !window.SubscriptionService._initPromise) {
         try {
           if (window.AuthService) {
             await window.AuthService.waitForAuth();
@@ -736,6 +737,10 @@ class AdService {
   async _isAdFreeUser() {
     try {
       if (window.SubscriptionService) {
+        // Ensure subscription data has finished loading before checking the tier.
+        // waitForInit() resolves immediately when data is cached, or waits for
+        // the in-flight init promise (with a 5-second safety timeout).
+        await window.SubscriptionService.waitForInit(5000);
         const tier = window.SubscriptionService.getCurrentTier();
         return tier === 'ad-free';
       }
