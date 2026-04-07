@@ -1662,6 +1662,9 @@ import {
           await window.SubscriptionService.incrementAdsViewed(user.uid);
         }
       }
+
+      // Monetag: show question-counter modal after every 19 questions
+      window.MonetagAds?.trackQuestionAnswer();
     } catch (error) {
       console.error('Error tracking reading usage:', error);
     }

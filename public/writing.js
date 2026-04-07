@@ -633,6 +633,9 @@
           showToast('Writing prompt generated!');
         }
       }
+
+      // Monetag: show question-counter modal after every 19 prompts
+      window.MonetagAds?.trackQuestionAnswer();
     } catch (error) {
       console.error('Error tracking writing usage:', error);
     }
