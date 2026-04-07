@@ -466,10 +466,13 @@
       <!-- Check if user is logged in -->
       <script>
         window.addEventListener('DOMContentLoaded', async () => {
-          // Wait a moment for AuthService to initialize
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const user = window.AuthService?.getCurrentUser?.();
+          // Wait for AuthService to be available (max 10 seconds)
+          const deadline = Date.now() + 10000;
+          while (!window.AuthService && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
+          const user = await window.AuthService?.waitForAuth?.();
           if (!user) {
             alert('You need to be logged in to access the practice section.');
             window.location.href = '/login';

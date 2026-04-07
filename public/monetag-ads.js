@@ -28,9 +28,13 @@
 // -----------------------------------------------------------------------
 // CONFIGURATION — replace with your real Monetag zone IDs
 // -----------------------------------------------------------------------
-const MONETAG_STICKY_ZONE_ID   = 'MONETAG_STICKY_ZONE_ID';   // sticky footer
-const MONETAG_MODAL_ZONE_ID    = 'MONETAG_MODAL_ZONE_ID';    // question modal
-const MONETAG_ONCLICK_ZONE_ID  = '227439';                    // OnClick (Popunder)
+// TODO: Create a "Banner" or "MultiTag" zone in your Monetag dashboard and
+//       paste the numeric Zone ID below to activate the sticky footer banner.
+const MONETAG_STICKY_ZONE_ID   = 'MONETAG_STICKY_ZONE_ID';   // ← replace with your sticky banner zone ID
+// TODO: Create a "MultiTag" or "Interstitial" zone in your Monetag dashboard
+//       and paste the numeric Zone ID below to activate the question-counter modal.
+const MONETAG_MODAL_ZONE_ID    = 'MONETAG_MODAL_ZONE_ID';    // ← replace with your modal zone ID
+const MONETAG_ONCLICK_ZONE_ID  = '10845754';                  // OnClick (Popunder)
 const MONETAG_VIGNETTE_ZONE_ID = '10845759';                  // Vignette Banner
 
 /** How many questions must be answered before the modal ad fires */
