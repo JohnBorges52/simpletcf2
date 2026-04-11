@@ -1,13 +1,5 @@
 // Monetag ad scripts
 
-// OnClick/Popunder Script
-(function() {
-    // Configuration for OnClick/Popunder
-    var monetagPopunder = document.createElement('script');
-    monetagPopunder.src = 'https://example.com/monetag/popunder.js';
-    document.head.appendChild(monetagPopunder);
-})();
-
 // Vignette Banner Script
 (function() {
     // Configuration for Vignette Banner
