@@ -10,7 +10,6 @@
 
 (function () {
   var AD_TYPES = {
-    onClick: { zone: '227439', url: 'https://quge5.com/88/tag.min.js' },
     Vignette: { zone: '10845759', url: 'https://n6wxm.com/vignette.min.js' },
     Push: { zone: '10846191', url: 'https://5gvci.com/act/files/tag.min.js' },
   };
@@ -18,7 +17,7 @@
   /**
    * Attach load/error listeners to a Monetag script element and emit logs.
    * @param {HTMLScriptElement} scriptEl
-   * @param {string} type  Human-readable ad type name (e.g. 'onClick')
+   * @param {string} type  Human-readable ad type name (e.g. 'Vignette')
    * @param {string} zone  Monetag zone ID
    */
   function watchScript(scriptEl, type, zone) {
@@ -49,7 +48,7 @@
         }
       }
       // Fallback: any unrecognised Monetag-looking URL
-      var monetagHosts = ['quge5.com', 'n6wxm.com', '5gvci.com'];
+      var monetagHosts = ['n6wxm.com', '5gvci.com'];
       for (var i = 0; i < monetagHosts.length; i++) {
         if (src.indexOf(monetagHosts[i]) !== -1) {
           watchScript(node, 'Unknown', 'unknown');
