@@ -15,9 +15,24 @@
     document.head.appendChild(push);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectScripts);
-  } else {
+  async function maybeInjectScripts() {
+    if (window.SubscriptionService) {
+      try {
+        await window.SubscriptionService.waitForInit(5000);
+        if (window.SubscriptionService.getCurrentTier() === 'ad-free') {
+          return;
+        }
+      } catch (_) {
+        // If subscription status cannot be determined, skip ads to be safe.
+        return;
+      }
+    }
     injectScripts();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeInjectScripts);
+  } else {
+    maybeInjectScripts();
   }
 }());
