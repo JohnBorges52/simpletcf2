@@ -18,6 +18,16 @@
   async function maybeInjectScripts() {
     if (window.SubscriptionService) {
       try {
+        // Wait for auth and ensure subscription data is loaded before checking
+        // the user's tier. Without this, waitForInit may resolve immediately
+        // with null (no init in flight yet) and getCurrentTier() defaults to
+        // 'free', causing ads to appear for ad-free users on first load.
+        if (window.SubscriptionService.currentUserData === null && !window.SubscriptionService._initPromise) {
+          if (window.AuthService) {
+            await window.AuthService.waitForAuth();
+          }
+          await window.SubscriptionService.init();
+        }
         await window.SubscriptionService.waitForInit(5000);
         if (window.SubscriptionService.getCurrentTier() === 'ad-free') {
           return;
