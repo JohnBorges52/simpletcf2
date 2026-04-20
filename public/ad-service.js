@@ -1,68 +1,36 @@
 /**
  * ad-service.js
- * Manages Google AdSense integration for SimpleTCF
+ * Manages SimpleTCF self-promotion ads (no third-party ad networks)
  *
  * Features:
- *  - Fixed bottom ad bar (refreshes on each navigation)
- *  - Internal support / upsell overlay every 10 questions answered
- *  - Robust multi-layer ad-blocker detection with fullscreen overlay
- *  - Skips ads for ad-free tier users
- *
- * -----------------------------------------------------------------------
- * HOW TO CONNECT REAL GOOGLE ADSENSE ADS
- * -----------------------------------------------------------------------
- * 1. Sign up at https://www.google.com/adsense/ and get approved.
- * 2. Replace ADSENSE_PUBLISHER_ID below with your real publisher ID
- *    (e.g. 'ca-pub-1234567890123456').
- * 3. In your AdSense dashboard, create one manual ad unit:
- *    a. A "Display ad" for the bottom bar → paste its slot ID
- *       into AD_SLOT_BOTTOM_BAR.
- * 4. For real Vignette ads, enable them in AdSense under:
- *    Ads > your site > Overlay formats > Vignette ads
- *    Do NOT use a manual data-ad-slot for vignette.
- * 5. Deploy. AdSense will automatically serve real ads once the site is
- *    approved and the correct IDs are in place.
- * -----------------------------------------------------------------------
+ *  - Fixed bottom bar promoting the ad-free plan (always visible for free users)
+ *  - Support overlay every 15 questions answered
+ *  - Random page-navigation popup promoting the ad-free plan
+ *  - Skips all promotions for ad-free tier users
  */
 
-// -----------------------------------------------------------------------
-// CONFIGURATION — replace with your real AdSense publisher ID & slot IDs
-// -----------------------------------------------------------------------
-const ADSENSE_PUBLISHER_ID = 'ca-pub-3540516083991428';
-const AD_SLOT_BOTTOM_BAR = '7383588658';
-const QUESTIONS_PER_AD = 20;
+const QUESTIONS_PER_PROMO = 15;
 
-/** How long (ms) to wait between periodic re-checks */
-const ADBLOCK_RECHECK_INTERVAL = 10000;
-/** Minimum ms between two full detection runs (debounce) */
-const ADBLOCK_DEBOUNCE_MS = 5000;
-
-// -----------------------------------------------------------------------
+/** Probability (0–1) that a promo popup appears on page navigation */
+const PAGE_NAV_POPUP_CHANCE = 0.25;
 
 class AdService {
   constructor() {
-    this._adBlockDetected = false;
     this._questionsSincePrompt = 0;
-    this._lastDetectionTime = 0;
-    this._recheckTimer = null;
-    this._overlayMutationObserver = null;
+    this._pageNavPopupShown = false;
   }
 
   /**
    * Bootstrap ads — call once on DOMContentLoaded
    */
   async init() {
-    // Always register for real-time tier changes, regardless of current tier
+    // Register for real-time tier changes
     if (window.SubscriptionService) {
       window.SubscriptionService.addTierChangeCallback((newTier, previousTier) => {
         this.refreshAdVisibility(newTier, previousTier);
       });
 
       // Ensure subscription data is loaded before checking the user's tier.
-      // On pages where no other script calls SubscriptionService.init() (e.g.
-      // the home page), currentUserData would remain null and _isAdFreeUser()
-      // would incorrectly return false, causing ads to appear for ad-free users.
-      // We also check _initPromise to avoid starting a duplicate concurrent load.
       if (window.SubscriptionService.currentUserData === null && !window.SubscriptionService._initPromise) {
         try {
           if (window.AuthService) {
@@ -76,40 +44,21 @@ class AdService {
     }
 
     if (await this._isAdFreeUser()) {
-      this._pauseAutoAds();
       return;
     }
 
-    // Inject the external overlay CSS as a redundancy strategy — both external
-    // CSS and inline styles are applied so the overlay remains styled even if
-    // one approach is intercepted by the ad blocker.
-    this._injectOverlayCss();
+    // Show the bottom bar for free users (always visible)
+    this._initBottomAdBar();
 
-    const blocked = await this._runDetection();
-    if (blocked) {
-      this._adBlockDetected = true;
-      this._showAdBlockOverlay();
-    } else {
-      this._injectAdSenseScript();
-      this._initBottomAdBar();
-    }
-
-    this._schedulePeriodicRecheck();
+    // Random page-navigation popup
+    this._maybeShowPageNavPopup();
   }
 
   /**
-   * Refresh ad visibility when the user's subscription tier changes in Firestore.
-   * - Upgrading to ad-free: immediately removes all ads and stops timers.
-   * - Downgrading to free: reloads the page so ads can be initialised normally.
-   * @param {string} newTier
+   * Refresh ad visibility when the user's subscription tier changes.
    */
   refreshAdVisibility(newTier, previousTier) {
-    // Note: TIERS constant is defined in subscription-service.js and is not
-    // in scope here, so the string literals 'ad-free' / 'free' are used directly.
     if (newTier === 'ad-free') {
-      // Pause AdSense auto-ads
-      this._pauseAutoAds();
-
       // Remove the bottom ad bar
       const bar = document.getElementById('bottom-ad-bar');
       if (bar) {
@@ -117,431 +66,26 @@ class AdService {
         document.body.style.paddingBottom = '';
       }
 
-      // Remove the ad-block overlay if it is currently shown
-      const adBlockOverlay = document.getElementById('adblock-overlay');
-      if (adBlockOverlay) {
-        adBlockOverlay.remove();
-        document.body.classList.remove('adblock-wall-open');
-        this._adBlockDetected = false;
+      // Remove any open popups
+      const navPopup = document.getElementById('promo-nav-popup-overlay');
+      if (navPopup) {
+        navPopup.remove();
+        document.body.classList.remove('promo-popup-open');
       }
 
-      // Stop the periodic recheck timer
-      if (this._recheckTimer) {
-        clearInterval(this._recheckTimer);
-        this._recheckTimer = null;
-      }
-
-      // Disconnect the overlay mutation observer
-      if (this._overlayMutationObserver) {
-        this._overlayMutationObserver.disconnect();
-        this._overlayMutationObserver = null;
+      const vignetteOverlay = document.getElementById('vignette-ad-overlay');
+      if (vignetteOverlay) {
+        vignetteOverlay.remove();
+        document.body.classList.remove('vignette-ad-open');
       }
     } else if (previousTier === 'ad-free') {
-      // Downgraded from ad-free to free — reload so ads initialise properly
+      // Downgraded from ad-free to free — reload so promos initialise properly
       window.location.reload();
     }
-    // If previousTier is null (initial load notification for an ad-free user already handled above),
-    // or any other non-ad-free previous tier, no action is needed here.
-  }
-
-  /**
-   * Pause all AdSense auto-ads for ad-free users.
-   * Called when the statically-loaded AdSense script is present but the
-   * user has an active ad-free subscription.
-   */
-  _pauseAutoAds() {
-    (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
   }
 
   // -----------------------------------------------------------------------
-  // Ad-blocker detection — multi-layer
-  // -----------------------------------------------------------------------
-
-  /**
-   * Run all detection layers in parallel and apply a consensus strategy:
-   * - If fetch detection reports a block, return `true` immediately (network
-   *   blocks are the most reliable signal).
-   * - Otherwise, require at least 2 out of 3 layers to agree before
-   *   concluding that an ad blocker is present.  This prevents the single
-   *   bait-detection false positive from suppressing ads on first load.
-   * @returns {Promise<boolean>}
-   */
-  async _runDetection() {
-    const now = Date.now();
-    if (now - this._lastDetectionTime < ADBLOCK_DEBOUNCE_MS) {
-      return this._adBlockDetected;
-    }
-    this._lastDetectionTime = now;
-
-    // Run all layers in parallel and wait for all of them to settle.
-    // Fetch detection is the most reliable (network-level block), so we
-    // give it priority: if fetch says "blocked", we trust it immediately.
-    // Without a fetch block, both bait AND script must agree before we
-    // conclude an ad blocker is present — this prevents a single
-    // false-positive bait result from suppressing ads on first load.
-    const [baitBlocked, scriptBlocked, fetchBlocked] = await Promise.all([
-      this._detectWithBaits(),
-      this._detectWithScript(),
-      this._detectWithFetch(),
-    ]);
-
-    // Fetch is primary: a network-level block is the strongest signal.
-    if (fetchBlocked) {
-      return true;
-    }
-
-    // Without a fetch block, require at least two of the remaining layers
-    // to agree (bait + script both flagged) before concluding blocked.
-    const result = baitBlocked && scriptBlocked;
-    return result;
-  }
-
-  // ── Layer 1: Bait elements ──────────────────────────────────────────────
-
-  /**
-   * Insert multiple "bait" elements with class names that ad blockers
-   * commonly target, then check them with several visibility methods.
-   * @returns {Promise<boolean>}
-   */
-  _detectWithBaits() {
-    return new Promise((resolve) => {
-      const baits = [
-        { tag: 'div',    cls: 'adsbygoogle',       style: 'width:300px;height:250px;' },
-        { tag: 'div',    cls: 'ad-banner',          style: 'width:728px;height:90px;' },
-        { tag: 'div',    cls: 'advertisement',      style: 'width:1px;height:1px;' },
-        { tag: 'ins',    cls: 'adsbygoogle',        style: 'display:block;width:1px;height:1px;' },
-        { tag: 'div',    cls: 'ad-slot ad-leaderboard', style: 'width:1px;height:1px;' },
-        { tag: 'div',    cls: 'adsbox',             style: 'width:1px;height:1px;' },
-      ];
-
-      const container = document.createElement('div');
-      container.setAttribute('aria-hidden', 'true');
-      container.style.cssText =
-        'position:absolute;left:-9999px;top:-9999px;pointer-events:none;';
-
-      const nodes = baits.map(({ tag, cls, style }) => {
-        const el = document.createElement(tag);
-        el.className = cls;
-        el.style.cssText = style;
-        container.appendChild(el);
-        return el;
-      });
-
-      document.body.appendChild(container);
-
-      // Give ad blockers up to 800 ms to act, then inspect.
-      // 400 ms was insufficient — CSS timing and browser rendering
-      // inconsistencies caused false positives on first load.
-      setTimeout(() => {
-        let blocked = false;
-
-        for (const el of nodes) {
-          const cs = window.getComputedStyle(el);
-          if (
-            el.offsetHeight === 0 ||
-            el.offsetWidth === 0 ||
-            cs.display === 'none' ||
-            cs.visibility === 'hidden' ||
-            cs.opacity === '0' ||
-            el.offsetParent === null
-          ) {
-            blocked = true;
-            break;
-          }
-        }
-
-        container.remove();
-        resolve(blocked);
-      }, 800);
-    });
-  }
-
-  // ── Layer 2: Script / global object check ───────────────────────────────
-
-  /**
-   * Check whether the AdSense global object was loaded.  Ad blockers
-   * intercept the adsbygoogle.js request before it executes.
-   * @returns {Promise<boolean>}
-   */
-  _detectWithScript() {
-    return new Promise((resolve) => {
-      // Google's script sets adsbygoogle.loaded = true once it runs.
-      // An undefined global at startup is inconclusive (async script not yet
-      // loaded), so we poll until either the flag appears or the deadline passes.
-      const checkLoaded = () => {
-        const asg = window.adsbygoogle;
-        return asg && asg.loaded === true;
-      };
-
-      // Give the script up to 2 seconds to load.
-      const deadline = Date.now() + 2000;
-      const poll = setInterval(() => {
-        if (checkLoaded()) {
-          clearInterval(poll);
-          resolve(false);
-          return;
-        }
-        if (Date.now() >= deadline) {
-          clearInterval(poll);
-          // Deadline elapsed without adsbygoogle.loaded being set — blocked.
-          const blocked = !checkLoaded();
-          resolve(blocked);
-        }
-      }, 100);
-    });
-  }
-
-  // ── Layer 3: Network request check ─────────────────────────────────────
-
-  /**
-   * Attempt a HEAD request to a known AdSense resource.
-   * Ad blockers intercept this request, causing a network error.
-   * @returns {Promise<boolean>}
-   */
-  async _detectWithFetch() {
-    const endpoints = [
-      'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
-      'https://googleads.g.doubleclick.net/pagead/viewthroughconversion/1/?',
-    ];
-
-    for (const url of endpoints) {
-      const ctrl = new AbortController();
-      const timeoutId = setTimeout(() => ctrl.abort(), 3000);
-      try {
-        await fetch(url, {
-          method: 'HEAD',
-          mode: 'no-cors',
-          cache: 'no-store',
-          signal: ctrl.signal,
-        });
-        // In no-cors mode a successful (opaque) response means the request
-        // was not blocked.  A blocked request throws before we get here.
-        return false;
-      } catch (err) {
-        // If the first endpoint threw, try the next one before concluding.
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    }
-
-    // All endpoints failed → ad blocker is active.
-    return true;
-  }
-
-  // ── Overlay ─────────────────────────────────────────────────────────────
-
-  /** Inject the external CSS stylesheet for the overlay (idempotent). */
-  _injectOverlayCss() {
-    const id = 'adblock-overlay-css';
-    if (document.getElementById(id)) return;
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = 'ad-blocker-overlay.css';
-    document.head.appendChild(link);
-  }
-
-  /**
-   * Show a fullscreen overlay that blocks the page until the user either
-   * disables their ad blocker or upgrades to the ad-free plan.
-   */
-  _showAdBlockOverlay() {
-    if (document.getElementById('adblock-overlay')) return;
-
-    // Inline styles act as a fallback if the external CSS was blocked.
-    const inlineOverlayStyle = [
-      'position:fixed',
-      'inset:0',
-      'z-index:2147483647',
-      'background:rgba(10,20,40,0.97)',
-      'display:flex',
-      'align-items:center',
-      'justify-content:center',
-      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
-    ].join(';');
-
-    const inlineBoxStyle = [
-      'background:#fff',
-      'border-radius:18px',
-      'padding:44px 36px',
-      'max-width:500px',
-      'width:92%',
-      'text-align:center',
-      'box-shadow:0 24px 64px rgba(0,0,0,.55)',
-      'box-sizing:border-box',
-    ].join(';');
-
-    const overlay = document.createElement('div');
-    overlay.id = 'adblock-overlay';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Ad blocker detected');
-    overlay.style.cssText = inlineOverlayStyle;
-
-    overlay.innerHTML = `
-      <div class="aob-box" style="${inlineBoxStyle}">
-        <span class="aob-icon" style="font-size:52px;display:block;margin-bottom:18px;">🚫</span>
-        <h2 class="aob-title" style="font-size:22px;font-weight:700;color:#1e3a5f;margin:0 0 14px;">
-          Ad Blocker Detected
-        </h2>
-        <p class="aob-body" style="font-size:15px;color:#374151;line-height:1.65;margin:0 0 10px;">
-          SimpleTCF is completely <strong>free</strong> and maintained by advertising revenue.
-          Ads are what allow us to keep all content accessible to everyone at no cost.
-        </p>
-        <p class="aob-body" style="font-size:15px;color:#374151;line-height:1.65;margin:0 0 10px;">
-          Please whitelist <strong>simpletcf.com</strong> in your ad blocker and refresh the page
-          to continue.
-        </p>
-        <div class="aob-countdown" id="aob-countdown"
-             style="display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fbbf24;
-                    border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;
-                    margin:12px 0 20px;">
-          Checking again in <span id="aob-timer">10</span>s…
-        </div>
-        <div class="aob-actions" style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
-          <button id="aob-refresh-btn"
-                  style="display:block;width:100%;padding:14px 20px;background:#1d4ed8;
-                         color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;
-                         cursor:pointer;box-sizing:border-box;">
-            ✅ I've Disabled It — Refresh
-          </button>
-          <a href="/plan.html"
-             style="display:block;width:100%;padding:13px 20px;background:transparent;
-                    color:#1d4ed8;border:2px solid #1d4ed8;border-radius:10px;font-size:15px;
-                    font-weight:600;cursor:pointer;text-decoration:none;box-sizing:border-box;">
-            ⭐ Go Ad-Free — CAD $10
-          </a>
-        </div>
-        <p class="aob-note"
-           style="font-size:12px;color:#9ca3af;margin:16px 0 0;line-height:1.5;">
-          Already subscribed? <a href="/login.html" style="color:#6b7280;">Sign in</a>
-          to restore your ad-free access.
-        </p>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    document.body.classList.add('adblock-wall-open');
-
-    // Wire up the refresh button.
-    const refreshBtn = document.getElementById('aob-refresh-btn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => window.location.reload());
-      setTimeout(() => refreshBtn.focus(), 120);
-    }
-
-    // Countdown display — counts down to the next automatic re-check.
-    this._startOverlayCountdown(10);
-
-    // Guard the overlay against removal by browser extensions using
-    // MutationObserver (re-insert if removed).
-    this._watchOverlay(overlay);
-  }
-
-  /**
-   * Animate the countdown timer shown inside the overlay.
-   * When it reaches 0 the page is silently re-checked; if the user has now
-   * disabled their ad blocker the overlay is removed and ads are loaded.
-   * The countdown loops automatically until the blocker is gone.
-   * @param {number} seconds
-   */
-  _startOverlayCountdown(seconds) {
-    const timerEl = document.getElementById('aob-timer');
-
-    const startTick = (initialSeconds) => {
-      let remaining = initialSeconds;
-
-      const tick = setInterval(async () => {
-        remaining -= 1;
-        if (timerEl) timerEl.textContent = String(remaining);
-
-        if (remaining <= 0) {
-          clearInterval(tick);
-          // Re-run detection — if the user disabled their blocker, clear overlay.
-          const stillBlocked = await this._runDetection();
-          if (!stillBlocked) {
-            this._adBlockDetected = false;
-            if (this._overlayMutationObserver) {
-              this._overlayMutationObserver.disconnect();
-              this._overlayMutationObserver = null;
-            }
-            const overlay = document.getElementById('adblock-overlay');
-            if (overlay) overlay.remove();
-            document.body.classList.remove('adblock-wall-open');
-            // Now load ads normally.
-            this._injectAdSenseScript();
-            this._initBottomAdBar();
-          } else {
-            // Still blocked — restart the countdown.
-            startTick(10);
-          }
-        }
-      }, 1000);
-    };
-
-    startTick(seconds);
-  }
-
-  /**
-   * Use a MutationObserver to detect if an extension removes the overlay
-   * from the DOM, and re-insert it immediately.
-   * @param {HTMLElement} overlay
-   */
-  _watchOverlay(overlay) {
-    if (this._overlayMutationObserver) {
-      this._overlayMutationObserver.disconnect();
-    }
-
-    this._overlayMutationObserver = new MutationObserver(() => {
-      if (!document.getElementById('adblock-overlay') && this._adBlockDetected) {
-        document.body.appendChild(overlay);
-        document.body.classList.add('adblock-wall-open');
-      }
-    });
-
-    this._overlayMutationObserver.observe(document.body, {
-      childList: true,
-      subtree: false,
-    });
-  }
-
-  // ── Periodic background checks ──────────────────────────────────────────
-
-  /**
-   * Schedule a re-detection run every ADBLOCK_RECHECK_INTERVAL ms so that
-   * ad blockers enabled after initial page load are also caught.
-   */
-  _schedulePeriodicRecheck() {
-    if (this._recheckTimer) return;
-
-    this._recheckTimer = setInterval(async () => {
-      if (await this._isAdFreeUser()) return;
-
-      const blocked = await this._runDetection();
-      if (blocked && !this._adBlockDetected) {
-        this._adBlockDetected = true;
-        this._showAdBlockOverlay();
-      }
-    }, ADBLOCK_RECHECK_INTERVAL);
-  }
-
-  // -----------------------------------------------------------------------
-  // AdSense script injection
-  // -----------------------------------------------------------------------
-
-  _injectAdSenseScript() {
-    if (document.querySelector('script[data-ad-client]')) return;
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`;
-    script.setAttribute('crossorigin', 'anonymous');
-    script.setAttribute('data-ad-client', ADSENSE_PUBLISHER_ID);
-    document.head.appendChild(script);
-  }
-
-  // -----------------------------------------------------------------------
-  // Bottom fixed ad bar
+  // Bottom fixed promo bar
   // -----------------------------------------------------------------------
 
   _initBottomAdBar() {
@@ -550,87 +94,83 @@ class AdService {
     const bar = document.createElement('div');
     bar.id = 'bottom-ad-bar';
     bar.setAttribute('role', 'complementary');
-    bar.setAttribute('aria-label', 'Advertisement');
+    bar.setAttribute('aria-label', 'Upgrade to Ad-Free');
     bar.innerHTML = `
       <div class="bottom-ad-bar__inner">
-        <span class="bottom-ad-bar__label">Advertisement</span>
-        <ins class="adsbygoogle bottom-ad-bar__ad"
-             style="display:inline-block;width:728px;height:90px"
-             data-ad-client="${ADSENSE_PUBLISHER_ID}"
-             data-ad-slot="${AD_SLOT_BOTTOM_BAR}"></ins>
+        <span class="bottom-ad-bar__label">SimpleTCF</span>
+        <span class="bottom-ad-bar__promo-text">
+          🚀 Enjoy an ad-free experience — focus on your TCF preparation without interruptions!
+        </span>
         <button
           class="bottom-ad-bar__remove-btn"
           onclick="window.location.href='/plan.html'"
           title="Go Ad-Free"
         >
-          ✕ Remove Ads – CAD $10
+          ⭐ Go Ad-Free – CAD $10
         </button>
       </div>
     `;
 
     document.body.appendChild(bar);
     document.body.style.paddingBottom = 'var(--bottom-ad-bar-height, 110px)';
-
-    this._pushAdsbygoogle();
-
-    this._scheduleEmptyBannerCheck(bar);
   }
 
-  /**
-   * After 5 seconds, check whether Google AdSense rendered a real ad into
-   * the bottom bar. If not, hide the bar so it does not appear empty.
-   * @param {HTMLElement} bar
-   */
-  _scheduleEmptyBannerCheck(bar) {
+  // -----------------------------------------------------------------------
+  // Random page navigation promo popup
+  // -----------------------------------------------------------------------
+
+  _maybeShowPageNavPopup() {
+    // Only show once per page load and with a random chance
+    if (this._pageNavPopupShown) return;
+
+    if (Math.random() > PAGE_NAV_POPUP_CHANCE) return;
+
+    this._pageNavPopupShown = true;
+
+    // Small delay to let the page render first
     setTimeout(() => {
-      const ins = bar.querySelector('.bottom-ad-bar__ad');
-      if (!ins) return;
-
-      // AdSense sets data-ad-status="filled" when a real ad is served.
-      const status = ins.getAttribute('data-ad-status');
-      if (status !== 'filled') {
-        bar.style.display = 'none';
-        document.body.style.paddingBottom = '';
-      }
-    }, 5000);
+      this._showPageNavPopup();
+    }, 1500);
   }
 
-  /**
-   * Refresh the bottom bar ad unit (call on each SPA navigation)
-   */
-  refreshBottomAd() {
-    if (this._adBlockDetected) return;
+  _showPageNavPopup() {
+    if (document.getElementById('promo-nav-popup-overlay')) return;
 
-    const bar = document.getElementById('bottom-ad-bar');
-    if (!bar) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'promo-nav-popup-overlay';
+    overlay.innerHTML = `
+      <div class="promo-nav-popup__card" role="dialog" aria-modal="true" aria-label="Go Ad-Free">
+        <button class="promo-nav-popup__close" id="promo-nav-close-btn" aria-label="Close">&times;</button>
+        <div class="promo-nav-popup__icon">⭐</div>
+        <h3 class="promo-nav-popup__title">Go Ad-Free!</h3>
+        <p class="promo-nav-popup__body">
+          Remove all promotional messages and enjoy a cleaner, distraction-free study experience.
+        </p>
+        <div class="promo-nav-popup__actions">
+          <a href="/plan.html" class="btn btn--primary">Upgrade Now – CAD $10</a>
+          <button id="promo-nav-dismiss-btn" class="btn btn--ghost">Maybe Later</button>
+        </div>
+      </div>
+    `;
 
-    const ins = bar.querySelector('.bottom-ad-bar__ad');
-    if (!ins) return;
+    document.body.appendChild(overlay);
+    document.body.classList.add('promo-popup-open');
 
-    const barInner = ins.parentElement;
-    if (!barInner) return;
+    const closeBtn = overlay.querySelector('#promo-nav-close-btn');
+    const dismissBtn = overlay.querySelector('#promo-nav-dismiss-btn');
 
-    ins.remove();
+    const cleanup = () => {
+      overlay.remove();
+      document.body.classList.remove('promo-popup-open');
+    };
 
-    const fresh = document.createElement('ins');
-    fresh.className = 'adsbygoogle bottom-ad-bar__ad';
-    fresh.style.cssText = 'display:inline-block;width:728px;height:90px';
-    fresh.setAttribute('data-ad-client', ADSENSE_PUBLISHER_ID);
-    fresh.setAttribute('data-ad-slot', AD_SLOT_BOTTOM_BAR);
+    if (closeBtn) closeBtn.addEventListener('click', cleanup, { once: true });
+    if (dismissBtn) dismissBtn.addEventListener('click', cleanup, { once: true });
 
-    const removeBtn = barInner.querySelector('.bottom-ad-bar__remove-btn');
-    if (removeBtn) {
-      barInner.insertBefore(fresh, removeBtn);
-    } else {
-      barInner.appendChild(fresh);
-    }
-
-    // Make the bar visible again in case it was hidden on the previous page
-    bar.style.display = '';
-    document.body.style.paddingBottom = 'var(--bottom-ad-bar-height, 110px)';
-
-    this._pushAdsbygoogle();
-    this._scheduleEmptyBannerCheck(bar);
+    // Close on overlay background click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) cleanup();
+    });
   }
 
   // -----------------------------------------------------------------------
@@ -643,11 +183,10 @@ class AdService {
    */
   async onQuestionAnswered() {
     if (await this._isAdFreeUser()) return false;
-    if (this._adBlockDetected) return false;
 
     this._questionsSincePrompt += 1;
 
-    if (this._questionsSincePrompt < QUESTIONS_PER_AD) {
+    if (this._questionsSincePrompt < QUESTIONS_PER_PROMO) {
       return false;
     }
 
@@ -669,10 +208,9 @@ class AdService {
         </div>
 
         <div class="vignette-ad__body">
-          <h3>SimpleTCF is free thanks to ads</h3>
+          <h3>Great progress! 🎉</h3>
           <p>
-            Thanks for using SimpleTCF. You can continue in a few seconds,
-            or go ad-free for a smoother experience.
+            You've answered ${QUESTIONS_PER_PROMO} questions! Upgrade to ad-free for uninterrupted practice sessions.
           </p>
         </div>
 
@@ -681,7 +219,7 @@ class AdService {
             <button id="vignette-close-btn" class="btn btn--ghost" disabled>
               Continue (5s)
             </button>
-            <a href="/plan.html" class="btn btn--primary">Go Ad-Free</a>
+            <a href="/plan.html" class="btn btn--primary">Go Ad-Free – CAD $10</a>
           </div>
         </div>
       </div>
@@ -723,18 +261,9 @@ class AdService {
   // Helpers
   // -----------------------------------------------------------------------
 
-  _pushAdsbygoogle() {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (_) {}
-  }
-
   async _isAdFreeUser() {
     try {
       if (window.SubscriptionService) {
-        // Ensure subscription data has finished loading before checking the tier.
-        // waitForInit() resolves immediately when data is cached, or waits for
-        // the in-flight init promise (with a 5-second safety timeout).
         await window.SubscriptionService.waitForInit(5000);
         const tier = window.SubscriptionService.getCurrentTier();
         return tier === 'ad-free';
