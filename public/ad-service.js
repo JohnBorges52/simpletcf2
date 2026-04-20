@@ -5,19 +5,20 @@
  * Features:
  *  - Fixed bottom bar promoting the ad-free plan (always visible for free users)
  *  - Support overlay every 15 questions answered
- *  - Random page-navigation popup promoting the ad-free plan
+ *  - Persistent popup every 5 minutes promoting the ad-free plan
  *  - Skips all promotions for ad-free tier users
  */
 
 const QUESTIONS_PER_PROMO = 15;
 
-/** Probability (0–1) that a promo popup appears on page navigation */
-const PAGE_NAV_POPUP_CHANCE = 0.25;
+/** Popup interval in milliseconds (5 minutes) */
+const POPUP_INTERVAL_MS = 300000;
+const LAST_POPUP_TIME_STORAGE_KEY = 'adService_lastPopupTime';
 
 class AdService {
   constructor() {
     this._questionsSincePrompt = 0;
-    this._pageNavPopupShown = false;
+    this._popupCheckTimer = null;
   }
 
   /**
@@ -50,8 +51,8 @@ class AdService {
     // Show the bottom bar for free users (always visible)
     this._initBottomAdBar();
 
-    // Random page-navigation popup
-    this._maybeShowPageNavPopup();
+    // Persistent 5-minute popup timer (survives page navigation via localStorage)
+    this._initPersistentPopupTimer();
   }
 
   /**
@@ -77,6 +78,11 @@ class AdService {
       if (vignetteOverlay) {
         vignetteOverlay.remove();
         document.body.classList.remove('vignette-ad-open');
+      }
+
+      if (this._popupCheckTimer) {
+        clearInterval(this._popupCheckTimer);
+        this._popupCheckTimer = null;
       }
     } else if (previousTier === 'ad-free') {
       // Downgraded from ad-free to free — reload so promos initialise properly
@@ -116,24 +122,43 @@ class AdService {
   }
 
   // -----------------------------------------------------------------------
-  // Random page navigation promo popup
+  // Persistent periodic promo popup
   // -----------------------------------------------------------------------
 
-  _maybeShowPageNavPopup() {
-    // Only show once per page load and with a random chance
-    if (this._pageNavPopupShown) return;
+  _initPersistentPopupTimer() {
+    if (this._popupCheckTimer) {
+      clearInterval(this._popupCheckTimer);
+    }
 
-    if (Math.random() > PAGE_NAV_POPUP_CHANCE) return;
+    this._maybeShowPeriodicPopup();
 
-    this._pageNavPopupShown = true;
-
-    // Small delay to let the page render first
-    setTimeout(() => {
-      this._showPageNavPopup();
-    }, 1500);
+    this._popupCheckTimer = setInterval(() => {
+      this._maybeShowPeriodicPopup();
+    }, 1000);
   }
 
-  _showPageNavPopup() {
+  _maybeShowPeriodicPopup() {
+    const now = Date.now();
+    const lastPopupTimeRaw = localStorage.getItem(LAST_POPUP_TIME_STORAGE_KEY);
+
+    if (lastPopupTimeRaw === null) {
+      localStorage.setItem(LAST_POPUP_TIME_STORAGE_KEY, String(now));
+      return;
+    }
+
+    const lastPopupTime = Number(lastPopupTimeRaw);
+    if (!Number.isFinite(lastPopupTime)) {
+      localStorage.setItem(LAST_POPUP_TIME_STORAGE_KEY, String(now));
+      return;
+    }
+
+    if (now - lastPopupTime >= POPUP_INTERVAL_MS) {
+      localStorage.setItem(LAST_POPUP_TIME_STORAGE_KEY, String(now));
+      this._showPeriodicPopup();
+    }
+  }
+
+  _showPeriodicPopup() {
     if (document.getElementById('promo-nav-popup-overlay')) return;
 
     const overlay = document.createElement('div');
