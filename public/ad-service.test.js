@@ -71,9 +71,12 @@ describe('AdService periodic popup timer', () => {
     const checkSpy = jest.spyOn(service, '_maybeShowPeriodicPopup').mockImplementation(() => {});
 
     service._initPersistentPopupTimer();
+    expect(checkSpy).toHaveBeenCalledTimes(1);
+
+    checkSpy.mockClear();
     jest.advanceTimersByTime(3000);
 
-    expect(checkSpy).toHaveBeenCalledTimes(4);
+    expect(checkSpy).toHaveBeenCalledTimes(3);
 
     clearInterval(service._popupCheckTimer);
     service._popupCheckTimer = null;
