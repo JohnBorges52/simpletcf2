@@ -9,7 +9,7 @@
  *  - Skips all promotions for ad-free tier users
  */
 
-const QUESTIONS_PER_AD = 15;
+const QUESTIONS_PER_PROMO = 15;
 
 /** Probability (0–1) that a promo popup appears on page navigation */
 const PAGE_NAV_POPUP_CHANCE = 0.25;
@@ -186,7 +186,7 @@ class AdService {
 
     this._questionsSincePrompt += 1;
 
-    if (this._questionsSincePrompt < QUESTIONS_PER_AD) {
+    if (this._questionsSincePrompt < QUESTIONS_PER_PROMO) {
       return false;
     }
 
@@ -210,7 +210,7 @@ class AdService {
         <div class="vignette-ad__body">
           <h3>Great progress! 🎉</h3>
           <p>
-            You've answered ${QUESTIONS_PER_AD} questions! Upgrade to ad-free for uninterrupted practice sessions.
+            You've answered ${QUESTIONS_PER_PROMO} questions! Upgrade to ad-free for uninterrupted practice sessions.
           </p>
         </div>
 
