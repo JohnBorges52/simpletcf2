@@ -2,7 +2,7 @@ describe('AdService periodic popup timer', () => {
   const STORAGE_KEY = 'adService_lastPopupTime';
   const POPUP_INTERVAL_MS = 300000;
 
-  function loadAdServiceClass() {
+  function loadAdServiceInstance() {
     jest.resetModules();
     document.body.innerHTML = '';
 
@@ -16,7 +16,7 @@ describe('AdService periodic popup timer', () => {
     };
 
     require('./ad-service.js');
-    return window.AdService.constructor;
+    return window.AdService;
   }
 
   beforeEach(() => {
@@ -29,8 +29,7 @@ describe('AdService periodic popup timer', () => {
   });
 
   test('sets baseline timestamp when no previous popup timestamp exists', () => {
-    const AdServiceClass = loadAdServiceClass();
-    const service = new AdServiceClass();
+    const service = loadAdServiceInstance();
     const showSpy = jest.spyOn(service, '_showPeriodicPopup').mockImplementation(() => {});
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
     const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
@@ -46,8 +45,7 @@ describe('AdService periodic popup timer', () => {
   });
 
   test('shows popup and resets timestamp after 5 minutes have elapsed', () => {
-    const AdServiceClass = loadAdServiceClass();
-    const service = new AdServiceClass();
+    const service = loadAdServiceInstance();
     const now = 1700000300000;
     const showSpy = jest.spyOn(service, '_showPeriodicPopup').mockImplementation(() => {});
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now);
@@ -66,8 +64,7 @@ describe('AdService periodic popup timer', () => {
   });
 
   test('checks popup timer immediately and then every second', () => {
-    const AdServiceClass = loadAdServiceClass();
-    const service = new AdServiceClass();
+    const service = loadAdServiceInstance();
     const checkSpy = jest.spyOn(service, '_maybeShowPeriodicPopup').mockImplementation(() => {});
 
     service._initPersistentPopupTimer();
