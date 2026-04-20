@@ -140,9 +140,14 @@ class AdService {
   _maybeShowPeriodicPopup() {
     const now = Date.now();
     const lastPopupTimeRaw = localStorage.getItem(LAST_POPUP_TIME_STORAGE_KEY);
-    const lastPopupTime = Number.parseInt(lastPopupTimeRaw, 10);
 
-    if (Number.isNaN(lastPopupTime)) {
+    if (lastPopupTimeRaw === null) {
+      localStorage.setItem(LAST_POPUP_TIME_STORAGE_KEY, String(now));
+      return;
+    }
+
+    const lastPopupTime = Number(lastPopupTimeRaw);
+    if (!Number.isFinite(lastPopupTime)) {
       localStorage.setItem(LAST_POPUP_TIME_STORAGE_KEY, String(now));
       return;
     }
